@@ -1,0 +1,77 @@
+name: atlexpress
+
+x-app-base: &app-base
+    build: .
+    image: atlexpress-app
+    restart: unless-stopped
+    env_file: .env
+    working_dir: /var/www/html
+    volumes:
+        - .:/var/www/html
+    depends_on:
+        db:
+            condition: service_healthy
+
+services:
+    db:
+        image: postgres:16-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${DB_DATABASE:-atlexpress}
+            POSTGRES_USER: ${DB_USERNAME:-atlexpress}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - dbdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-atlexpress} -d ${DB_DATABASE:-atlexpress}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    app:
+        <<: *app-base
+        command: php-fpm
+        healthcheck:
+            test: ["CMD-SHELL", "php-fpm -t >/dev/null 2>&1"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+    worker:
+        <<: *app-base
+        command: ["php", "artisan", "queue:work", "database", "--sleep=3", "--tries=3"]
+        depends_on:
+            - app
+
+    scheduler:
+        <<: *app-base
+        command: ["php", "artisan", "schedule:work"]
+        depends_on:
+            - app
+
+    assets:
+        image: node:20-alpine
+        working_dir: /app
+        volumes:
+            - .:/app
+        profiles:
+            - tools
+
+    caddy:
+        image: caddy:2-alpine
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+            - .:/var/www/html:ro
+            - caddy_data:/data
+            - caddy_config:/config
+        depends_on:
+            - app
+
+volumes:
+    dbdata:
+    caddy_data:
+    caddy_config:
