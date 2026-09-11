@@ -1,10 +1,7 @@
 <x-layouts.app :settings="$settings">
 
-    <section class="bg-primary text-white relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10">
-            <div class="absolute -top-40 -right-40 w-96 h-96 bg-gold rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-20 -left-20 w-72 h-72 bg-gold rounded-full blur-3xl"></div>
-        </div>
+    <section class="text-white relative overflow-hidden bg-cover bg-center bg-no-repeat" style="background-image: url('https://cdn.pixabay.com/photo/2016/01/25/15/11/euro-pallets-1160806_1280.jpg');">
+        <div class="absolute inset-0 bg-primary/75"></div>
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
                 <div>
