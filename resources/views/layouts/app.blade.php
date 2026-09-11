@@ -6,7 +6,7 @@
     <title>{{ $settings['company_name'] ?? 'ATL Express' }} - {{ $settings['company_tagline'] ?? 'Cargo & Logistics' }}</title>
     <meta name="description" content="ATL Express - Solusi cargo dan logistik terpercaya di Indonesia">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" type="image/png" href="{{ asset('build/assets/logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -16,7 +16,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
-                    <img src="{{ asset('build/assets/logo.png') }}" alt="ATL Express" class="w-10 h-10 rounded-lg object-contain">
+                    <img src="{{ asset('images/logo.png') }}" alt="ATL Express" class="w-10 h-10 rounded-lg object-contain">
                     <div>
                         <span class="text-xl font-bold tracking-tight">ATL Express</span>
                         <span class="block text-xs text-gold font-medium -mt-0.5">Cargo & Logistics</span>
@@ -65,7 +65,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                 <div>
                     <div class="flex items-center gap-3 mb-6">
-                        <img src="{{ asset('build/assets/logo.png') }}" alt="ATL Express" class="w-10 h-10 rounded-lg object-contain">
+                        <img src="{{ asset('images/logo.png') }}" alt="ATL Express" class="w-10 h-10 rounded-lg object-contain">
                         <div>
                             <span class="text-xl font-bold">ATL Express</span>
                             <span class="block text-xs text-gold font-medium -mt-0.5">Cargo & Logistics</span>
