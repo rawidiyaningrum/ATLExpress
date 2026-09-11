@@ -4,28 +4,68 @@ namespace Database\Seeders;
 
 use App\Models\ShippingRate;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 class ShippingRateSeeder extends Seeder
 {
+    private const ORIGIN_CITY = 'Jakarta';
+
     public function run(): void
     {
-        $rates = [
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Surabaya', 'service_type' => 'darat', 'min_weight' => 1, 'price_per_kg' => 5000, 'estimated_days' => 2],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Surabaya', 'service_type' => 'laut', 'min_weight' => 1, 'price_per_kg' => 3000, 'estimated_days' => 5],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Medan', 'service_type' => 'darat', 'min_weight' => 1, 'price_per_kg' => 7000, 'estimated_days' => 4],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Medan', 'service_type' => 'udara', 'min_weight' => 1, 'price_per_kg' => 15000, 'estimated_days' => 1],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Makassar', 'service_type' => 'laut', 'min_weight' => 1, 'price_per_kg' => 4000, 'estimated_days' => 6],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Makassar', 'service_type' => 'udara', 'min_weight' => 1, 'price_per_kg' => 18000, 'estimated_days' => 1],
-            ['origin_city' => 'Surabaya', 'destination_city' => 'Bali', 'service_type' => 'darat', 'min_weight' => 1, 'price_per_kg' => 3500, 'estimated_days' => 1],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Papua', 'service_type' => 'udara', 'min_weight' => 1, 'price_per_kg' => 22000, 'estimated_days' => 2],
-            ['origin_city' => 'Jakarta', 'destination_city' => 'Papua', 'service_type' => 'laut', 'min_weight' => 1, 'price_per_kg' => 8000, 'estimated_days' => 10],
-        ];
+        $file = database_path('seeders/data/shipping_prices.csv');
 
-        foreach ($rates as $rate) {
-            ShippingRate::updateOrCreate(
-                $rate,
-                $rate
-            );
+        if (! is_file($file)) {
+            $this->command->error('Price list file not found: ' . $file);
+            return;
         }
+
+        $rows = array_map('str_getcsv', file($file));
+        array_shift($rows);
+
+        $now = Carbon::now();
+        $records = [];
+
+        foreach ($rows as $row) {
+            if (count($row) < 8) {
+                continue;
+            }
+
+            [$province, $district, $city, $udaraPrice, $udaraDays, $landPrice, $landMin, $landDays] = $row;
+
+            $city = trim($city);
+            if ($city === '') {
+                continue;
+            }
+
+            $records[] = [
+                'origin_city' => self::ORIGIN_CITY,
+                'destination_city' => $city,
+                'service_type' => 'udara',
+                'min_weight' => 1,
+                'price_per_kg' => (float) $udaraPrice,
+                'estimated_days' => (int) $udaraDays,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            $records[] = [
+                'origin_city' => self::ORIGIN_CITY,
+                'destination_city' => $city,
+                'service_type' => 'darat',
+                'min_weight' => (int) $landMin,
+                'price_per_kg' => (float) $landPrice,
+                'estimated_days' => (int) $landDays,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        ShippingRate::query()->delete();
+
+        foreach (array_chunk($records, 500) as $chunk) {
+            ShippingRate::insert($chunk);
+        }
+
+        $this->command->info('Shipping rates seeded: ' . count($records) . ' records.');
     }
 }
