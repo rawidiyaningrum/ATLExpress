@@ -35,11 +35,19 @@ docker compose build app worker scheduler
 echo "==> [6/9] start/update containers"
 docker compose up -d --remove-orphans
 
+echo "==> [6.5/9] backup DB (sebelum migrate)"
+BACKUP_DIR="${BACKUP_DIR:-backups}"
+mkdir -p "$BACKUP_DIR"
+docker compose exec -T db pg_dump -U "${DB_USERNAME:-atlexpress}" -d "${DB_DATABASE:-atlexpress}" > "$BACKUP_DIR/atlexpress_$(date +%F_%H%M).sql"
+echo "backup disimpan di $BACKUP_DIR"
+
 echo "==> [7/9] migrate"
 docker compose run --rm app php artisan migrate --force
 
 echo "==> [8/9] rebuild caches"
 docker compose run --rm app php artisan optimize:clear
+docker compose run --rm app php artisan filament:clear-cached-components
+docker compose run --rm app php artisan filament:cache-components
 docker compose run --rm app php artisan optimize
 docker compose restart worker scheduler
 

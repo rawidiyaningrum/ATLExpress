@@ -71,7 +71,7 @@ cd /home/ubuntu/atlexpress
 bash deploy/deploy.sh
 ```
 
-Script menangani: `git pull` → build asset → `composer install --no-dev` → build image → `up -d` → `migrate --force` → cache → restart worker/scheduler → health-check. Seed **tidak** diulang.
+Script menangani: `git pull` → build asset → `composer install --no-dev` → build image → `up -d` → **backup DB otomatis ke `backups/`** → `migrate --force` → cache (termasuk refresh cache komponen Filament agar resource baru muncul) → restart worker/scheduler → health-check. Seed **tidak** diulang.
 
 ## Operasional
 
@@ -85,7 +85,7 @@ Script menangani: `git pull` → build asset → `composer install --no-dev` →
 | `docker compose down -v` | stop AND **hapus volume** (DB & data!) — hanya saat mau reset total |
 | `docker compose run --rm app php artisan` | jalankan artisan ad-hoc |
 
-Backup DB:
+Backup DB (otomatis tiap `deploy.sh`, tersimpan di `backups/`; bisa juga manual):
 ```bash
 docker compose exec db pg_dump -U atlexpress -d atlexpress > backup_atlexpress_$(date +%F).sql
 ```
