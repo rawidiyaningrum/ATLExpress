@@ -93,7 +93,8 @@
                                 </div>
                                 <div>
                                     <h4 class="font-bold text-sm text-primary mb-1">Telepon</h4>
-                                    <p class="text-gray-500 text-sm">{{ $settings['phone'] ?? '+62 21 1234 5678' }}</p>
+                                    <a href="tel:{{ preg_replace('/\D/', '', $settings['phone'] ?? '+62 21 1234 5678') }}" class="text-gray-500 text-sm hover:text-primary transition">{{ $settings['phone'] ?? '+62 21 1234 5678' }} (Herinsa)</a>
+                                    <a href="tel:+6281807786675" class="block text-gray-500 text-sm hover:text-primary transition mt-1">+62 818-0778-6675 (Ayu Widi)</a>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">

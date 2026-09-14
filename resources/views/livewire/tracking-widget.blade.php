@@ -12,7 +12,7 @@
                     id="tracking_number"
                     wire:model="tracking_number"
                     placeholder="Masukkan nomor resi Anda"
-                    class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold focus:border-gold transition"
+                    class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-gold focus:border-gold transition"
                 >
                 <button type="submit" class="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl text-sm font-bold transition hover:bg-primary-600">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>

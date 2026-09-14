@@ -17,6 +17,9 @@ class Shipment extends Model
         'destination',
         'weight',
         'status',
+        'shipping_request_id',
+        'final_tariff',
+        'final_dimensions',
     ];
 
     protected $casts = [
@@ -26,5 +29,10 @@ class Shipment extends Model
     public function logs()
     {
         return $this->hasMany(ShipmentLog::class);
+    }
+
+    public function shippingRequest()
+    {
+        return $this->belongsTo(ShippingRequest::class);
     }
 }

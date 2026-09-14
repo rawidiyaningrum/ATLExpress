@@ -29,12 +29,18 @@ class ShipmentResource extends Resource
                     ->maxLength(255)
                     ->unique(ignoreRecord: true)
                     ->disabled(fn (?Shipment $record) => $record !== null),
+                Forms\Components\Select::make('shipping_request_id')
+                    ->label('Dari Pemesanan')
+                    ->relationship('shippingRequest', 'name')
+                    ->preload()
+                    ->searchable(),
                 Forms\Components\TextInput::make('sender_name')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('receiver_name')
-                    ->required()
-                    ->maxLength(255),
+                    ->label('Penerima')
+                    ->maxLength(255)
+                    ->nullable(),
                 Forms\Components\TextInput::make('origin')
                     ->required()
                     ->maxLength(255),
@@ -45,6 +51,15 @@ class ShipmentResource extends Resource
                     ->numeric()
                     ->required()
                     ->suffix('kg'),
+                Forms\Components\TextInput::make('final_tariff')
+                    ->label('Tarif Final')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->nullable(),
+                Forms\Components\TextInput::make('final_dimensions')
+                    ->label('Dimensi Final')
+                    ->placeholder('Contoh: 50x40x30')
+                    ->nullable(),
                 Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Pending',
@@ -65,6 +80,11 @@ class ShipmentResource extends Resource
                 Tables\Columns\TextColumn::make('tracking_number')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('shippingRequest.name')
+                    ->label('Dari Pemesanan')
+                    ->placeholder('-')
+                    ->searchable()
+                    ->description(fn (Shipment $record) => $record->shipping_request_id ? "#{$record->shipping_request_id}" : ''),
                 Tables\Columns\TextColumn::make('sender_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('receiver_name')
@@ -82,6 +102,14 @@ class ShipmentResource extends Resource
                         'cancelled' => 'danger',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('final_tariff')
+                    ->label('Tarif Final')
+                    ->money('IDR')
+                    ->placeholder('-')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('final_dimensions')
+                    ->label('Dimensi Final')
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
