@@ -49,7 +49,12 @@ docker compose run --rm app php artisan optimize:clear
 docker compose run --rm app php artisan filament:clear-cached-components
 docker compose run --rm app php artisan filament:cache-components
 docker compose run --rm app php artisan optimize
+docker compose run --rm app php artisan view:cache
 docker compose restart worker scheduler
+
+echo "==> [8.5/9] warm SEO endpoints"
+curl -fsS "$APP_URL/sitemap.xml" -o /dev/null && echo "sitemap OK"
+curl -fsS "$APP_URL/robots.txt" -o /dev/null && echo "robots OK"
 
 echo "==> [9/9] health check"
 curl -fsSI "$APP_URL" >/dev/null && echo "OK: $APP_URL"

@@ -16,6 +16,8 @@ class Post extends Model
         'category_id',
         'image',
         'content',
+        'meta_title',
+        'meta_description',
         'published_at',
         'status',
     ];

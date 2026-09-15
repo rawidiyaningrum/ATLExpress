@@ -1,4 +1,4 @@
-<x-layouts.app :settings="$settings">
+<x-layouts.app :settings="$settings" :seo="$seo">
 
     <section class="text-white relative overflow-hidden bg-cover bg-center bg-no-repeat" style="background-image: url('https://cdn.pixabay.com/photo/2016/01/25/15/11/euro-pallets-1160806_1280.jpg');">
         <div class="absolute inset-0 bg-primary/75"></div>

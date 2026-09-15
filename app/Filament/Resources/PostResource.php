@@ -45,6 +45,16 @@ class PostResource extends Resource
                 Forms\Components\DateTimePicker::make('published_at')
                     ->nullable(),
             ])->columns(2),
+            Forms\Components\Section::make('SEO')->schema([
+                Forms\Components\TextInput::make('meta_title')
+                    ->label('Meta Title')
+                    ->helperText('Kosongkan untuk default: judul artikel')
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('meta_description')
+                    ->label('Meta Description')
+                    ->helperText('Kosongkan untuk auto-generate dari konten')
+                    ->rows(3),
+            ])->columns(1),
         ]);
     }
 

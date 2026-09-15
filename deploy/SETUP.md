@@ -111,3 +111,11 @@ scheduler -> schedule:work (pengganti cron)
 - File upload Filament tersimpan di `storage/app/public` (host) dan ter-expose via symlink `storage:link` (otomatis oleh entrypoint).
 - Queue & cache & session memakai database → `migrate --force` di deploy.sh sudah mencakup tabel terkait.
 - Jika sertifikat SSL butuh dihilangkan saat tes (DNS belum siap): pertajuk `deploy/Caddyfile` ganti `atlexpress.biz.id` → `:80 { ... }` dan komentari `header {...}` bila perlu.
+
+## SEO & Performance
+
+- **sitemap.xml** & **robots.txt** tersedia otomatis di `https://atlexpress.biz.id/sitemap.xml` dan `robots.txt`.
+- Setelah deploy, submit sitemap ke Google Search Console & Bing Webmaster Tools.
+- Caddy: gzip compression aktif, static assets di-cache 1 tahun (`immutable`), admin pages no-store.
+- PHP OPcache aktif (revalidate 5s), Laravel `optimize` + `view:cache` dijalankan otomatis setiap deploy.
+- Jalankan `docker compose run --rm app php artisan tinker` lalu `Setting::where('key','og_image')->update(['value'=>'https://atlexpress.biz.id/images/logo.jpg'])` untuk mengatur OG image default (thumbnail saat link dishare di media sosial).

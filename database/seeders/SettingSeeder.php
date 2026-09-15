@@ -26,6 +26,10 @@ class SettingSeeder extends Seeder
             'facebook' => 'https://facebook.com/atlexpress',
             'instagram' => 'https://instagram.com/atlexpress',
             'youtube' => 'https://youtube.com/atlexpress',
+            'seo_title' => 'Jasa Cargo & Logistik Terpercaya | ATL Express',
+            'seo_description' => 'ATL Express melayani jasa pengiriman cargo darat, laut, dan udara ke seluruh Indonesia. Cek tarif dan lacak pengiriman secara online, aman dan transparan.',
+            'seo_keywords' => 'cargo jakarta, jasa ekspedisi, pengiriman barang, cargo laut, cargo udara, ekspedisi murah, logistik indonesia, atl express',
+            'og_image' => '',
         ];
 
         foreach ($settings as $key => $value) {

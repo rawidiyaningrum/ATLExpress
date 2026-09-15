@@ -1,4 +1,4 @@
-<x-layouts.app :settings="[]">
+<x-layouts.app :settings="$settings" :seo="$seo">
 
     <section class="bg-primary text-white py-20 relative overflow-hidden">
         <div class="absolute inset-0 opacity-10">

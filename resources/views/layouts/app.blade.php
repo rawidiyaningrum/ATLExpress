@@ -1,12 +1,76 @@
+@props([
+    'settings' => [],
+    'seo' => [],
+    'seoTitle' => null,
+    'seoDescription' => null,
+    'seoImage' => null,
+    'seoType' => 'website',
+    'seoKeywords' => null,
+    'seoJsonLd' => [],
+])
+@php
+    $siteName = $settings['company_name'] ?? 'ATL Express';
+    $tagline = $settings['company_tagline'] ?? 'Cargo & Logistics';
+    $siteLogo = asset('images/logo.png');
+
+    $seo = array_merge([
+        'title' => $settings['seo_title'] ?? $siteName,
+        'description' => $settings['seo_description'] ?? ($settings['about_text'] ?? 'Solusi cargo dan logistik terpercaya di Indonesia'),
+        'keywords' => $settings['seo_keywords'] ?? '',
+        'canonical' => url()->current(),
+        'type' => 'website',
+        'image' => $settings['og_image'] ?: $siteLogo,
+        'json_ld' => [],
+    ], is_array($seo) ? $seo : []);
+
+    $metaTitle = $seoTitle ?? $seo['title'] ?? $siteName;
+    $appendName = $seo['append_name'] ?? true;
+    $fullTitle = ($appendName && $metaTitle !== $siteName && ! Str::contains($metaTitle, $siteName))
+        ? trim($metaTitle) . ' - ' . $siteName
+        : trim($metaTitle);
+
+    $metaDescription = $seoDescription ?? $seo['description'] ?? '';
+    $metaKeywords = $seoKeywords ?? $seo['keywords'] ?? '';
+    $canonical = $seo['canonical'] ?? url()->current();
+    $ogType = $seoType ?? $seo['type'] ?? 'website';
+    $ogImage = $seoImage ?? $seo['image'] ?? $siteLogo;
+    $jsonLd = $seoJsonLd ?: ($seo['json_ld'] ?? []);
+    $jsonLd[] = \App\Services\SeoService::organization($settings, $siteLogo);
+    $jsonLd = array_values(array_filter($jsonLd));
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $settings['company_name'] ?? 'ATL Express' }} - {{ $settings['company_tagline'] ?? 'Cargo & Logistics' }}</title>
-    <meta name="description" content="ATL Express - Solusi cargo dan logistik terpercaya di Indonesia">
+    <title>{{ $fullTitle }}@if($fullTitle === $siteName && $tagline) - {{ $tagline }}@endif</title>
+
+    <meta name="description" content="{{ $metaDescription }}">
+    @if($metaKeywords)
+        <meta name="keywords" content="{{ $metaKeywords }}">
+    @endif
+    <meta name="robots" content="index, follow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="canonical" href="{{ $canonical }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:title" content="{{ $fullTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
+    <meta property="og:url" content="{{ $canonical }}">
+    <meta property="og:type" content="{{ $ogType }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:locale" content="id_ID">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $fullTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
+
+    @foreach($jsonLd as $schema)
+        <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    @endforeach
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>

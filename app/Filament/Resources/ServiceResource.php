@@ -44,6 +44,16 @@ class ServiceResource extends Resource
                     ->numeric()
                     ->default(0),
             ])->columns(2),
+            Forms\Components\Section::make('SEO')->schema([
+                Forms\Components\TextInput::make('meta_title')
+                    ->label('Meta Title')
+                    ->helperText('Kosongkan untuk default: judul layanan')
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('meta_description')
+                    ->label('Meta Description')
+                    ->helperText('Kosongkan untuk auto-generate dari deskripsi')
+                    ->rows(3),
+            ])->columns(1),
         ]);
     }
 
