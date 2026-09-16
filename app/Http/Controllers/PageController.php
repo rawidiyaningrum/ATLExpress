@@ -16,7 +16,7 @@ class PageController extends Controller
         $seo = $this->baseSeo($settings);
         $seo += [
             'title' => 'Tentang Kami',
-            'description' => $settings['about_text']
+            'description' => ($settings['about_text'] ?? '')
                 ?: 'Mengenal lebih dekat ATL Express, partner logistik terpercaya Anda.',
             'canonical' => route('about'),
             'json_ld' => [
@@ -156,6 +156,7 @@ class PageController extends Controller
     {
         $keys = [
             'company_name', 'company_tagline', 'phone', 'email', 'address', 'whatsapp',
+            'about_text',
             'facebook', 'instagram', 'youtube',
             'seo_title', 'seo_description', 'seo_keywords', 'og_image',
         ];
