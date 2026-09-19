@@ -54,6 +54,11 @@ class Post extends Model
         return $slug;
     }
 
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

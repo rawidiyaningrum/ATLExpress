@@ -21,7 +21,7 @@
             <div class="grid lg:grid-cols-3 gap-12">
                 <div class="lg:col-span-2">
                     @if($service->image)
-                        <img src="{{ $service->image }}" alt="{{ $service->title }}" class="w-full h-80 object-cover rounded-2xl mb-8">
+                        <img src="{{ $service->image_url }}" alt="{{ $service->title }}" class="w-full h-80 object-cover rounded-2xl mb-8">
                     @else
                         <div class="w-full h-80 bg-gradient-to-br from-primary/20 to-gold/20 rounded-2xl flex items-center justify-center mb-8">
                             <svg class="w-24 h-24 text-primary/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>

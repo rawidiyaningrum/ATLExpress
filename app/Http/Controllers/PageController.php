@@ -65,7 +65,7 @@ class PageController extends Controller
             'description' => $description,
             'canonical' => route('service.detail', $service->slug),
             'type' => 'service',
-            'image' => $service->image ?: ($settings['og_image'] ?: asset('images/logo.png')),
+            'image' => $service->image_url ?: ($settings['og_image'] ?: asset('images/logo.png')),
             'json_ld' => [
                 [
                     '@context' => 'https://schema.org',

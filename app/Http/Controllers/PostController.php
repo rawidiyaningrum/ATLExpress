@@ -48,14 +48,14 @@ class PostController extends Controller
             'description' => $description,
             'canonical' => route('posts.show', $post->slug),
             'type' => 'article',
-            'image' => $post->image ?: ($settings['og_image'] ?: asset('images/logo.png')),
+            'image' => $post->image_url ?: ($settings['og_image'] ?: asset('images/logo.png')),
             'json_ld' => [
                 [
                     '@context' => 'https://schema.org',
                     '@type' => 'NewsArticle',
                     'headline' => $post->title,
                     'description' => $description,
-                    'image' => $post->image ?: asset('images/logo.png'),
+                    'image' => $post->image_url ?: asset('images/logo.png'),
                     'datePublished' => $published,
                     'dateModified' => $post->updated_at->toIso8601String(),
                     'author' => [
