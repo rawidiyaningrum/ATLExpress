@@ -73,76 +73,86 @@ class ShippingRequestResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make('Data Pemesan')->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('Nama')
-                    ->required()
-                    ->disabled(),
-                Forms\Components\TextInput::make('phone')
-                    ->label('No. Telepon')
-                    ->required()
-                    ->disabled(),
-                Forms\Components\TextInput::make('email')
-                    ->label('Email')
-                    ->email()
-                    ->required()
-                    ->disabled(),
+                Forms\Components\Placeholder::make('name')->label('Nama')
+                    ->content(fn (ShippingRequest $record): string => $record->name),
+                Forms\Components\Placeholder::make('phone')->label('No. Telepon')
+                    ->content(fn (ShippingRequest $record): string => $record->phone),
+                Forms\Components\Placeholder::make('email')->label('Email')
+                    ->content(fn (ShippingRequest $record): string => $record->email),
             ])->columns(3),
             Forms\Components\Section::make('Detail Pengiriman')->schema([
-                Forms\Components\TextInput::make('origin')
-                    ->label('Asal')
-                    ->required()
-                    ->disabled(),
-                Forms\Components\TextInput::make('destination')
-                    ->label('Tujuan')
-                    ->required()
-                    ->disabled(),
-                Forms\Components\TextInput::make('service_type')
-                    ->label('Layanan')
-                    ->disabled(),
-                Forms\Components\TextInput::make('item_type')
-                    ->label('Jenis Barang')
-                    ->required()
-                    ->disabled(),
-                Forms\Components\TextInput::make('weight')
-                    ->label('Berat')
-                    ->numeric()
-                    ->required()
-                    ->suffix('kg')
-                    ->disabled(),
-                Forms\Components\TextInput::make('dimensions')
-                    ->label('Dimensi')
-                    ->placeholder('-')
-                    ->disabled(),
-                Forms\Components\Textarea::make('pickup_address')
-                    ->label('Alamat Penjemputan')
-                    ->required()
-                    ->disabled(),
-                Forms\Components\Textarea::make('notes')
-                    ->label('Keterangan')
-                    ->placeholder('-')
-                    ->disabled(),
+                Forms\Components\Placeholder::make('origin')->label('Asal')
+                    ->content(fn (ShippingRequest $record): string => $record->origin),
+                Forms\Components\Placeholder::make('destination')->label('Tujuan')
+                    ->content(fn (ShippingRequest $record): string => $record->destination),
+                Forms\Components\Placeholder::make('service_type')->label('Layanan')
+                    ->content(fn (ShippingRequest $record): string => $record->service_type ?? '-'),
+                Forms\Components\Placeholder::make('item_type')->label('Jenis Barang')
+                    ->content(fn (ShippingRequest $record): string => $record->item_type),
+                Forms\Components\Placeholder::make('weight')->label('Berat')
+                    ->content(fn (ShippingRequest $record): string => $record->weight . ' kg'),
+                Forms\Components\Placeholder::make('dimensions')->label('Dimensi')
+                    ->content(fn (ShippingRequest $record): string => $record->dimensions ?? '-'),
+                Forms\Components\Placeholder::make('pickup_address')->label('Alamat Penjemputan')
+                    ->columnSpan(2)
+                    ->content(fn (ShippingRequest $record): string => $record->pickup_address),
+                Forms\Components\Placeholder::make('notes')->label('Keterangan')
+                    ->columnSpan(2)
+                    ->content(fn (ShippingRequest $record): string => $record->notes ?? '-'),
             ])->columns(3),
             Forms\Components\Section::make('Data Final (Admin)')->schema([
-                Forms\Components\TextInput::make('final_tariff')
-                    ->label('Tarif Final (Rp)')
-                    ->numeric()
-                    ->placeholder('-')
-                    ->disabled(),
-                Forms\Components\TextInput::make('final_dimensions')
-                    ->label('Dimensi Final')
-                    ->placeholder('-')
-                    ->disabled(),
-                Forms\Components\TextInput::make('final_weight')
-                    ->label('Berat Final (kg)')
-                    ->numeric()
-                    ->placeholder('-')
-                    ->disabled(),
-                Forms\Components\Select::make('status')
-                    ->label('Status')
-                    ->options(self::getStatusOptions())
-                    ->disabled(),
+                Forms\Components\Placeholder::make('initial_tariff')->label('Tarif Saat Pemesanan')
+                    ->content(fn (ShippingRequest $record): string => $record->initial_tariff !== null
+                        ? 'Rp ' . number_format((float) $record->initial_tariff, 0, ',', '.')
+                        : '-'),
+                Forms\Components\Placeholder::make('final_tariff')->label('Tarif Final (Rp)')
+                    ->content(fn (ShippingRequest $record): string => $record->final_tariff !== null
+                        ? 'Rp ' . number_format((float) $record->final_tariff, 0, ',', '.')
+                        : '-'),
+                Forms\Components\Placeholder::make('final_dimensions')->label('Dimensi Final')
+                    ->content(fn (ShippingRequest $record): string => $record->final_dimensions ?? '-'),
+                Forms\Components\Placeholder::make('final_weight')->label('Berat Final (kg)')
+                    ->content(fn (ShippingRequest $record): string => $record->final_weight ?? '-'),
+                Forms\Components\Placeholder::make('awb_number')->label('Nomor AWB')
+                    ->content(fn (ShippingRequest $record): string => $record->awb_number ?? '-'),
+                Forms\Components\Placeholder::make('status')->label('Status')
+                    ->content(fn (ShippingRequest $record): string => self::getStatusOptions()[$record->status] ?? $record->status),
             ])->columns(3),
         ]);
+    }
+
+    public static function getAdminDataSchema(): array
+    {
+        return [
+            Forms\Components\Placeholder::make('initial_tariff')->label('Tarif Saat Pemesanan')
+                ->content(fn (ShippingRequest $record): string => $record->initial_tariff !== null
+                    ? 'Rp ' . number_format((float) $record->initial_tariff, 0, ',', '.')
+                    : '-'),
+            Forms\Components\TextInput::make('final_tariff')
+                ->label('Tarif Final (Rp)')
+                ->numeric()
+                ->minValue(0)
+                ->default(fn (ShippingRequest $record) => $record->final_tariff),
+            Forms\Components\TextInput::make('final_dimensions')
+                ->label('Dimensi Final (PxLxT cm)')
+                ->maxLength(255)
+                ->placeholder('Contoh: 50x40x30')
+                ->default(fn (ShippingRequest $record) => $record->final_dimensions),
+            Forms\Components\TextInput::make('final_weight')
+                ->label('Berat Final (kg)')
+                ->numeric()
+                ->minValue(0.5)
+                ->default(fn (ShippingRequest $record) => $record->final_weight),
+            Forms\Components\TextInput::make('awb_number')
+                ->label('Nomor AWB')
+                ->unique(ignoreRecord: true)
+                ->maxLength(255)
+                ->helperText('Kosongkan bila "Generate otomatis" aktif. Nomor AWB wajib unik.')
+                ->default(fn (ShippingRequest $record) => $record->awb_number),
+            Forms\Components\Toggle::make('generate_awb')
+                ->label('Generate otomatis AWB')
+                ->default(true),
+        ];
     }
 
     public static function table(Table $table): Table
@@ -173,6 +183,10 @@ class ShippingRequestResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => self::getStatusColor($state))
                     ->formatStateUsing(fn (string $state): string => self::getStatusOptions()[$state] ?? $state),
+                Tables\Columns\TextColumn::make('awb_number')
+                    ->label('AWB')
+                    ->searchable()
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Diterima')
                     ->dateTime()
@@ -181,6 +195,24 @@ class ShippingRequestResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('updateFinalData')
+                    ->label('Kelola Tarif & AWB')
+                    ->icon('heroicon-o-pencil-square')
+                    ->form(self::getAdminDataSchema())
+                    ->modalHeading('Kelola Tarif Final & AWB')
+                    ->modalSubmitActionLabel('Simpan')
+                    ->action(function (array $data, ShippingRequest $record): void {
+                        if (! empty($data['generate_awb']) && blank($data['awb_number'])) {
+                            $data['awb_number'] = self::generateAwb();
+                        }
+
+                        $record->update([
+                            'final_tariff' => $data['final_tariff'],
+                            'final_dimensions' => $data['final_dimensions'],
+                            'final_weight' => $data['final_weight'],
+                            'awb_number' => $data['awb_number'],
+                        ]);
+                    }),
                 Tables\Actions\Action::make('contacted')
                     ->label('Tandai Dihubungi')
                     ->icon('heroicon-o-phone')
@@ -238,6 +270,18 @@ class ShippingRequestResource extends Resource
         $last = Shipment::where('tracking_number', 'like', $prefix . '%')
             ->orderByDesc('tracking_number')
             ->value('tracking_number');
+
+        $next = $last ? ((int) substr($last, -6)) + 1 : 1;
+
+        return $prefix . str_pad((string) $next, 6, '0', STR_PAD_LEFT);
+    }
+
+    public static function generateAwb(): string
+    {
+        $prefix = 'ATL-' . date('Y') . '-';
+        $last = ShippingRequest::where('awb_number', 'like', $prefix . '%')
+            ->orderByDesc('awb_number')
+            ->value('awb_number');
 
         $next = $last ? ((int) substr($last, -6)) + 1 : 1;
 

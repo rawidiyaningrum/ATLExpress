@@ -21,14 +21,17 @@ class ShippingRequest extends Model
         'origin',
         'destination',
         'service_type',
+        'initial_tariff',
         'status',
         'final_tariff',
         'final_dimensions',
         'final_weight',
+        'awb_number',
     ];
 
     protected $casts = [
         'weight' => 'decimal:2',
+        'initial_tariff' => 'decimal:2',
         'final_tariff' => 'decimal:2',
         'final_weight' => 'decimal:2',
     ];

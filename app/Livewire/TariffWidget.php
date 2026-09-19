@@ -84,6 +84,8 @@ class TariffWidget extends Component
             'service_type' => 'nullable|string|max:255',
         ]);
 
+        $selected = collect($this->results)->firstWhere('service_type', $this->service_type);
+
         $shippingRequest = ShippingRequest::create([
             'name' => $this->name,
             'phone' => $this->phone,
@@ -96,6 +98,7 @@ class TariffWidget extends Component
             'origin' => $this->origin,
             'destination' => $this->destination,
             'service_type' => $this->service_type,
+            'initial_tariff' => $selected['total_price'] ?? ($this->results[0]['total_price'] ?? null),
             'status' => 'new',
         ]);
 

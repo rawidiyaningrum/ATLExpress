@@ -15,6 +15,24 @@ class ViewShippingRequest extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('updateFinalData')
+                ->label('Kelola Tarif & AWB')
+                ->icon('heroicon-o-pencil-square')
+                ->form(ShippingRequestResource::getAdminDataSchema())
+                ->modalHeading('Kelola Tarif Final & AWB')
+                ->modalSubmitActionLabel('Simpan')
+                ->action(function (array $data): void {
+                    if (! empty($data['generate_awb']) && blank($data['awb_number'])) {
+                        $data['awb_number'] = ShippingRequestResource::generateAwb();
+                    }
+
+                    $this->record->update([
+                        'final_tariff' => $data['final_tariff'],
+                        'final_dimensions' => $data['final_dimensions'],
+                        'final_weight' => $data['final_weight'],
+                        'awb_number' => $data['awb_number'],
+                    ]);
+                }),
             Actions\Action::make('contacted')
                 ->label('Tandai Dihubungi')
                 ->icon('heroicon-o-phone')
