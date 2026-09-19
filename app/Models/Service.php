@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class Service extends Model
 {
@@ -27,6 +28,35 @@ class Service extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (Service $service) {
+            if (empty($service->slug)) {
+                $service->slug = $service->generateUniqueSlug(Str::slug($service->title));
+            }
+        });
+
+        static::updating(function (Service $service) {
+            if ($service->isDirty('title') && empty($service->slug)) {
+                $service->slug = $service->generateUniqueSlug(Str::slug($service->title));
+            }
+        });
+    }
+
+    protected function generateUniqueSlug(string $slug): string
+    {
+        $base = $slug;
+        $suffix = 2;
+
+        while (static::where('slug', $slug)->where('id', '!=', $this->id)->exists()) {
+            $slug = $base . '-' . $suffix++;
+        }
+
+        return $slug;
+    }
 
     public function scopeActive(Builder $query): Builder
     {
