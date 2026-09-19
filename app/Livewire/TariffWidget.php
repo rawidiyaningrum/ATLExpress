@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Mail\BookingSubmitted;
 use App\Models\ShippingRequest;
 use App\Services\TariffCalculatorService;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 
 class TariffWidget extends Component
@@ -82,7 +84,7 @@ class TariffWidget extends Component
             'service_type' => 'nullable|string|max:255',
         ]);
 
-        ShippingRequest::create([
+        $shippingRequest = ShippingRequest::create([
             'name' => $this->name,
             'phone' => $this->phone,
             'email' => $this->email,
@@ -96,6 +98,13 @@ class TariffWidget extends Component
             'service_type' => $this->service_type,
             'status' => 'new',
         ]);
+
+        try {
+            Mail::to($this->email)->send(new BookingSubmitted($shippingRequest));
+            Mail::to(config('mail.admin_address'))->send(new BookingSubmitted($shippingRequest, forAdmin: true));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $this->reset([
             'name',
