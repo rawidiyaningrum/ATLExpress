@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Filament\Resources\ShippingRequestResource;
 use App\Models\ShippingRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -34,6 +35,9 @@ class BookingSubmitted extends Mailable
             with: [
                 'request' => $this->request,
                 'forAdmin' => $this->forAdmin,
+                'adminUrl' => $this->forAdmin
+                    ? ShippingRequestResource::getUrl('view', ['record' => $this->request])
+                    : null,
             ],
         );
     }

@@ -1,7 +1,15 @@
 @component('mail::message')
+@if($forAdmin)
+# Hai Admin ATL Express,
+
+Jaya di darat, laut, dan udara.
+
+**{{ $request->name }}** telah melakukan pemesanan melalui aplikasi. Segera tindak lanjuti melalui menu admin.
+@else
 # Halo, {{ $request->name }},
 
 Terima kasih telah melakukan pemesanan pengiriman melalui **ATL Express**. Berikut rincian pemesanan Anda:
+@endif
 
 @component('mail::table')
 | Keterangan | Detail |
@@ -20,7 +28,9 @@ Terima kasih telah melakukan pemesanan pengiriman melalui **ATL Express**. Berik
 @endcomponent
 
 @if($forAdmin)
-Pemesanan baru telah diterima. Mohon segera dilakukan tindak lanjut dan konfirmasi kepada pelanggan.
+@component('mail::button', ['url' => $adminUrl])
+Lihat Pemesanan di Panel Admin
+@endcomponent
 @else
 Pesanan Anda sudah kami terima. Tim kami akan segera menghubungi Anda untuk konfirmasi.
 @endif
