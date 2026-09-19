@@ -51,6 +51,10 @@ class ShippingRequestResource extends Resource
     public static function getShipmentTransferSchema(): array
     {
         return [
+            Forms\Components\Placeholder::make('initial_tariff')->label('Tarif Saat Pemesanan')
+                ->content(fn (ShippingRequest $record): string => $record->initial_tariff !== null
+                    ? 'Rp ' . number_format((float) $record->initial_tariff, 0, ',', '.')
+                    : '-'),
             Forms\Components\TextInput::make('final_weight')
                 ->label('Berat Final (kg)')
                 ->numeric()
@@ -66,7 +70,43 @@ class ShippingRequestResource extends Resource
                 ->numeric()
                 ->required()
                 ->minValue(0),
+            Forms\Components\TextInput::make('awb_number')
+                ->label('Nomor AWB')
+                ->unique(ignoreRecord: true)
+                ->maxLength(255)
+                ->helperText('Kosongkan bila "Generate otomatis" aktif. Nomor AWB wajib unik.'),
+            Forms\Components\Toggle::make('generate_awb')
+                ->label('Generate otomatis AWB')
+                ->default(true),
         ];
+    }
+
+    public static function transferToShipment(ShippingRequest $record, array $data): void
+    {
+        if (! empty($data['generate_awb']) && blank($data['awb_number'])) {
+            $data['awb_number'] = self::generateAwb();
+        }
+
+        $record->update([
+            'status' => 'shipped',
+            'final_tariff' => $data['final_tariff'],
+            'final_dimensions' => $data['final_dimensions'],
+            'final_weight' => $data['final_weight'],
+            'awb_number' => $data['awb_number'],
+        ]);
+
+        Shipment::create([
+            'tracking_number' => self::generateTrackingNumber(),
+            'sender_name' => $record->name,
+            'receiver_name' => null,
+            'origin' => $record->origin,
+            'destination' => $record->destination,
+            'weight' => $data['final_weight'],
+            'status' => 'pending',
+            'shipping_request_id' => $record->id,
+            'final_tariff' => $data['final_tariff'],
+            'final_dimensions' => $data['final_dimensions'],
+        ]);
     }
 
     public static function form(Form $form): Form
@@ -121,40 +161,6 @@ class ShippingRequestResource extends Resource
         ]);
     }
 
-    public static function getAdminDataSchema(): array
-    {
-        return [
-            Forms\Components\Placeholder::make('initial_tariff')->label('Tarif Saat Pemesanan')
-                ->content(fn (ShippingRequest $record): string => $record->initial_tariff !== null
-                    ? 'Rp ' . number_format((float) $record->initial_tariff, 0, ',', '.')
-                    : '-'),
-            Forms\Components\TextInput::make('final_tariff')
-                ->label('Tarif Final (Rp)')
-                ->numeric()
-                ->minValue(0)
-                ->default(fn (ShippingRequest $record) => $record->final_tariff),
-            Forms\Components\TextInput::make('final_dimensions')
-                ->label('Dimensi Final (PxLxT cm)')
-                ->maxLength(255)
-                ->placeholder('Contoh: 50x40x30')
-                ->default(fn (ShippingRequest $record) => $record->final_dimensions),
-            Forms\Components\TextInput::make('final_weight')
-                ->label('Berat Final (kg)')
-                ->numeric()
-                ->minValue(0.5)
-                ->default(fn (ShippingRequest $record) => $record->final_weight),
-            Forms\Components\TextInput::make('awb_number')
-                ->label('Nomor AWB')
-                ->unique(ignoreRecord: true)
-                ->maxLength(255)
-                ->helperText('Kosongkan bila "Generate otomatis" aktif. Nomor AWB wajib unik.')
-                ->default(fn (ShippingRequest $record) => $record->awb_number),
-            Forms\Components\Toggle::make('generate_awb')
-                ->label('Generate otomatis AWB')
-                ->default(true),
-        ];
-    }
-
     public static function table(Table $table): Table
     {
         return $table
@@ -195,24 +201,6 @@ class ShippingRequestResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\Action::make('updateFinalData')
-                    ->label('Kelola Tarif & AWB')
-                    ->icon('heroicon-o-pencil-square')
-                    ->form(self::getAdminDataSchema())
-                    ->modalHeading('Kelola Tarif Final & AWB')
-                    ->modalSubmitActionLabel('Simpan')
-                    ->action(function (array $data, ShippingRequest $record): void {
-                        if (! empty($data['generate_awb']) && blank($data['awb_number'])) {
-                            $data['awb_number'] = self::generateAwb();
-                        }
-
-                        $record->update([
-                            'final_tariff' => $data['final_tariff'],
-                            'final_dimensions' => $data['final_dimensions'],
-                            'final_weight' => $data['final_weight'],
-                            'awb_number' => $data['awb_number'],
-                        ]);
-                    }),
                 Tables\Actions\Action::make('contacted')
                     ->label('Tandai Dihubungi')
                     ->icon('heroicon-o-phone')
@@ -229,30 +217,10 @@ class ShippingRequestResource extends Resource
                     ->label('Pindahkan ke Shipment')
                     ->icon('heroicon-o-truck')
                     ->form(self::getShipmentTransferSchema())
-                    ->modalHeading('Pindahkan ke Shipment')
+                    ->modalHeading('Input Tarif Akhir & AWB')
                     ->modalSubmitActionLabel('Pindahkan & Buat Pengiriman')
                     ->action(function (array $data, ShippingRequest $record): void {
-                        $record->update([
-                            'status' => 'shipped',
-                            'final_tariff' => $data['final_tariff'],
-                            'final_dimensions' => $data['final_dimensions'],
-                            'final_weight' => $data['final_weight'],
-                        ]);
-
-                        $weight = $data['final_weight'];
-
-                        $shipment = Shipment::create([
-                            'tracking_number' => self::generateTrackingNumber(),
-                            'sender_name' => $record->name,
-                            'receiver_name' => null,
-                            'origin' => $record->origin,
-                            'destination' => $record->destination,
-                            'weight' => $weight,
-                            'status' => 'pending',
-                            'shipping_request_id' => $record->id,
-                            'final_tariff' => $data['final_tariff'],
-                            'final_dimensions' => $data['final_dimensions'],
-                        ]);
+                        self::transferToShipment($record, $data);
                     })
                     ->visible(fn (ShippingRequest $record) => $record->status === 'checking'),
                 Tables\Actions\DeleteAction::make(),
