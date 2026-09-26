@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ShipmentResource\Pages;
 
 use App\Filament\Resources\ShipmentResource;
 use App\Models\Shipment;
+use App\Services\TariffCalculatorService;
 use App\Support\NumberGenerator;
 use Filament\Forms;
 use Filament\Forms\Components\Wizard\Step;
@@ -132,10 +133,116 @@ class CreateShipment extends CreateRecord
         return Step::make('Berat & Tarif')
             ->description('Berat akhir dan tarif per kg')
             ->icon('heroicon-o-scale')
+            ->afterValidation(fn (Step $step) => $this->persistStep($step))
             ->schema([
-                Forms\Components\Placeholder::make('berat_tarif')
-                    ->content('Berat dan tarif final diisi pada langkah ini.'),
+                Forms\Components\Section::make('Berat & Dimensi')
+                    ->schema([
+                        Forms\Components\TextInput::make('weight')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->suffix('kg')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                                $this->suggestPricePerKg($get, $set);
+                                $set('final_tariff', $this->calculatedTotal($get));
+                            }),
+                        Forms\Components\Textarea::make('final_dimensions')
+                            ->label('Dimensi')
+                            ->placeholder('Contoh: 50x40x30')
+                            ->rows(1),
+                    ])
+                    ->columns(2),
+                Forms\Components\Section::make('Tarif')
+                    ->description('Tarif saran diambil dari tabel ShippingRate untuk rute di langkah 1.')
+                    ->schema([
+                        Forms\Components\TextInput::make('price_per_kg')
+                            ->label('Tarif per kg')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->prefix('Rp')
+                            ->helperText(fn (Forms\Get $get): string => $this->tariffHint($get))
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => $set('final_tariff', $this->calculatedTotal($get))),
+                        Forms\Components\TextInput::make('final_tariff')
+                            ->label('Tarif Final')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->prefix('Rp')
+                            ->helperText('Terisi otomatis dari berat x tarif per kg, bisa disesuaikan bila ada biaya tambahan.'),
+                    ])
+                    ->columns(2),
             ]);
+    }
+
+    /**
+     * Saran tarif yang cocok untuk rute dan berat saat ini, bila ada.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function suggestedRate(Forms\Get $get): ?array
+    {
+        $weight = (float) $get('weight');
+
+        if ($weight <= 0 || blank($get('origin')) || blank($get('destination'))) {
+            return null;
+        }
+
+        return app(TariffCalculatorService::class)
+            ->suggest((string) $get('origin'), (string) $get('destination'), $weight)['recommended'];
+    }
+
+    protected function tariffHint(Forms\Get $get): string
+    {
+        if (blank($get('origin')) || blank($get('destination'))) {
+            return 'Isi kota asal dan tujuan pada langkah 1 untuk melihat saran tarif.';
+        }
+
+        $rate = $this->suggestedRate($get);
+
+        if ($rate === null) {
+            return (float) $get('weight') > 0
+                ? 'Tidak ada tarif yang cocok untuk berat ini, isi tarif per kg secara manual.'
+                : 'Masukkan berat terlebih dahulu untuk melihat saran tarif.';
+        }
+
+        return sprintf(
+            'Saran: %s — Rp %s/kg, estimasi %s hari.',
+            $rate['service_type'],
+            number_format((float) $rate['price_per_kg'], 0, ',', '.'),
+            $rate['estimated_days'],
+        );
+    }
+
+    /**
+     * Mengisi tarif per kg dari saran tabel hanya bila staf belum mengisinya,
+     * supaya tarif manual tidak ditimpa.
+     */
+    protected function suggestPricePerKg(Forms\Get $get, Forms\Set $set): void
+    {
+        if (filled($get('price_per_kg'))) {
+            return;
+        }
+
+        $rate = $this->suggestedRate($get);
+
+        if ($rate !== null) {
+            $set('price_per_kg', $rate['price_per_kg']);
+        }
+    }
+
+    protected function calculatedTotal(Forms\Get $get): ?float
+    {
+        $weight = (float) $get('weight');
+        $pricePerKg = (float) $get('price_per_kg');
+
+        if ($weight <= 0 || $pricePerKg <= 0) {
+            return null;
+        }
+
+        return round($weight * $pricePerKg, 2);
     }
 
     protected function airwayBillStep(): Step
