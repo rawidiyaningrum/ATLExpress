@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\InvoiceResource\Pages;
 
 use App\Filament\Resources\InvoiceResource;
+use App\Models\Invoice;
 use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
@@ -25,10 +26,12 @@ class ListInvoices extends ListRecords
     {
         return [
             'all' => Tab::make('Semua'),
-            'draft' => Tab::make('Draft')
-                ->modifyQueryUsing(fn ($query) => $query->where('status', 'draft')),
-            'final' => Tab::make('Final')
-                ->modifyQueryUsing(fn ($query) => $query->where('status', 'final')),
+            ...collect(Invoice::STATUSES)
+                ->mapWithKeys(fn (string $status): array => [
+                    $status => Tab::make(Invoice::STATUS_LABELS[$status])
+                        ->modifyQueryUsing(fn ($query) => $query->where('status', $status)),
+                ])
+                ->all(),
         ];
     }
 }

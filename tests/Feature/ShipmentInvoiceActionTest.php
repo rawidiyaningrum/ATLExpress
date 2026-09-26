@@ -64,7 +64,7 @@ class ShipmentInvoiceActionTest extends TestCase
         $page->assertRedirect(InvoiceResource::getUrl('view', ['record' => $invoice]));
     }
 
-    public function test_finalising_from_the_create_page_redirects_to_print(): void
+    public function test_billing_from_the_create_page_redirects_to_print(): void
     {
         $shipment = $this->shipment();
 
@@ -77,14 +77,14 @@ class ShipmentInvoiceActionTest extends TestCase
                     ['description' => 'Packing kayu', 'type' => 'additional', 'dihitung_dari' => InvoiceService::BASIS_FINAL_TARIFF, 'quantity' => 2, 'unit_price' => 50000],
                 ],
             ])
-            ->call('mountAction', 'saveFinal')
+            ->call('mountAction', 'saveBilled')
             ->assertRedirect(route('filament.atlexpress-admin.resources.shipments.print-invoice', [
                 'record' => $shipment,
             ]));
 
         $invoice = Invoice::sole();
 
-        $this->assertSame('final', $invoice->status);
+        $this->assertSame(Invoice::STATUS_TERTAGIH, $invoice->status);
         $this->assertSame('PT Tempo billed', $invoice->billed_to_name);
         $this->assertSame(300000.0, (float) $invoice->subtotal, '200000 + 2 x 50000');
 
@@ -92,6 +92,23 @@ class ShipmentInvoiceActionTest extends TestCase
             ->get(route('filament.atlexpress-admin.resources.shipments.print-invoice', ['record' => $shipment]))
             ->assertOk()
             ->assertSee($invoice->invoice_number);
+    }
+
+    public function test_saving_draft_from_the_create_page_opens_the_invoice_detail(): void
+    {
+        $shipment = $this->shipment();
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(CreateShipmentInvoice::class, ['record' => $shipment->getKey()])
+            ->fillForm([
+                'invoice_billed_to_name' => 'PT Tempo draft',
+                'invoice_shipping_cost' => 200000,
+                'invoice_items' => [],
+            ])
+            ->call('mountAction', 'saveDraft')
+            ->assertRedirect(InvoiceResource::getUrl('view', ['record' => Invoice::sole()]));
+
+        $this->assertSame(Invoice::STATUS_DRAFT, Invoice::sole()->status);
     }
 
     public function test_shipment_with_invoice_shows_invoice_and_links_to_the_detail(): void

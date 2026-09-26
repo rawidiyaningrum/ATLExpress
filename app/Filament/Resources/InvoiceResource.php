@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Infolists\Components\InvoiceItemsTable;
+use App\Filament\Resources\InvoiceResource\Concerns\AppliesInvoiceStatus;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\ShipmentResource\Pages\PrintInvoice as PrintShipmentInvoice;
 use App\Models\Invoice;
@@ -19,6 +20,8 @@ use Illuminate\Support\HtmlString;
 
 class InvoiceResource extends Resource
 {
+    use AppliesInvoiceStatus;
+
     protected static ?string $model = Invoice::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
@@ -54,6 +57,8 @@ class InvoiceResource extends Resource
                         ->disabled()
                         ->dehydrated(false),
                     Forms\Components\TextInput::make('status')
+                        ->label('Status')
+                        ->formatStateUsing(fn (?string $state): string => Invoice::statusLabelFor($state))
                         ->disabled()
                         ->dehydrated(false),
                     Forms\Components\TextInput::make('billed_to_name')
@@ -127,11 +132,8 @@ class InvoiceResource extends Resource
                     ->copyable(),
                 Infolists\Components\TextEntry::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'final' => 'success',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(fn (Invoice $record): string => $record->statusLabel())
+                    ->color(fn (string $state): string => Invoice::STATUS_COLORS[$state] ?? 'gray'),
                 Infolists\Components\TextEntry::make('shipment.awb_number')
                     ->label('Nomor AWB')
                     ->placeholder('-')
@@ -215,11 +217,8 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->sortable()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'final' => 'success',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(fn (Invoice $record): string => $record->statusLabel())
+                    ->color(fn (string $state): string => Invoice::STATUS_COLORS[$state] ?? 'gray'),
                 Tables\Columns\TextColumn::make('items_count')
                     ->label('Item')
                     ->counts('items')
@@ -238,30 +237,53 @@ class InvoiceResource extends Resource
             ->recordUrl(null)
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('status')->options([
-                    'draft' => 'Draft',
-                    'final' => 'Final',
-                ]),
+                Tables\Filters\SelectFilter::make('status')->options(Invoice::STATUS_LABELS),
             ])
             ->actions([
+                ...static::statusTransitionActions(),
                 Tables\Actions\EditAction::make()
-                    ->visible(fn (Invoice $record): bool => $record->status !== 'final'),
+                    ->visible(fn (Invoice $record): bool => $record->isDraft()),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn (Invoice $record): bool => $record->status !== 'final'),
+                    ->visible(fn (Invoice $record): bool => $record->isDraft()),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->before(fn () => abort_if(
-                            Invoice::query()
-                                ->whereKey($this->selection)
-                                ->where('status', '!=', 'draft')
-                                ->exists(),
-                            422,
-                            'Invoice yang sudah final tidak dapat dihapus.'
-                        )),
-                ]),
-            ]);
+            // Penghapusan massal sengaja tidak disediakan: penghapusan invoice
+            // yang sudah ditagihkan bisa meninggalkan jurnal yatim, sedangkan
+            // penjaga di action baris hanya bekerja untuk satu record.
+            ->bulkActions([]);
+    }
+
+    /**
+     * Aksi pemindahan status di baris tabel invoice.
+     *
+     * Definisi diambil dari Invoice::STATUS_ACTIONS sehingga daftar invoice dan
+     * halaman detailnya offering transisi yang sama persis, termasuk larangan
+     * mundur lebih dari satu langkah.
+     *
+     * Nama aksi memuat status asal dan tujuan, bukan hanya tujuan. Tanpa itu,
+     * "ke tertagih" yang dibuat dari draft akan menimpa definisi "ke tertagih"
+     * dari lunas, karena registry Filament mengunci aksi berdasarkan nama.
+     *
+     * @return array<int, Tables\Actions\Action>
+     */
+    protected static function statusTransitionActions(): array
+    {
+        return collect(Invoice::STATUSES)
+            ->flatMap(fn (string $from): array => collect(Invoice::STATUS_ACTIONS[$from] ?? [])
+                ->map(fn (array $definition, string $to): Tables\Actions\Action => Tables\Actions\Action::make("status:{$from}:{$to}")
+                    ->label($definition['label'])
+                    ->icon($definition['icon'])
+                    ->color($definition['color'])
+                    ->requiresConfirmation()
+                    ->modalHeading($definition['label'])
+                    ->modalDescription($definition['description'])
+                    ->modalSubmitActionLabel($definition['label'])
+                    ->visible(fn (Invoice $record): bool => $record->status === $from)
+                    ->action(fn (Invoice $record) => static::applyInvoiceStatus($record, $to)),
+                )
+                ->values()
+                ->all(),
+            )
+            ->all();
     }
 
     public static function getRelations(): array

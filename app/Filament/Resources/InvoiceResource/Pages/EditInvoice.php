@@ -17,9 +17,12 @@ class EditInvoice extends EditRecord
         parent::authorizeAccess();
 
         abort_if(
-            $this->record instanceof Invoice && $this->record->status === 'final',
+            $this->record instanceof Invoice && $this->record->isLocked(),
             403,
-            'Invoice yang sudah final tidak dapat diubah.',
+            sprintf(
+                'Invoice yang sudah berstatus %s tidak dapat diubah.',
+                $this->record->statusLabel(),
+            ),
         );
     }
 

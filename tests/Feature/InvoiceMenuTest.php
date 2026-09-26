@@ -48,13 +48,13 @@ class InvoiceMenuTest extends TestCase
     public function test_invoice_menu_lists_and_filters_invoices(): void
     {
         $draft = $this->draftInvoice([], 'AWB-MENU-0001');
-        $final = $this->draftInvoice(['billed_to_name' => 'Siti Aminah'], 'AWB-MENU-0002');
-        $final->update(['status' => 'final']);
+        $tertagih = $this->draftInvoice(['billed_to_name' => 'Siti Aminah'], 'AWB-MENU-0002');
+        $tertagih->update(['status' => Invoice::STATUS_TERTAGIH]);
 
         Livewire::actingAs(User::factory()->create())
             ->test(ListInvoices::class)
             ->assertActionHidden('create')
-            ->assertCanSeeTableRecords([$draft, $final])
+            ->assertCanSeeTableRecords([$draft, $tertagih])
             ->assertSee($draft->invoice_number)
             ->assertSee('AWB-MENU-0001')
             ->assertSee('Jakarta')
@@ -62,15 +62,15 @@ class InvoiceMenuTest extends TestCase
 
         Livewire::actingAs(User::factory()->create())
             ->test(ListInvoices::class)
-            ->set('activeTab', 'final')
-            ->assertCanSeeTableRecords([$final])
-            ->assertCanNotSeeTableRecords([$draft], 'tab Final tidak memuat invoice draft');
+            ->set('activeTab', Invoice::STATUS_TERTAGIH)
+            ->assertCanSeeTableRecords([$tertagih])
+            ->assertCanNotSeeTableRecords([$draft], 'tab Tertagih tidak memuat invoice draft');
 
         Livewire::actingAs(User::factory()->create())
             ->test(ListInvoices::class)
-            ->set('activeTab', 'draft')
+            ->set('activeTab', Invoice::STATUS_DRAFT)
             ->assertCanSeeTableRecords([$draft])
-            ->assertCanNotSeeTableRecords([$final], 'tab Draft tidak memuat invoice final');
+            ->assertCanNotSeeTableRecords([$tertagih], 'tab Draft tidak memuat invoice tertagih');
     }
 
     public function test_invoice_detail_shows_items_totals_and_print_link(): void
@@ -148,10 +148,24 @@ class InvoiceMenuTest extends TestCase
         );
     }
 
-    public function test_final_invoice_is_locked_against_editing(): void
+    public function test_billed_invoice_is_locked_against_editing(): void
     {
         $invoice = $this->draftInvoice();
-        $invoice->update(['status' => 'final']);
+        $invoice->update(['status' => Invoice::STATUS_TERTAGIH]);
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ViewInvoice::class, ['record' => $invoice->getKey()])
+            ->assertActionHidden('edit');
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('filament.atlexpress-admin.resources.invoices.edit', ['record' => $invoice]))
+            ->assertForbidden();
+    }
+
+    public function test_paid_invoice_is_locked_against_editing(): void
+    {
+        $invoice = $this->draftInvoice();
+        $invoice->update(['status' => Invoice::STATUS_LUNAS]);
 
         Livewire::actingAs(User::factory()->create())
             ->test(ViewInvoice::class, ['record' => $invoice->getKey()])

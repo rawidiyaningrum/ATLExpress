@@ -12,6 +12,7 @@
 
 - Summary keuangan per pengiriman/project masuk ke jurnal: modal, biaya operasional, pajak, sampai profit (nominal + persentase).
 - Dashboard finance keseluruhan, bisa difilter tanggal.
+- Alur pembayaran invoice: `draft → tertagih → lunas`, jurnalnya terpisah antara pendapatan dan kas masuk.
 
 ## Checklist
 
@@ -21,7 +22,12 @@
 - [ ] Step 3 — generate nomor AWB (unik), cetak airway bill otomatis, transisi status draft -> aktif + ShipmentLog
 - [ ] Step 4 — proses invoice: perhitungan awal, item tambahan + jumlah, auto-total, hint item umum (PPN, PPh, diskon, packing kayu)
 - [ ] Step 5 — cetak invoice (layout printable, format nomor invoice)
-- [ ] Migrasi & model: invoice, invoice_items, finance journal/catatan keuangan per shipment (modal, opex, pajak, profit nominal & %)
-- [ ] Summary keuangan per pengiriman/project masuk ke jurnal
-- [ ] Dashboard finance keseluruhan dengan filter tanggal + agregasi
-- [ ] Test alur wizard end-to-end + pint/typecheck
+- [x] Migrasi & model: invoice, invoice_items, finance journal/catatan keuangan per shipment (modal, opex, pajak, profit nominal & %)
+- [x] Summary keuangan per pengiriman/project masuk ke jurnal
+- [x] Dashboard finance keseluruhan dengan filter tanggal + agregasi
+- [x] Status invoice 3 tahap: `draft` → `tertagih` → `lunas`, `final` lama dipetakan ke `tertagih`
+- [x] Jurnal dipisah per tipe: `revenue` saat ditagih, `receipt` saat lunas (dashboard tidak dobel hitung)
+- [x] Aksi transisi status di daftar invoice & detail, mundur maksimal satu langkah
+- [x] Statistik `Kas Masuk` + `Piutang Belum Lunas` di dashboard finance
+- [x] Wizard shipment berhenti di `draft` (tidak auto-menagih)
+- [x] Test alur wizard end-to-end + pint/typecheck

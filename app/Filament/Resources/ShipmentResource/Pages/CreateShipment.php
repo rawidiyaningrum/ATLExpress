@@ -65,8 +65,6 @@ class CreateShipment extends CreateRecord
 
             $this->callHook('afterCreate');
 
-            $this->finaliseInvoice();
-
             $this->commitDatabaseTransaction();
         } catch (\Throwable $exception) {
             $this->rollBackDatabaseTransaction();
@@ -567,7 +565,7 @@ class CreateShipment extends CreateRecord
             ->icon('heroicon-o-printer')
             ->schema([
                 Forms\Components\Section::make('Invoice')
-                    ->description('Nomor invoice terbit saat langkah 4 disimpan, lalu ditandai final setelah pengiriman dibuat.')
+                    ->description('Nomor invoice terbit saat langkah 4 disimpan. Invoice tetap berstatus draft sampai ditandai tertagih dari daftar atau halaman detail invoice.')
                     ->schema([
                         Forms\Components\Placeholder::make('invoice_summary')
                             ->hiddenLabel()
@@ -608,17 +606,6 @@ class CreateShipment extends CreateRecord
         ]);
     }
 
-    protected function finaliseInvoice(): void
-    {
-        $invoice = $this->currentInvoice();
-
-        if ($invoice === null) {
-            return;
-        }
-
-        app(InvoiceService::class)->finalise($invoice);
-    }
-
     protected function currentInvoice(): ?Invoice
     {
         if ($this->record === null) {
@@ -642,7 +629,7 @@ class CreateShipment extends CreateRecord
         return sprintf(
             'Invoice %s berstatus %s. Ongkos kirim Rp %s, %d biaya tambahan, %d penyesuaian diskon atau pajak, total tagihan Rp %s.',
             $invoice->invoice_number,
-            $invoice->status,
+            $invoice->statusLabel(),
             $this->rupiah((float) $invoice->shipping_cost),
             $additional,
             $adjustments,

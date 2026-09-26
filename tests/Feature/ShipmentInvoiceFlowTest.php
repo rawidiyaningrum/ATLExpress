@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\ShipmentResource\Pages\CreateShipment;
+use App\Models\FinanceJournal;
 use App\Models\Invoice;
 use App\Models\Shipment;
 use App\Models\User;
@@ -85,7 +86,12 @@ class ShipmentInvoiceFlowTest extends TestCase
         // Selesaikan wizard.
         $wizard->call('create');
 
-        $this->assertSame('final', $invoice->fresh()->status, 'invoice final setelah create');
+        $this->assertSame(
+            Invoice::STATUS_DRAFT,
+            $invoice->fresh()->status,
+            'wizard berhenti di draft, penagihan dilakukan manual dari daftar invoice',
+        );
+        $this->assertSame(0, FinanceJournal::count(), 'invoice draft belum menghasilkan jurnal');
 
         $printUrl = route('filament.atlexpress-admin.resources.shipments.print-invoice', [
             'record' => $shipment,

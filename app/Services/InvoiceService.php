@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FinanceJournal;
 use App\Models\Invoice;
 use App\Models\Shipment;
 use App\Support\NumberGenerator;
@@ -150,9 +151,28 @@ class InvoiceService
      */
     public function saveForShipment(Shipment $shipment, array $state, string $status = 'draft'): Invoice
     {
+        abort_if(
+            ! in_array($status, Invoice::STATUSES, true),
+            422,
+            "Status invoice '{$status}' tidak dikenal.",
+        );
+
         $items = $this->normaliseItems((array) ($state['items'] ?? []));
         $shippingCost = round(max(0, (float) ($state['shipping_cost'] ?? 0)), 2);
         $totals = $this->calculate($shippingCost, $items);
+
+        $invoice = $shipment->invoices()->orderByDesc('id')->first();
+
+        // Penurunan status hanya boleh lewat transitionTo(), karena di sana
+        // jurnal yang sudah tercatat ikut dibersihkan. Simpan form tidak boleh
+        // diam-diam mengembalikan invoice yang sudah ditagihkan ke draft.
+        if ($invoice?->isLocked() === true) {
+            abort(422, sprintf(
+                'Invoice %s berstatus %s dan tidak bisa diubah lagi.',
+                $invoice->invoice_number,
+                $invoice->statusLabel(),
+            ));
+        }
 
         $attributes = [
             'billed_to_name' => $state['billed_to_name'] ?? null,
@@ -164,8 +184,6 @@ class InvoiceService
             'total' => $totals['total'],
             'status' => $status,
         ];
-
-        $invoice = $shipment->invoices()->orderByDesc('id')->first();
 
         if ($invoice === null) {
             $invoice = app(NumberGenerator::class)->persistWithRetry(
@@ -181,18 +199,113 @@ class InvoiceService
         $invoice->items()->delete();
         $invoice->items()->createMany($items);
 
+        $this->syncFinanceJournals($invoice->refresh());
+
         return $invoice->refresh();
     }
 
     /**
-     * Menandai invoice sebagai final saat langkah cetak dilewati.
+     * Memindahkan invoice ke status tujuan, lalu menyelaraskan jurnalnya.
+     *
+     * Hanya transisi yang diizinkan Invoice::STATUS_ACTIONS yang diterima.
+     * Melompat dari draft ke lunas ditolak karena pendapatan dan penerimaan kas
+     * harus tercatat pada dua titik yang berbeda.
      */
-    public function finalise(Invoice $invoice): Invoice
+    public function transitionTo(Invoice $invoice, string $status): Invoice
     {
-        if ($invoice->status !== 'final') {
-            $invoice->update(['status' => 'final']);
+        abort_if(
+            ! in_array($status, Invoice::STATUSES, true),
+            422,
+            "Status invoice '{$status}' tidak dikenal.",
+        );
+
+        abort_if(
+            $status !== $invoice->status && ! $invoice->canTransitionTo($status),
+            422,
+            sprintf(
+                'Invoice %s berstatus %s dan tidak bisa langsung menjadi %s.',
+                $invoice->invoice_number,
+                $invoice->statusLabel(),
+                Invoice::statusLabelFor($status),
+            ),
+        );
+
+        if ($status !== $invoice->status) {
+            $invoice->update(['status' => $status]);
         }
 
+        $this->syncFinanceJournals($invoice->refresh());
+
         return $invoice;
+    }
+
+    /**
+     * Invoice sudah ditagihkan ke pelanggan, jadi pendapatannya diakui.
+     */
+    public function markBilled(Invoice $invoice): Invoice
+    {
+        return $this->transitionTo($invoice, Invoice::STATUS_TERTAGIH);
+    }
+
+    /**
+     * Invoice sudah dibayar, jadi kas masuknya dicatat.
+     */
+    public function markPaid(Invoice $invoice): Invoice
+    {
+        return $this->transitionTo($invoice, Invoice::STATUS_LUNAS);
+    }
+
+    /**
+     * Menyelaraskan jurnal keuangan dengan status invoice.
+     *
+     * Satu invoice punya dua jurnal dengan siklus hidup berbeda:
+     *
+     * - jurnal pendapatan dibuat saat invoice ditagihkan, dan hilang lagi
+     *   kalau invoice dikembalikan ke draft;
+     * - jurnal kas masuk dibuat saat invoice dilunasi, dan hilang lagi kalau
+     *   invoice dikembalikan ke tertagih.
+     *
+     * Jurnal kas hanya mencatat penerimaan kas. Pendapatan dan pajaknya sudah
+     * diakui di jurnal pendapatan, jadi keduanya tidak boleh ikut diulang di sini.
+     */
+    protected function syncFinanceJournals(Invoice $invoice): void
+    {
+        if ($invoice->status === Invoice::STATUS_DRAFT) {
+            FinanceJournal::deleteForReference($invoice->invoice_number, $invoice->shipment_id);
+
+            return;
+        }
+
+        FinanceJournal::syncFromTotals(
+            $invoice->invoice_number,
+            [
+                'income' => (float) $invoice->total,
+                'tax' => (float) $invoice->tax,
+            ],
+            $invoice->shipment_id,
+            $invoice->created_at?->toDateString(),
+            FinanceJournal::TYPE_REVENUE,
+        );
+
+        if ($invoice->status === Invoice::STATUS_LUNAS) {
+            FinanceJournal::syncFromTotals(
+                $invoice->invoice_number,
+                [
+                    'income' => (float) $invoice->total,
+                    'tax' => 0,
+                ],
+                $invoice->shipment_id,
+                now()->toDateString(),
+                FinanceJournal::TYPE_RECEIPT,
+            );
+
+            return;
+        }
+
+        FinanceJournal::deleteForReference(
+            $invoice->invoice_number,
+            $invoice->shipment_id,
+            FinanceJournal::TYPE_RECEIPT,
+        );
     }
 }

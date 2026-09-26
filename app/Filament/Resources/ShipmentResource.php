@@ -108,14 +108,8 @@ class ShipmentResource extends Resource
                     ->prefix('Rp')
                     ->nullable(),
                 Forms\Components\Select::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'pending' => 'Pending',
-                        'in_transit' => 'In Transit',
-                        'delivered' => 'Delivered',
-                        'cancelled' => 'Cancelled',
-                    ])
-                    ->default('draft')
+                    ->options(Shipment::STATUS_LABELS)
+                    ->default(Shipment::STATUS_DRAFT)
                     ->required(),
             ])->columns(2),
         ]);
@@ -180,14 +174,7 @@ class ShipmentResource extends Resource
                     ->formatStateUsing(fn (?string $state): string => $state !== null ? ucfirst($state) : '-'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'pending' => 'warning',
-                        'in_transit' => 'info',
-                        'delivered' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->color(fn (string $state): string => Shipment::STATUS_COLORS[$state] ?? 'gray'),
                 Tables\Columns\TextColumn::make('final_tariff')
                     ->label('Tarif Final')
                     ->money('IDR')

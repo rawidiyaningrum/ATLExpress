@@ -10,9 +10,44 @@ class FinanceJournal extends Model
 {
     use HasFactory;
 
+    /**
+     * Jurnal pendapatan: pengakuan pendapatan saat invoice ditagihkan.
+     */
+    public const TYPE_REVENUE = 'revenue';
+
+    /**
+     * Jurnal kas: penerimaan kas saat invoice dilunasi.
+     */
+    public const TYPE_RECEIPT = 'receipt';
+
+    /**
+     * @var array<int, string>
+     */
+    public const TYPES = [
+        self::TYPE_REVENUE,
+        self::TYPE_RECEIPT,
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    public const TYPE_LABELS = [
+        self::TYPE_REVENUE => 'Pendapatan',
+        self::TYPE_RECEIPT => 'Kas Masuk',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    public const TYPE_COLORS = [
+        self::TYPE_REVENUE => 'info',
+        self::TYPE_RECEIPT => 'success',
+    ];
+
     protected $fillable = [
         'shipment_id',
         'reference_label',
+        'journal_type',
         'entry_date',
         'income',
         'cost_of_goods',
@@ -35,32 +70,143 @@ class FinanceJournal extends Model
         'profit_percentage' => 'decimal:2',
     ];
 
+    /**
+     * Total biaya, profit, dan profit persen selalu diturunkan dari modal,
+     * biaya operasional, pajak, dan pendapatan supaya tidak bisa diisi manual
+     * dengan angka yang tidak konsisten.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $journal): void {
+            $journal->total_expense = static::totalExpense(
+                (float) $journal->cost_of_goods,
+                (float) $journal->operational_cost,
+                (float) $journal->tax,
+            );
+
+            $journal->profit = static::profit((float) $journal->income, $journal->total_expense);
+            $journal->profit_percentage = static::percentage($journal->profit, (float) $journal->income);
+        });
+    }
+
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);
     }
 
-    public static function createFromTotals(string $reference, array $totals, ?int $shipmentId = null, ?string $entryDate = null): self
+    public function isReceipt(): bool
     {
-        $income = (float) ($totals['income'] ?? 0);
-        $costOfGoods = (float) ($totals['cost_of_goods'] ?? 0);
-        $operational = (float) ($totals['operational_cost'] ?? 0);
-        $tax = (float) ($totals['tax'] ?? 0);
+        return $this->journal_type === self::TYPE_RECEIPT;
+    }
 
-        $totalExpense = $costOfGoods + $operational + $tax;
-        $profit = $income - $totalExpense;
+    public function isRevenue(): bool
+    {
+        return ! $this->isReceipt();
+    }
 
+    public function typeLabel(): string
+    {
+        return self::TYPE_LABELS[$this->journal_type] ?? (string) $this->journal_type;
+    }
+
+    /**
+     * Total biaya dari modal, biaya operasional, dan pajak.
+     */
+    public static function totalExpense(float $costOfGoods, float $operationalCost, float $tax): float
+    {
+        return round(max(0, $costOfGoods) + max(0, $operationalCost) + max(0, $tax), 2);
+    }
+
+    /**
+     * Pendapatan dikurangi total biaya. Karena pendapatan sudah termasuk pajak
+     * dan pajak ikut masuk total biaya, hasilnya adalah profit bersih pajak.
+     */
+    public static function profit(float $income, float $totalExpense): float
+    {
+        return round($income - $totalExpense, 2);
+    }
+
+    public static function percentage(float $profit, float $income): float
+    {
+        return $income > 0 ? round(($profit / $income) * 100, 2) : 0.0;
+    }
+
+    /**
+     * Membuat jurnal baru untuk sebuah referensi.
+     *
+     * @param  array<string, mixed>  $totals
+     */
+    public static function createFromTotals(string $reference, array $totals, ?int $shipmentId = null, ?string $entryDate = null, string $type = self::TYPE_REVENUE): self
+    {
         return static::create([
             'shipment_id' => $shipmentId,
             'reference_label' => $reference,
+            'journal_type' => $type,
             'entry_date' => $entryDate ?? now()->toDateString(),
-            'income' => $income,
-            'cost_of_goods' => $costOfGoods,
-            'operational_cost' => $operational,
-            'tax' => $tax,
-            'total_expense' => $totalExpense,
-            'profit' => $profit,
-            'profit_percentage' => $income > 0 ? round(($profit / $income) * 100, 2) : 0,
+            'income' => (float) ($totals['income'] ?? 0),
+            'cost_of_goods' => (float) ($totals['cost_of_goods'] ?? 0),
+            'operational_cost' => (float) ($totals['operational_cost'] ?? 0),
+            'tax' => (float) ($totals['tax'] ?? 0),
+            'notes' => $totals['notes'] ?? null,
         ]);
+    }
+
+    /**
+     * Menyelaraskan jurnal milik sebuah referensi tanpa membuat duplikat.
+     *
+     * Pendapatan dan pajak yang ditimpa karena keduanya berasal dari invoice.
+     * Modal, biaya operasional, dan catatan yang sudah diisi operator tetap
+     * dipertahankan saat invoice ditagihkan ulang.
+     *
+     * Tipe jurnal ikut jadi bagian kunci pencarian: satu invoice punya dua
+     * jurnal, jurnal pendapatan dan jurnal kas masuk, dan keduanya tidak boleh
+     * saling menimpa.
+     *
+     * @param  array<string, mixed>  $totals
+     */
+    public static function syncFromTotals(string $reference, array $totals, ?int $shipmentId = null, ?string $entryDate = null, string $type = self::TYPE_REVENUE): self
+    {
+        $journal = static::query()->firstOrNew([
+            'shipment_id' => $shipmentId,
+            'reference_label' => $reference,
+            'journal_type' => $type,
+        ]);
+
+        $journal->income = (float) ($totals['income'] ?? 0);
+        $journal->tax = (float) ($totals['tax'] ?? 0);
+        $journal->entry_date = $entryDate ?? $journal->entry_date ?? now()->toDateString();
+
+        $journal->save();
+
+        return $journal->refresh();
+    }
+
+    /**
+     * Menghapus seluruh jurnal milik sebuah referensi, atau hanya satu tipenya.
+     */
+    public static function deleteForReference(string $reference, ?int $shipmentId = null, ?string $type = null): int
+    {
+        return static::query()
+            ->where('shipment_id', $shipmentId)
+            ->where('reference_label', $reference)
+            ->when($type !== null, fn ($query) => $query->where('journal_type', $type))
+            ->delete();
+    }
+
+    /**
+     * Jurnal yang berasal dari invoice yang sudah ditagihkan tidak boleh dihapus,
+     * karena modal dan biaya operasional di dalamnya akan hilang dan invoice
+     * yang sudah ditagihkan tidak dapat diedit lagi.
+     */
+    public function isLinkedToBilledInvoice(): bool
+    {
+        if ($this->shipment_id === null) {
+            return false;
+        }
+
+        return Invoice::query()
+            ->where('shipment_id', $this->shipment_id)
+            ->whereIn('status', [Invoice::STATUS_TERTAGIH, Invoice::STATUS_LUNAS])
+            ->exists();
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ShipmentResource\Pages;
 use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\ShipmentResource;
 use App\Filament\Resources\ShipmentResource\Concerns\HasInvoiceForm;
+use App\Models\Invoice;
 use App\Models\Shipment;
 use App\Services\InvoiceService;
 use Filament\Actions\Action;
@@ -75,18 +76,19 @@ class CreateShipmentInvoice extends Page
                 ->label('Simpan Draft')
                 ->icon('heroicon-o-pencil')
                 ->color('gray')
-                ->action(fn () => $this->store('draft')),
-            Action::make('saveFinal')
-                ->label('Finalkan & Cetak')
-                ->icon('heroicon-o-check')
-                ->color('success')
-                ->action(fn () => $this->store('final')),
+                ->action(fn () => $this->store(Invoice::STATUS_DRAFT)),
+            Action::make('saveBilled')
+                ->label('Tertagih & Cetak')
+                ->icon('heroicon-o-document-check')
+                ->color('warning')
+                ->action(fn () => $this->store(Invoice::STATUS_TERTAGIH)),
         ];
     }
 
     /**
      * Menyimpan invoice dengan status yang dipilih, lalu mengarahkan ke
-     * halaman yang relevan: detail invoice untuk draft, cetak untuk final.
+     * halaman yang relevan: detail invoice untuk draft, cetak untuk yang
+     * sudah ditagihkan.
      */
     protected function store(string $status): void
     {
@@ -101,7 +103,7 @@ class CreateShipmentInvoice extends Page
             $status,
         );
 
-        $this->redirect($status === 'final'
+        $this->redirect($status !== Invoice::STATUS_DRAFT
             ? static::getResource()::getUrl('print-invoice', ['record' => $this->record])
             : InvoiceResource::getUrl('view', ['record' => $invoice]));
     }

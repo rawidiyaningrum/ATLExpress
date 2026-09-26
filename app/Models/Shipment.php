@@ -10,6 +10,73 @@ class Shipment extends Model
 {
     use HasFactory;
 
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_IN_TRANSIT = 'in_transit';
+
+    public const STATUS_DELIVERED = 'delivered';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    /**
+     * Urutan status shipment, dipakai form, tabel, dan widget dashboard.
+     *
+     * @var array<int, string>
+     */
+    public const STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_PENDING,
+        self::STATUS_IN_TRANSIT,
+        self::STATUS_DELIVERED,
+        self::STATUS_CANCELLED,
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    public const STATUS_LABELS = [
+        self::STATUS_DRAFT => 'Draft',
+        self::STATUS_PENDING => 'Pending',
+        self::STATUS_IN_TRANSIT => 'In Transit',
+        self::STATUS_DELIVERED => 'Delivered',
+        self::STATUS_CANCELLED => 'Cancelled',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    public const STATUS_COLORS = [
+        self::STATUS_DRAFT => 'gray',
+        self::STATUS_PENDING => 'warning',
+        self::STATUS_IN_TRANSIT => 'info',
+        self::STATUS_DELIVERED => 'success',
+        self::STATUS_CANCELLED => 'danger',
+    ];
+
+    /**
+     * Warna heksadesimal untuk grafik dashboard, karena Chart.js tidak
+     * menerima nama warna badge Filament.
+     *
+     * @var array<string, string>
+     */
+    public const STATUS_CHART_COLORS = [
+        self::STATUS_DRAFT => '#9ca3af',
+        self::STATUS_PENDING => '#f59e0b',
+        self::STATUS_IN_TRANSIT => '#3b82f6',
+        self::STATUS_DELIVERED => '#10b981',
+        self::STATUS_CANCELLED => '#ef4444',
+    ];
+
+    /**
+     * Label status milik sebuah shipment, dipakai kolom tabel dan widget.
+     */
+    public static function statusLabel(?string $status): string
+    {
+        return $status === null ? '-' : (self::STATUS_LABELS[$status] ?? $status);
+    }
+
     protected $fillable = [
         'awb_number',
         'sender_name',
