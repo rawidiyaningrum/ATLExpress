@@ -71,7 +71,11 @@ class CreateShipment extends CreateRecord
 
         if ($another) {
             $this->redirect(ShipmentResource::getUrl('index'));
+
+            return;
         }
+
+        $this->redirect(ShipmentResource::getUrl('edit', ['record' => $this->record]));
     }
 
     protected function detailStep(): Step
@@ -250,10 +254,78 @@ class CreateShipment extends CreateRecord
         return Step::make('Nomor AWB')
             ->description('Nomor airway bill dan cetak')
             ->icon('heroicon-o-document-text')
+            ->afterValidation(function (Step $step): void {
+                $this->persistStep($step);
+                $this->issueAirwayBill();
+            })
             ->schema([
-                Forms\Components\Placeholder::make('awb')
-                    ->content('Nomor AWB dibuat pada langkah ini.'),
+                Forms\Components\Section::make('Ringkasan')
+                    ->description('Nomor AWB diterbitkan saat meninggalkan langkah ini dan pengiriman menjadi aktif.')
+                    ->schema([
+                        Forms\Components\Placeholder::make('ringkasan')
+                            ->hiddenLabel()
+                            ->content(fn (): string => $this->airwayBillSummary()),
+                    ]),
             ]);
+    }
+
+    /**
+     * Meng menerbitkan nomor AWB, mengaktifkan pengiriman, dan mencatat riwayatnya.
+     */
+    protected function issueAirwayBill(): void
+    {
+        if ($this->record === null || $this->record->awb_number !== null) {
+            return;
+        }
+
+        $this->record = app(NumberGenerator::class)->persistWithRetry(
+            'awbNumber',
+            function (string $awbNumber): Shipment {
+                $shipment = $this->record;
+
+                $shipment->forceFill([
+                    'awb_number' => $awbNumber,
+                    'status' => 'in_transit',
+                ])->save();
+
+                $shipment->logs()->create([
+                    'status_description' => 'Nomor AWB diterbitkan, pengiriman aktif',
+                    'location' => $shipment->origin,
+                    'timestamp' => now(),
+                ]);
+
+                return $shipment;
+            },
+        );
+
+        Notification::make()
+            ->title('Airway bill dibuat')
+            ->body("Nomor AWB: {$this->record->awb_number}. Pengiriman berstatus aktif.")
+            ->success()
+            ->send();
+    }
+
+    protected function airwayBillSummary(): string
+    {
+        if ($this->record === null) {
+            return 'Selesaikan langkah sebelumnya terlebih dahulu.';
+        }
+
+        $awb = $this->record->awb_number
+            ? "Nomor AWB {$this->record->awb_number}, pengiriman sudah aktif dan siap dicetak."
+            : 'Nomor AWB belum dibuat, pengiriman masih berstatus draft.';
+
+        return sprintf(
+            '%s Pengiriman %s dari %s ke %s, berat %s kg, tarif final %s.',
+            $awb,
+            $this->record->tracking_number,
+            $this->record->origin,
+            $this->record->destination,
+            $this->record->weight ?? '-',
+            $this->record->final_tariff !== null
+                ? 'Rp '.number_format((float) $this->record->final_tariff, 0, ',', '.')
+                : '-',
+        );
     }
 
     protected function invoiceStep(): Step

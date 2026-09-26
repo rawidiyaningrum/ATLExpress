@@ -159,6 +159,12 @@ class ShipmentResource extends Resource
                     ->sortable(),
             ])
             ->actions([
+                Tables\Actions\Action::make('printAwb')
+                    ->label('Cetak AWB')
+                    ->icon('heroicon-o-printer')
+                    ->color('gray')
+                    ->visible(fn (Shipment $record): bool => filled($record->awb_number))
+                    ->url(fn (Shipment $record): string => Pages\PrintAirwayBill::getUrl(['record' => $record])),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -180,6 +186,7 @@ class ShipmentResource extends Resource
             'index' => Pages\ListShipments::route('/'),
             'create' => Pages\CreateShipment::route('/create'),
             'edit' => Pages\EditShipment::route('/{record}/edit'),
+            'print-airway-bill' => Pages\PrintAirwayBill::route('/{record}/airway-bill'),
         ];
     }
 }
