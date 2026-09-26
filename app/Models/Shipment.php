@@ -30,6 +30,8 @@ class Shipment extends Model
 
     protected $casts = [
         'weight' => 'decimal:2',
+        'price_per_kg' => 'decimal:2',
+        'final_tariff' => 'decimal:2',
     ];
 
     public function logs()
