@@ -11,8 +11,13 @@ class Shipment extends Model
 
     protected $fillable = [
         'tracking_number',
+        'awb_number',
         'sender_name',
+        'sender_phone',
+        'sender_address',
         'receiver_name',
+        'receiver_phone',
+        'receiver_address',
         'origin',
         'destination',
         'weight',
@@ -20,6 +25,7 @@ class Shipment extends Model
         'shipping_request_id',
         'final_tariff',
         'final_dimensions',
+        'price_per_kg',
     ];
 
     protected $casts = [
@@ -34,5 +40,15 @@ class Shipment extends Model
     public function shippingRequest()
     {
         return $this->belongsTo(ShippingRequest::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function financeJournals()
+    {
+        return $this->hasMany(FinanceJournal::class);
     }
 }
