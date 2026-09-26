@@ -18,14 +18,12 @@ return new class extends Migration
             $table->decimal('price_per_kg', 12, 2)->nullable()->after('final_tariff');
         });
 
-        DB::statement("ALTER TABLE shipments DROP CONSTRAINT IF EXISTS shipments_status_check");
-        DB::statement("ALTER TABLE shipments ADD CONSTRAINT shipments_status_check CHECK (status IN ('draft', 'pending', 'in_transit', 'delivered', 'cancelled'))");
+        $this->replaceStatusConstraint(['draft', 'pending', 'in_transit', 'delivered', 'cancelled']);
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE shipments DROP CONSTRAINT IF EXISTS shipments_status_check");
-        DB::statement("ALTER TABLE shipments ADD CONSTRAINT shipments_status_check CHECK (status IN ('pending', 'in_transit', 'delivered'))");
+        $this->replaceStatusConstraint(['pending', 'in_transit', 'delivered']);
 
         Schema::table('shipments', function (Blueprint $table) {
             $table->dropUnique(['awb_number']);
@@ -38,5 +36,22 @@ return new class extends Migration
                 'price_per_kg',
             ]);
         });
+    }
+
+    private function replaceStatusConstraint(array $allowed): void
+    {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            // On sqlite the enum compiles to an inline "varchar check (...)" on the
+            // shipments table, but migration 2026_09_14_000004 already rebuilt that table
+            // via ->change(), which drops inline checks. The column is therefore a plain
+            // varchar there and accepts every value in $allowed without further work.
+            return;
+        }
+
+        DB::statement('ALTER TABLE shipments DROP CONSTRAINT IF EXISTS shipments_status_check');
+        DB::statement(sprintf(
+            'ALTER TABLE shipments ADD CONSTRAINT shipments_status_check CHECK (status IN (%s))',
+            implode(', ', array_map(fn (string $status) => "'{$status}'", $allowed))
+        ));
     }
 };

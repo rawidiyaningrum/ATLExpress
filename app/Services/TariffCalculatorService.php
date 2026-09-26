@@ -30,6 +30,44 @@ class TariffCalculatorService
         return $results->toArray();
     }
 
+    /**
+     * Saran tarif untuk berat tertentu, dengan menghormati min_weight.
+     *
+     * calculate() sengaja tidak memfilter min_weight karena halaman tarif publik
+     * menampilkan seluruh opsi layanan; untuk saran tarif di wizard, tier dengan
+     * min_weight di atas berat pengiriman tidak boleh terpilih.
+     *
+     * @return array{recommended: array|null, options: array<int, array<string, mixed>>}
+     */
+    public function suggest(string $origin, string $destination, float $weight, ?string $serviceType = null): array
+    {
+        $query = ShippingRate::where('origin_city', $origin)
+            ->where('destination_city', $destination)
+            ->where('min_weight', '<=', $weight);
+
+        if ($serviceType) {
+            $query->where('service_type', $serviceType);
+        }
+
+        $rates = $query->orderByDesc('min_weight')
+            ->orderBy('price_per_kg')
+            ->get();
+
+        $options = $rates->map(fn (ShippingRate $rate): array => [
+            'rate_id' => $rate->id,
+            'service_type' => $rate->service_type,
+            'min_weight' => (float) $rate->min_weight,
+            'price_per_kg' => (float) $rate->price_per_kg,
+            'total_price' => $rate->price_per_kg * $weight,
+            'estimated_days' => $rate->estimated_days,
+        ])->all();
+
+        return [
+            'recommended' => $options[0] ?? null,
+            'options' => $options,
+        ];
+    }
+
     public function getAvailableCities(): array
     {
         $origins = ShippingRate::distinct()->pluck('origin_city')->toArray();

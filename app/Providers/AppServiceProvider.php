@@ -13,6 +13,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(\App\Services\ShipmentTrackingService::class);
         $this->app->singleton(\App\Services\TariffCalculatorService::class);
+        $this->app->singleton(\App\Support\NumberGenerator::class);
     }
 
     /**

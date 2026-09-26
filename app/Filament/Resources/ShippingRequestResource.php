@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ShippingRequestResource\Pages;
 use App\Models\Shipment;
 use App\Models\ShippingRequest;
+use App\Support\NumberGenerator;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -70,33 +71,23 @@ class ShippingRequestResource extends Resource
                 ->numeric()
                 ->required()
                 ->minValue(0),
-            Forms\Components\TextInput::make('awb_number')
-                ->label('Nomor AWB')
-                ->unique(ignoreRecord: true)
-                ->maxLength(255)
-                ->helperText('Kosongkan bila "Generate otomatis" aktif. Nomor AWB wajib unik.'),
-            Forms\Components\Toggle::make('generate_awb')
-                ->label('Generate otomatis AWB')
-                ->default(true),
         ];
     }
 
     public static function transferToShipment(ShippingRequest $record, array $data): void
     {
-        if (! empty($data['generate_awb']) && blank($data['awb_number'])) {
-            $data['awb_number'] = self::generateAwb();
-        }
-
         $record->update([
             'status' => 'shipped',
             'final_tariff' => $data['final_tariff'],
             'final_dimensions' => $data['final_dimensions'],
             'final_weight' => $data['final_weight'],
-            'awb_number' => $data['awb_number'],
         ]);
 
+        $numbers = app(NumberGenerator::class);
+
         Shipment::create([
-            'tracking_number' => self::generateTrackingNumber(),
+            'tracking_number' => $numbers->trackingNumber(),
+            'awb_number' => $numbers->awbNumber(),
             'sender_name' => $record->name,
             'receiver_name' => null,
             'origin' => $record->origin,
@@ -154,7 +145,7 @@ class ShippingRequestResource extends Resource
                 Forms\Components\Placeholder::make('final_weight')->label('Berat Final (kg)')
                     ->content(fn (ShippingRequest $record): string => $record->final_weight ?? '-'),
                 Forms\Components\Placeholder::make('awb_number')->label('Nomor AWB')
-                    ->content(fn (ShippingRequest $record): string => $record->awb_number ?? '-'),
+                    ->content(fn (ShippingRequest $record): string => self::getShipmentAwb($record) ?? '-'),
                 Forms\Components\Placeholder::make('status')->label('Status')
                     ->content(fn (ShippingRequest $record): string => self::getStatusOptions()[$record->status] ?? $record->status),
             ])->columns(3),
@@ -191,7 +182,8 @@ class ShippingRequestResource extends Resource
                     ->formatStateUsing(fn (string $state): string => self::getStatusOptions()[$state] ?? $state),
                 Tables\Columns\TextColumn::make('awb_number')
                     ->label('AWB')
-                    ->searchable()
+                    ->state(fn (ShippingRequest $record): ?string => self::getShipmentAwb($record))
+                    ->searchable(['awb_number', 'name'])
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Diterima')
@@ -217,7 +209,7 @@ class ShippingRequestResource extends Resource
                     ->label('Pindahkan ke Shipment')
                     ->icon('heroicon-o-truck')
                     ->form(self::getShipmentTransferSchema())
-                    ->modalHeading('Input Tarif Akhir & AWB')
+                    ->modalHeading('Input Tarif Akhir')
                     ->modalSubmitActionLabel('Pindahkan & Buat Pengiriman')
                     ->action(function (array $data, ShippingRequest $record): void {
                         self::transferToShipment($record, $data);
@@ -232,28 +224,13 @@ class ShippingRequestResource extends Resource
             ]);
     }
 
-    public static function generateTrackingNumber(): string
+    /**
+     * AWB kini hanya hidup di shipments, jadi pemesanan menampilkannya lewat
+     * shipment yangelding padanya.
+     */
+    public static function getShipmentAwb(ShippingRequest $record): ?string
     {
-        $prefix = 'ATL-' . date('Y') . '-';
-        $last = Shipment::where('tracking_number', 'like', $prefix . '%')
-            ->orderByDesc('tracking_number')
-            ->value('tracking_number');
-
-        $next = $last ? ((int) substr($last, -6)) + 1 : 1;
-
-        return $prefix . str_pad((string) $next, 6, '0', STR_PAD_LEFT);
-    }
-
-    public static function generateAwb(): string
-    {
-        $prefix = 'ATL-' . date('Y') . '-';
-        $last = ShippingRequest::where('awb_number', 'like', $prefix . '%')
-            ->orderByDesc('awb_number')
-            ->value('awb_number');
-
-        $next = $last ? ((int) substr($last, -6)) + 1 : 1;
-
-        return $prefix . str_pad((string) $next, 6, '0', STR_PAD_LEFT);
+        return $record->shipments()->orderBy('id')->value('awb_number');
     }
 
     public static function getRelations(): array

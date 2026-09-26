@@ -26,7 +26,6 @@ class ShippingRequest extends Model
         'final_tariff',
         'final_dimensions',
         'final_weight',
-        'awb_number',
     ];
 
     protected $casts = [

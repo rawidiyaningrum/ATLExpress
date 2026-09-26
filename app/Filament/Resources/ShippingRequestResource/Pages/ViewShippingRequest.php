@@ -30,7 +30,7 @@ class ViewShippingRequest extends ViewRecord
                 ->label('Pindahkan ke Shipment')
                 ->icon('heroicon-o-truck')
                 ->form(ShippingRequestResource::getShipmentTransferSchema())
-                ->modalHeading('Input Tarif Akhir & AWB')
+                ->modalHeading('Input Tarif Akhir')
                 ->modalSubmitActionLabel('Pindahkan & Buat Pengiriman')
                 ->action(function (array $data): void {
                     ShippingRequestResource::transferToShipment($this->record, $data);
