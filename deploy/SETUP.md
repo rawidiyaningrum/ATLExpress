@@ -71,7 +71,11 @@ cd /home/ubuntu/atlexpress
 bash deploy/deploy.sh
 ```
 
-Script menangani: `git pull` → build asset → `composer install --no-dev` → build image → `up -d` → **backup DB otomatis ke `backups/`** → `migrate --force` → cache (termasuk refresh cache komponen Filament agar resource baru muncul) → restart worker/scheduler → health-check. Seed **tidak** diulang.
+Script menangani: `git pull` → **backup DB ke `backups/`** → build asset → `composer install --no-dev` → build image → `migrate --force` → start/update container → cache (termasuk refresh cache komponen Filament agar resource baru muncul) → restart worker/scheduler → verifikasi skema → warm SEO → health-check. Seed **tidak** diulang.
+
+Backup dan `migrate` sengaja dijalankan **sebelum** container di-restart. Kode di-bind mount ke host, jadi begitu `git pull` selesai kodenya sudah live sementara container lama masih melayani permintaan dengan skema lama. Kalau `migrate` gagal, script berhenti sebelum `up -d` dan tidak ada jendela kode-baru-skema-lama sama sekali.
+
+Verifikasi skema ([10/12]) memeriksa kolom yang dibawa migrasi terakhir ada semua dan `shipments.tracking_number` sudah hilang, lewat `information_schema` langsung ke PostgreSQL. Ini menangkap kegagalan yang hanya muncul di PostgreSQL, karena test suite lokal jalan di SQLite. Kalau gagal, script mencetak perintah rollback dan berhenti.
 
 ## Operasional
 
