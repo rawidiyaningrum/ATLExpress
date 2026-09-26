@@ -13,6 +13,12 @@ class EditShipment extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('invoice')
+                ->label(fn (): string => ShipmentResource::invoiceActionLabel($this->record))
+                ->icon('heroicon-o-receipt-percent')
+                ->color('gray')
+                ->visible(fn (): bool => $this->record !== null && ShipmentResource::canShowInvoiceAction($this->record))
+                ->url(fn (): string => ShipmentResource::invoiceActionUrl($this->record)),
             Actions\Action::make('printAwb')
                 ->label('Cetak Airway Bill')
                 ->icon('heroicon-o-printer')

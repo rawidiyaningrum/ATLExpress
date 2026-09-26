@@ -27,14 +27,6 @@ class NumberGenerator
     }
 
     /**
-     * Nomor tracking, bersemang pada shipments.tracking_number.
-     */
-    public function trackingNumber(?string $onDate = null): string
-    {
-        return $this->daily('tracking_number', 'ATL_', Shipment::query(), $onDate);
-    }
-
-    /**
      * Nomor invoice, bersemang pada invoices.invoice_number.
      */
     public function invoiceNumber(?string $onDate = null): string

@@ -7,15 +7,17 @@ use App\Models\ShipmentLog;
 
 class ShipmentTrackingService
 {
-    public function trackByNumber(string $trackingNumber): ?Shipment
+    /**
+     * Pelacakan publik memakai satu nomor yang sama dengan nomor AWB internally.
+     */
+    public function trackByAwb(string $awbNumber): ?Shipment
     {
-        return Shipment::with('logs')->where('tracking_number', $trackingNumber)->first();
+        return Shipment::with('logs')->where('awb_number', $awbNumber)->first();
     }
 
-    public function getLatestStatus(string $trackingNumber): ?string
+    public function getLatestStatus(string $awbNumber): ?string
     {
-        $shipment = $this->trackByNumber($trackingNumber);
-        return $shipment?->status;
+        return $this->trackByAwb($awbNumber)?->status;
     }
 
     public function createShipment(array $data): Shipment

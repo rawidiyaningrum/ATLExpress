@@ -12,12 +12,16 @@ class ShipmentSeeder extends Seeder
     {
         $shipments = [
             [
-                'tracking_number' => 'ATL-2025-000001',
+                'awb_number' => 'AWB_ATL_20250101001',
                 'sender_name' => 'PT Sinar Maju',
                 'receiver_name' => 'CV Karya Abadi',
                 'origin' => 'Jakarta',
                 'destination' => 'Surabaya',
+                'service_type' => 'darat',
                 'weight' => 15.5,
+                'dimension_length' => 50,
+                'dimension_width' => 40,
+                'dimension_height' => 30,
                 'status' => 'delivered',
                 'logs' => [
                     ['status_description' => 'Barang diterima di kantor cabang Jakarta', 'location' => 'Jakarta', 'timestamp' => now()->subDays(3)],
@@ -26,12 +30,16 @@ class ShipmentSeeder extends Seeder
                 ],
             ],
             [
-                'tracking_number' => 'ATL-2025-000002',
+                'awb_number' => 'AWB_ATL_20250102001',
                 'sender_name' => 'Budi Santoso',
                 'receiver_name' => 'Andi Pratama',
                 'origin' => 'Jakarta',
                 'destination' => 'Medan',
+                'service_type' => 'udara',
                 'weight' => 8.0,
+                'dimension_length' => 30,
+                'dimension_width' => 25,
+                'dimension_height' => 20,
                 'status' => 'in_transit',
                 'logs' => [
                     ['status_description' => 'Barang diterima di kantor cabang Jakarta', 'location' => 'Jakarta', 'timestamp' => now()->subDays(2)],
@@ -39,24 +47,32 @@ class ShipmentSeeder extends Seeder
                 ],
             ],
             [
-                'tracking_number' => 'ATL-2025-000003',
+                'awb_number' => 'AWB_ATL_20250103001',
                 'sender_name' => 'Susi Rahayu',
                 'receiver_name' => 'Rauf Hidayat',
                 'origin' => 'Surabaya',
                 'destination' => 'Makassar',
+                'service_type' => 'udara',
                 'weight' => 22.3,
+                'dimension_length' => 60,
+                'dimension_width' => 45,
+                'dimension_height' => 35,
                 'status' => 'pending',
                 'logs' => [
                     ['status_description' => 'Data pengiriman telah dibuat, menunggu proses pengangkutan', 'location' => 'Surabaya', 'timestamp' => now()],
                 ],
             ],
             [
-                'tracking_number' => 'ATL-2025-000004',
+                'awb_number' => 'AWB_ATL_20250104001',
                 'sender_name' => 'PT Indojaya',
                 'receiver_name' => 'Komang Surya',
                 'origin' => 'Jakarta',
                 'destination' => 'Bali',
+                'service_type' => 'udara',
                 'weight' => 5.0,
+                'dimension_length' => 40,
+                'dimension_width' => 30,
+                'dimension_height' => 20,
                 'status' => 'delivered',
                 'logs' => [
                     ['status_description' => 'Barang diterima di kantor cabang Jakarta', 'location' => 'Jakarta', 'timestamp' => now()->subDays(4)],
@@ -65,12 +81,16 @@ class ShipmentSeeder extends Seeder
                 ],
             ],
             [
-                'tracking_number' => 'ATL-2025-000005',
+                'awb_number' => 'AWB_ATL_20250105001',
                 'sender_name' => 'Rina Wati',
                 'receiver_name' => 'Agus Salim',
                 'origin' => 'Bandung',
                 'destination' => 'Semarang',
+                'service_type' => 'darat',
                 'weight' => 10.0,
+                'dimension_length' => 45,
+                'dimension_width' => 35,
+                'dimension_height' => 25,
                 'status' => 'in_transit',
                 'logs' => [
                     ['status_description' => 'Barang diterima di kantor cabang Bandung', 'location' => 'Bandung', 'timestamp' => now()->subDay()],
@@ -81,7 +101,7 @@ class ShipmentSeeder extends Seeder
 
         foreach ($shipments as $data) {
             $shipment = Shipment::updateOrCreate(
-                ['tracking_number' => $data['tracking_number']],
+                ['awb_number' => $data['awb_number']],
                 collect($data)->except('logs')->toArray()
             );
 

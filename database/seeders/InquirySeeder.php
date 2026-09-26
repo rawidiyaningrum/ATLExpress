@@ -23,7 +23,7 @@ class InquirySeeder extends Seeder
                 'email' => 'rina.wati@example.com',
                 'phone' => '082198765432',
                 'subject' => 'Cek Status Pengiriman',
-                'message' => 'Saya ingin bertanya mengenai status pengiriman paket saya dengan nomor resi ATL-2025-000002. Sampai saat ini statusnya masih dalam perjalanan, mohon informasinya. Terima kasih.',
+                'message' => 'Saya ingin bertanya mengenai status pengiriman paket saya dengan nomor resi AWB_ATL_20250102001. Sampai saat ini statusnya masih dalam perjalanan, mohon informasinya. Terima kasih.',
                 'is_read' => false,
             ],
             [

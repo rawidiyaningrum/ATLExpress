@@ -54,7 +54,7 @@ class ShippingRequestResource extends Resource
         return [
             Forms\Components\Placeholder::make('initial_tariff')->label('Tarif Saat Pemesanan')
                 ->content(fn (ShippingRequest $record): string => $record->initial_tariff !== null
-                    ? 'Rp ' . number_format((float) $record->initial_tariff, 0, ',', '.')
+                    ? 'Rp '.number_format((float) $record->initial_tariff, 0, ',', '.')
                     : '-'),
             Forms\Components\TextInput::make('final_weight')
                 ->label('Berat Final (kg)')
@@ -86,7 +86,6 @@ class ShippingRequestResource extends Resource
         $numbers = app(NumberGenerator::class);
 
         Shipment::create([
-            'tracking_number' => $numbers->trackingNumber(),
             'awb_number' => $numbers->awbNumber(),
             'sender_name' => $record->name,
             'receiver_name' => null,
@@ -96,8 +95,30 @@ class ShippingRequestResource extends Resource
             'status' => 'pending',
             'shipping_request_id' => $record->id,
             'final_tariff' => $data['final_tariff'],
-            'final_dimensions' => $data['final_dimensions'],
+            ...static::parseDimensions($data['final_dimensions']),
         ]);
+    }
+
+    /**
+     * Dimensions pada form legacy masih satu teks "PxLxT", dipisah agar bisa
+     * disimpan ke kolom numerik di shipments.
+     *
+     * @return array{dimension_length: float|null, dimension_width: float|null, dimension_height: float|null}
+     */
+    protected static function parseDimensions(?string $dimensions): array
+    {
+        $parts = preg_split('/\s*[x*]\s*/i', trim((string) $dimensions)) ?: [];
+
+        return [
+            'dimension_length' => self::dimensionValue($parts[0] ?? null),
+            'dimension_width' => self::dimensionValue($parts[1] ?? null),
+            'dimension_height' => self::dimensionValue($parts[2] ?? null),
+        ];
+    }
+
+    protected static function dimensionValue(?string $value): ?float
+    {
+        return is_numeric($value) ? (float) $value : null;
     }
 
     public static function form(Form $form): Form
@@ -121,7 +142,7 @@ class ShippingRequestResource extends Resource
                 Forms\Components\Placeholder::make('item_type')->label('Jenis Barang')
                     ->content(fn (ShippingRequest $record): string => $record->item_type),
                 Forms\Components\Placeholder::make('weight')->label('Berat')
-                    ->content(fn (ShippingRequest $record): string => $record->weight . ' kg'),
+                    ->content(fn (ShippingRequest $record): string => $record->weight.' kg'),
                 Forms\Components\Placeholder::make('dimensions')->label('Dimensi')
                     ->content(fn (ShippingRequest $record): string => $record->dimensions ?? '-'),
                 Forms\Components\Placeholder::make('pickup_address')->label('Alamat Penjemputan')
@@ -134,11 +155,11 @@ class ShippingRequestResource extends Resource
             Forms\Components\Section::make('Data Final (Admin)')->schema([
                 Forms\Components\Placeholder::make('initial_tariff')->label('Tarif Saat Pemesanan')
                     ->content(fn (ShippingRequest $record): string => $record->initial_tariff !== null
-                        ? 'Rp ' . number_format((float) $record->initial_tariff, 0, ',', '.')
+                        ? 'Rp '.number_format((float) $record->initial_tariff, 0, ',', '.')
                         : '-'),
                 Forms\Components\Placeholder::make('final_tariff')->label('Tarif Final (Rp)')
                     ->content(fn (ShippingRequest $record): string => $record->final_tariff !== null
-                        ? 'Rp ' . number_format((float) $record->final_tariff, 0, ',', '.')
+                        ? 'Rp '.number_format((float) $record->final_tariff, 0, ',', '.')
                         : '-'),
                 Forms\Components\Placeholder::make('final_dimensions')->label('Dimensi Final')
                     ->content(fn (ShippingRequest $record): string => $record->final_dimensions ?? '-'),

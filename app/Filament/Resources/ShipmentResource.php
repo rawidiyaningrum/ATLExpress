@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ShipmentResource\Pages;
 use App\Models\Shipment;
+use App\Services\TariffCalculatorService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -24,11 +25,6 @@ class ShipmentResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make('Nomor')->schema([
-                Forms\Components\TextInput::make('tracking_number')
-                    ->required()
-                    ->maxLength(255)
-                    ->unique(ignoreRecord: true)
-                    ->disabled(fn (?Shipment $record) => $record !== null),
                 Forms\Components\TextInput::make('awb_number')
                     ->label('Nomor AWB')
                     ->maxLength(255)
@@ -77,13 +73,27 @@ class ShipmentResource extends Resource
                 Forms\Components\TextInput::make('destination')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('service_type')
+                    ->label('Jenis Layanan')
+                    ->options(fn (): array => app(TariffCalculatorService::class)->serviceTypes()),
                 Forms\Components\TextInput::make('weight')
                     ->numeric()
                     ->required(fn (?Shipment $record) => $record === null || $record->status !== 'draft')
                     ->suffix('kg'),
-                Forms\Components\Textarea::make('final_dimensions')
-                    ->label('Dimensi Final')
-                    ->placeholder('Contoh: 50x40x30')
+                Forms\Components\TextInput::make('dimension_length')
+                    ->label('Panjang')
+                    ->numeric()
+                    ->suffix('cm')
+                    ->nullable(),
+                Forms\Components\TextInput::make('dimension_width')
+                    ->label('Lebar')
+                    ->numeric()
+                    ->suffix('cm')
+                    ->nullable(),
+                Forms\Components\TextInput::make('dimension_height')
+                    ->label('Tinggi')
+                    ->numeric()
+                    ->suffix('cm')
                     ->nullable(),
             ])->columns(2),
             Forms\Components\Section::make('Tarif')->schema([
@@ -111,23 +121,50 @@ class ShipmentResource extends Resource
         ]);
     }
 
+    /**
+     * Tujuan tombol invoice milik sebuah shipment.
+     *
+     * Shipment yang sudah punya invoice dibuka ke detailnya, sedangkan yang
+     * belum punya invoice diarahkan ke form pembuatan invoice di luar wizard.
+     */
+    public static function invoiceActionUrl(Shipment $shipment): string
+    {
+        $invoice = $shipment->latestInvoice;
+
+        return $invoice !== null
+            ? InvoiceResource::getUrl('view', ['record' => $invoice])
+            : static::getUrl('create-invoice', ['record' => $shipment]);
+    }
+
+    public static function invoiceActionLabel(Shipment $shipment): string
+    {
+        return $shipment->latestInvoice !== null ? 'Invoice' : 'Buat Invoice';
+    }
+
+    /**
+     * Shipment batal tidak mendapat invoice baru, tapi invoice yang sudah
+     * terbit tetap boleh dilihat dan dicetak.
+     */
+    public static function canShowInvoiceAction(Shipment $shipment): bool
+    {
+        return $shipment->latestInvoice !== null || $shipment->status !== 'cancelled';
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('tracking_number')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('awb_number')
                     ->label('No. AWB')
                     ->searchable()
+                    ->sortable()
                     ->placeholder('-')
                     ->copyable(),
                 Tables\Columns\TextColumn::make('shippingRequest.name')
                     ->label('Dari Pemesanan')
                     ->placeholder('-')
                     ->searchable()
-                    ->description(fn (Shipment $record) => $record->shipping_request_id ? "#{$record->shipping_request_id}" : ''),
+                    ->description(fn (Shipment $record): string => $record->shipping_request_id ? "#{$record->shipping_request_id}" : ''),
                 Tables\Columns\TextColumn::make('sender_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('receiver_name')
@@ -136,6 +173,11 @@ class ShipmentResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('destination')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Layanan')
+                    ->badge()
+                    ->placeholder('-')
+                    ->formatStateUsing(fn (?string $state): string => $state !== null ? ucfirst($state) : '-'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -151,14 +193,20 @@ class ShipmentResource extends Resource
                     ->money('IDR')
                     ->placeholder('-')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('final_dimensions')
-                    ->label('Dimensi Final')
+                Tables\Columns\TextColumn::make('dimensions')
+                    ->label('Dimensi')
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
             ])
             ->actions([
+                Tables\Actions\Action::make('invoice')
+                    ->label(fn (Shipment $record): string => static::invoiceActionLabel($record))
+                    ->icon('heroicon-o-receipt-percent')
+                    ->color('gray')
+                    ->visible(fn (Shipment $record): bool => static::canShowInvoiceAction($record))
+                    ->url(fn (Shipment $record): string => static::invoiceActionUrl($record)),
                 Tables\Actions\Action::make('printAwb')
                     ->label('Cetak AWB')
                     ->icon('heroicon-o-printer')
@@ -187,6 +235,8 @@ class ShipmentResource extends Resource
             'create' => Pages\CreateShipment::route('/create'),
             'edit' => Pages\EditShipment::route('/{record}/edit'),
             'print-airway-bill' => Pages\PrintAirwayBill::route('/{record}/airway-bill'),
+            'print-invoice' => Pages\PrintInvoice::route('/{record}/invoice'),
+            'create-invoice' => Pages\CreateShipmentInvoice::route('/{record}/invoice/create'),
         ];
     }
 }

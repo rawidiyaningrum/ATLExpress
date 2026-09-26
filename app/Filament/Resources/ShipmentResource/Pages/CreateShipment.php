@@ -3,7 +3,10 @@
 namespace App\Filament\Resources\ShipmentResource\Pages;
 
 use App\Filament\Resources\ShipmentResource;
+use App\Filament\Resources\ShipmentResource\Concerns\HasInvoiceForm;
+use App\Models\Invoice;
 use App\Models\Shipment;
+use App\Services\InvoiceService;
 use App\Services\TariffCalculatorService;
 use App\Support\NumberGenerator;
 use Filament\Forms;
@@ -11,9 +14,11 @@ use Filament\Forms\Components\Wizard\Step;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\HasWizard;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Validation\Rule;
 
 class CreateShipment extends CreateRecord
 {
+    use HasInvoiceForm;
     use HasWizard;
 
     protected static string $resource = ShipmentResource::class;
@@ -56,9 +61,11 @@ class CreateShipment extends CreateRecord
             $this->callHook('afterValidate');
             $this->callHook('beforeCreate');
 
-            $this->record->update($data);
+            $this->record->update($this->shipmentAttributes($data));
 
             $this->callHook('afterCreate');
+
+            $this->finaliseInvoice();
 
             $this->commitDatabaseTransaction();
         } catch (\Throwable $exception) {
@@ -75,13 +82,19 @@ class CreateShipment extends CreateRecord
             return;
         }
 
+        if ($this->currentInvoice() !== null) {
+            $this->redirect(PrintInvoice::getUrl(['record' => $this->record]));
+
+            return;
+        }
+
         $this->redirect(ShipmentResource::getUrl('edit', ['record' => $this->record]));
     }
 
     protected function detailStep(): Step
     {
         return Step::make('Buat Pengiriman')
-            ->description('Data pengirim, penerima, dan rute')
+            ->description('Data pengirim, penerima, rute, dan layanan')
             ->icon('heroicon-o-identification')
             ->afterValidation(fn (Step $step) => $this->persistStep($step))
             ->schema([
@@ -117,18 +130,119 @@ class CreateShipment extends CreateRecord
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
-                Forms\Components\Section::make('Rute')
+                Forms\Components\Section::make('Rute & Layanan')
+                    ->description('Kota diambil dari tabel tarif. Pilih jenis layanan memakai tombol pada panel Informasi Tarif di bawah.')
                     ->schema([
-                        Forms\Components\TextInput::make('origin')
+                        Forms\Components\Select::make('origin')
                             ->label('Kota Asal')
+                            ->options(fn (): array => app(TariffCalculatorService::class)->getOriginOptions())
+                            ->searchable()
                             ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('destination')
+                            ->rule(fn (): array => [Rule::in(array_keys(app(TariffCalculatorService::class)->getOriginOptions()))])
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                                $set('destination', null);
+                                $this->syncServiceType($get, $set);
+                                $this->applyRate($get, $set);
+                            }),
+                        Forms\Components\Select::make('destination')
                             ->label('Kota Tujuan')
+                            ->options(fn (Forms\Get $get): array => app(TariffCalculatorService::class)->getDestinationOptions((string) $get('origin')))
+                            ->searchable()
                             ->required()
-                            ->maxLength(255),
+                            ->disabled(fn (Forms\Get $get): bool => blank($get('origin')))
+                            ->rule(fn (Forms\Get $get): array => [Rule::in(array_keys(app(TariffCalculatorService::class)->getDestinationOptions((string) $get('origin'))))])
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                                $this->syncServiceType($get, $set);
+                                $this->applyRate($get, $set);
+                            }),
+                        Forms\Components\Hidden::make('service_type')
+                            ->required()
+                            ->rule(fn (Forms\Get $get): array => [Rule::in(array_keys($this->availableServices($get)))]),
                     ])
                     ->columns(2),
+                $this->tariffComparisonSection(),
+            ]);
+    }
+
+    /**
+     * Perbandingan tarif untuk rute yang sedang dipilih.
+     *
+     * Muncul begitu asal dan tujuan terisi, jadi operator bisa membandingkan
+     * sebelum memilih layanan; layanan yang dipakai ditandai setelah dipilih.
+     *
+     * Satu Fieldset per jenis layanan yang dikenali, disembunyikan bila layanan
+     * itu tidak punya tarif untuk rute tersebut. Skemanya dibangun sekali saat
+     * form dibuat, sedangkan visibilitas dihitung ulang tiap render, sehingga
+     * layanan yang baru diseed otomatis ikut tampil tanpa mengubah kode.
+     */
+    protected function tariffComparisonSection(): Forms\Components\Section
+    {
+        return Forms\Components\Section::make('Informasi Tarif')
+            ->description('Perbandingan tarif per kg untuk rute ini. Pilih jenis layanan di atas untuk menandai yang dipakai; tarif final dihitung di langkah 2 setelah berat diketahui.')
+            ->visible(fn (Forms\Get $get): bool => $this->routeIsKnown($get))
+            ->schema([
+                Forms\Components\Grid::make(3)
+                    ->schema(
+                        array_map(
+                            fn (string $serviceType): Forms\Components\Fieldset => $this->serviceRateFieldset($serviceType),
+                            array_keys(app(TariffCalculatorService::class)->serviceTypes()),
+                        )
+                    ),
+            ]);
+    }
+
+    /**
+     * Kartu tarif satu layanan, lengkap dengan tombol untuk memilihnya.
+     *
+     * Tombol menulis service_type lalu memanggil applyRate(), jadi tarif per kg
+     * di langkah 2 ikut terisi seperti saat dropdown biasa berubah.
+     */
+    protected function serviceRateFieldset(string $serviceType): Forms\Components\Fieldset
+    {
+        $labels = app(TariffCalculatorService::class)->serviceTypes();
+        $label = $labels[$serviceType] ?? ucfirst($serviceType);
+
+        return Forms\Components\Fieldset::make($label)
+            ->label(fn (Forms\Get $get): string => $get('service_type') === $serviceType
+                ? $label.' — dipilih'
+                : $label)
+            ->hidden(fn (Forms\Get $get): bool => $this->rateForService($get, $serviceType) === null)
+            ->schema([
+                Forms\Components\Placeholder::make("{$serviceType}_price")
+                    ->label('Tarif per kg')
+                    ->content(function (Forms\Get $get) use ($serviceType): string {
+                        $rate = $this->rateForService($get, $serviceType);
+
+                        return 'Rp '.$this->rupiah((float) ($rate['price_per_kg'] ?? 0)).' / kg';
+                    }),
+                Forms\Components\Placeholder::make("{$serviceType}_min_weight")
+                    ->label('Berat minimum')
+                    ->content(function (Forms\Get $get) use ($serviceType): string {
+                        $rate = $this->rateForService($get, $serviceType);
+
+                        return $this->rupiah((float) ($rate['min_weight'] ?? 0)).' kg';
+                    }),
+                Forms\Components\Placeholder::make("{$serviceType}_estimated_days")
+                    ->label('Estimasi tiba')
+                    ->content(function (Forms\Get $get) use ($serviceType): string {
+                        $rate = $this->rateForService($get, $serviceType);
+
+                        return $rate === null ? '-' : $rate['estimated_days'].' hari';
+                    }),
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make("pilih_{$serviceType}")
+                        ->label('Pilih')
+                        ->icon('heroicon-o-check-circle')
+                        ->disabled(fn (Forms\Get $get): bool => $get('service_type') === $serviceType)
+                        ->color(fn (Forms\Get $get): string => $get('service_type') === $serviceType ? 'gray' : 'primary')
+                        ->action(function (Forms\Get $get, Forms\Set $set) use ($serviceType): void {
+                            $set('service_type', $serviceType);
+                            $this->applyRate($get, $set);
+                        }),
+                ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -140,6 +254,7 @@ class CreateShipment extends CreateRecord
             ->afterValidation(fn (Step $step) => $this->persistStep($step))
             ->schema([
                 Forms\Components\Section::make('Berat & Dimensi')
+                    ->description('Panjang, lebar, dan tinggi diisi terpisah dalam cm.')
                     ->schema([
                         Forms\Components\TextInput::make('weight')
                             ->required()
@@ -151,14 +266,28 @@ class CreateShipment extends CreateRecord
                                 $this->suggestPricePerKg($get, $set);
                                 $set('final_tariff', $this->calculatedTotal($get));
                             }),
-                        Forms\Components\Textarea::make('final_dimensions')
-                            ->label('Dimensi')
-                            ->placeholder('Contoh: 50x40x30')
-                            ->rows(1),
+                        Forms\Components\TextInput::make('dimension_length')
+                            ->label('Panjang')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->suffix('cm'),
+                        Forms\Components\TextInput::make('dimension_width')
+                            ->label('Lebar')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->suffix('cm'),
+                        Forms\Components\TextInput::make('dimension_height')
+                            ->label('Tinggi')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->suffix('cm'),
                     ])
                     ->columns(2),
                 Forms\Components\Section::make('Tarif')
-                    ->description('Tarif saran diambil dari tabel ShippingRate untuk rute di langkah 1.')
+                    ->description('Tarif per kg mengikuti rute dan jenis layanan yang dipilih pada langkah 1.')
                     ->schema([
                         Forms\Components\TextInput::make('price_per_kg')
                             ->label('Tarif per kg')
@@ -182,46 +311,136 @@ class CreateShipment extends CreateRecord
     }
 
     /**
-     * Saran tarif yang cocok untuk rute dan berat saat ini, bila ada.
+     * Tarif untuk rute, layanan, dan berat saat ini, bila ada di tabel tarif.
      *
      * @return array<string, mixed>|null
      */
-    protected function suggestedRate(Forms\Get $get): ?array
+    protected function currentRate(Forms\Get $get): ?array
     {
-        $weight = (float) $get('weight');
+        $origin = $get('origin');
+        $destination = $get('destination');
+        $serviceType = $get('service_type');
 
-        if ($weight <= 0 || blank($get('origin')) || blank($get('destination'))) {
+        if (blank($origin) || blank($destination) || blank($serviceType)) {
             return null;
         }
 
-        return app(TariffCalculatorService::class)
-            ->suggest((string) $get('origin'), (string) $get('destination'), $weight)['recommended'];
+        $weight = (float) $get('weight');
+
+        return app(TariffCalculatorService::class)->rateFor(
+            (string) $origin,
+            (string) $destination,
+            (string) $serviceType,
+            $weight > 0 ? $weight : null,
+        );
+    }
+
+    /**
+     * Asal dan tujuan sudah dipilih, sehingga layanan yang tersedia untuk rute
+     * itu sudah bisa diketahui.
+     */
+    protected function routeIsKnown(Forms\Get $get): bool
+    {
+        return filled($get('origin')) && filled($get('destination'));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function availableServices(Forms\Get $get): array
+    {
+        if (blank($get('origin')) || blank($get('destination'))) {
+            return [];
+        }
+
+        return app(TariffCalculatorService::class)->availableServiceTypes(
+            (string) $get('origin'),
+            (string) $get('destination'),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function rateForService(Forms\Get $get, string $serviceType): ?array
+    {
+        if (blank($get('origin')) || blank($get('destination'))) {
+            return null;
+        }
+
+        return app(TariffCalculatorService::class)->rateFor(
+            (string) $get('origin'),
+            (string) $get('destination'),
+            $serviceType,
+        );
+    }
+
+    /**
+     * Mempertahankan layanan yang dipilih bila masih tersedia untuk rute baru,
+     * atau mengosongkannya supaya operator tidak terikat layanan lama.
+     */
+    protected function syncServiceType(Forms\Get $get, Forms\Set $set): void
+    {
+        $current = $get('service_type');
+
+        if (filled($current) && array_key_exists((string) $current, $this->availableServices($get))) {
+            return;
+        }
+
+        $set('service_type', null);
+    }
+
+    /**
+     * Memuat ulang tarif per kg dari tabel, karena rute atau layanan sengaja
+     * diubah di langkah 1. Berhenti bila tidak ada tarif untuk kombinasi itu.
+     */
+    protected function applyRate(Forms\Get $get, Forms\Set $set): void
+    {
+        $rate = $this->currentRate($get);
+
+        if ($rate === null) {
+            return;
+        }
+
+        $set('price_per_kg', $rate['price_per_kg']);
+        $set('final_tariff', $this->totalFor((float) $get('weight'), $rate['price_per_kg']));
     }
 
     protected function tariffHint(Forms\Get $get): string
     {
         if (blank($get('origin')) || blank($get('destination'))) {
-            return 'Isi kota asal dan tujuan pada langkah 1 untuk melihat saran tarif.';
+            return 'Pilih kota asal dan tujuan pada langkah 1 untuk melihat tarif.';
         }
 
-        $rate = $this->suggestedRate($get);
+        if (blank($get('service_type'))) {
+            return 'Pilih jenis layanan memakai tombol pada panel Informasi Tarif di langkah 1.';
+        }
+
+        $rate = $this->currentRate($get);
 
         if ($rate === null) {
-            return (float) $get('weight') > 0
-                ? 'Tidak ada tarif yang cocok untuk berat ini, isi tarif per kg secara manual.'
-                : 'Masukkan berat terlebih dahulu untuk melihat saran tarif.';
+            return 'Tidak ada tarif untuk rute dan layanan ini, isi tarif per kg secara manual.';
         }
 
-        return sprintf(
-            'Saran: %s — Rp %s/kg, estimasi %s hari.',
-            $rate['service_type'],
+        $hint = sprintf(
+            'Tarif %s: Rp %s/kg, estimasi %s hari.',
+            ucfirst((string) $rate['service_type']),
             number_format((float) $rate['price_per_kg'], 0, ',', '.'),
             $rate['estimated_days'],
         );
+
+        if (! $rate['meets_min_weight']) {
+            $hint .= sprintf(
+                ' Perhatian: berat di bawah minimum %s kg untuk layanan ini.',
+                number_format((float) $rate['min_weight'], 0, ',', '.'),
+            );
+        }
+
+        return $hint;
     }
 
     /**
-     * Mengisi tarif per kg dari saran tabel hanya bila staf belum mengisinya,
+     * Mengisi tarif per kg dari tabel hanya bila staf belum mengisinya,
      * supaya tarif manual tidak ditimpa.
      */
     protected function suggestPricePerKg(Forms\Get $get, Forms\Set $set): void
@@ -230,7 +449,7 @@ class CreateShipment extends CreateRecord
             return;
         }
 
-        $rate = $this->suggestedRate($get);
+        $rate = $this->currentRate($get);
 
         if ($rate !== null) {
             $set('price_per_kg', $rate['price_per_kg']);
@@ -239,9 +458,11 @@ class CreateShipment extends CreateRecord
 
     protected function calculatedTotal(Forms\Get $get): ?float
     {
-        $weight = (float) $get('weight');
-        $pricePerKg = (float) $get('price_per_kg');
+        return $this->totalFor((float) $get('weight'), (float) $get('price_per_kg'));
+    }
 
+    protected function totalFor(float $weight, float $pricePerKg): ?float
+    {
         if ($weight <= 0 || $pricePerKg <= 0) {
             return null;
         }
@@ -316,11 +537,11 @@ class CreateShipment extends CreateRecord
             : 'Nomor AWB belum dibuat, pengiriman masih berstatus draft.';
 
         return sprintf(
-            '%s Pengiriman %s dari %s ke %s, berat %s kg, tarif final %s.',
+            '%s Pengiriman dari %s ke %s via %s, berat %s kg, tarif final %s.',
             $awb,
-            $this->record->tracking_number,
             $this->record->origin,
             $this->record->destination,
+            $this->record->service_type !== null ? ucfirst((string) $this->record->service_type) : '-',
             $this->record->weight ?? '-',
             $this->record->final_tariff !== null
                 ? 'Rp '.number_format((float) $this->record->final_tariff, 0, ',', '.')
@@ -333,10 +554,10 @@ class CreateShipment extends CreateRecord
         return Step::make('Invoice')
             ->description('Perhitungan dan item invoice')
             ->icon('heroicon-o-receipt-percent')
-            ->schema([
-                Forms\Components\Placeholder::make('invoice')
-                    ->content('Item invoice diisi pada langkah ini.'),
-            ]);
+            ->afterValidation(function (Step $step): void {
+                $this->persistInvoice($step);
+            })
+            ->schema($this->invoiceFormSchema());
     }
 
     protected function printInvoiceStep(): Step
@@ -345,9 +566,88 @@ class CreateShipment extends CreateRecord
             ->description('Pratinjau dan cetak invoice')
             ->icon('heroicon-o-printer')
             ->schema([
-                Forms\Components\Placeholder::make('cetak')
-                    ->content('Invoice dicetak pada langkah ini.'),
+                Forms\Components\Section::make('Invoice')
+                    ->description('Nomor invoice terbit saat langkah 4 disimpan, lalu ditandai final setelah pengiriman dibuat.')
+                    ->schema([
+                        Forms\Components\Placeholder::make('invoice_summary')
+                            ->hiddenLabel()
+                            ->content(fn (): string => $this->invoiceSummary()),
+                    ]),
+                Forms\Components\Section::make('Cetak')
+                    ->schema([
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('cetakInvoice')
+                                ->label('Buka halaman cetak')
+                                ->icon('heroicon-o-printer')
+                                ->url(fn (): string => PrintInvoice::getUrl(['record' => $this->record]))
+                                ->visible(fn (): bool => $this->currentInvoice() !== null),
+                        ])
+                            ->columnSpanFull(),
+                    ]),
             ]);
+    }
+
+    /**
+     * Menyimpan invoice milik draft yang sedang dikerjakan.
+     *
+     * Berbeda dengan persistStep(), state langkah ini tidak boleh masuk ke tabel
+     * shipments: kuncinya berawalan invoice_ dan hanya milik invoice.
+     */
+    protected function persistInvoice(Step $step): void
+    {
+        if ($this->record === null) {
+            // Tidak ada draft shipment lagi, jadi tidak ada yang boleh disimpan di sini.
+            return;
+        }
+
+        $state = $step->getChildComponentContainer()->getState();
+
+        app(InvoiceService::class)->saveForShipment($this->record, [
+            ...$this->invoiceDefaultsFromShipment($state),
+            'items' => $state['invoice_items'] ?? [],
+        ]);
+    }
+
+    protected function finaliseInvoice(): void
+    {
+        $invoice = $this->currentInvoice();
+
+        if ($invoice === null) {
+            return;
+        }
+
+        app(InvoiceService::class)->finalise($invoice);
+    }
+
+    protected function currentInvoice(): ?Invoice
+    {
+        if ($this->record === null) {
+            return null;
+        }
+
+        return $this->record->latestInvoice;
+    }
+
+    protected function invoiceSummary(): string
+    {
+        $invoice = $this->currentInvoice();
+
+        if ($invoice === null) {
+            return 'Invoice belum dibuat. Selesaikan langkah sebelumnya terlebih dahulu.';
+        }
+
+        $additional = $invoice->items()->where('type', InvoiceService::TYPE_ADDITIONAL)->count();
+        $adjustments = $invoice->items()->where('type', '!=', InvoiceService::TYPE_ADDITIONAL)->count();
+
+        return sprintf(
+            'Invoice %s berstatus %s. Ongkos kirim Rp %s, %d biaya tambahan, %d penyesuaian diskon atau pajak, total tagihan Rp %s.',
+            $invoice->invoice_number,
+            $invoice->status,
+            $this->rupiah((float) $invoice->shipping_cost),
+            $additional,
+            $adjustments,
+            $this->rupiah((float) $invoice->total),
+        );
     }
 
     /**
@@ -355,7 +655,7 @@ class CreateShipment extends CreateRecord
      */
     protected function persistStep(Step $step): void
     {
-        $attributes = $step->getChildComponentContainer()->getState();
+        $attributes = $this->shipmentAttributes($step->getChildComponentContainer()->getState());
 
         if ($this->record !== null) {
             $this->record->update($attributes);
@@ -363,18 +663,32 @@ class CreateShipment extends CreateRecord
             return;
         }
 
-        $this->record = app(NumberGenerator::class)->persistWithRetry(
-            'trackingNumber',
-            fn (string $trackingNumber): Shipment => Shipment::create($attributes + [
-                'tracking_number' => $trackingNumber,
-                'status' => 'draft',
-            ]),
-        );
+        $this->record = Shipment::create($attributes + ['status' => 'draft']);
 
         Notification::make()
             ->title('Draft pengiriman disimpan')
-            ->body("Nomor tracking: {$this->record->tracking_number}")
+            ->body('Nomor AWB diterbitkan pada langkah 3.')
             ->success()
             ->send();
+    }
+
+    /**
+     * Membuang kunci invoice_* dari state form.
+     *
+     * Kunci-kunci itu milik langkah invoice dan tidak punya kolom di tabel
+     * shipments, jadi tidak boleh ikut tersimpan ke sana.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array<string, mixed>
+     */
+    protected function shipmentAttributes(array $state): array
+    {
+        foreach (array_keys($state) as $key) {
+            if (str_starts_with($key, 'invoice_')) {
+                unset($state[$key]);
+            }
+        }
+
+        return $state;
     }
 }

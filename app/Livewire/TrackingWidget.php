@@ -7,8 +7,10 @@ use Livewire\Component;
 
 class TrackingWidget extends Component
 {
-    public $tracking_number = '';
+    public $awb_number = '';
+
     public $result = null;
+
     public $error = '';
 
     protected ShipmentTrackingService $trackingService;
@@ -20,8 +22,8 @@ class TrackingWidget extends Component
 
     public function track()
     {
-        $this->validate(['tracking_number' => 'required|string|min:5']);
-        $this->result = $this->trackingService->trackByNumber($this->tracking_number);
+        $this->validate(['awb_number' => 'required|string|min:5']);
+        $this->result = $this->trackingService->trackByAwb($this->awb_number);
         $this->error = $this->result ? '' : 'Nomor resi tidak ditemukan.';
     }
 

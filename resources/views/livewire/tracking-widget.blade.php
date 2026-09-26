@@ -1,16 +1,16 @@
 <div>
     <form wire:submit="track" class="space-y-4">
-        @error('tracking_number')
+        @error('awb_number')
             <p class="text-accent text-sm font-medium">{{ $message }}</p>
         @enderror
 
         <div>
-            <label for="tracking_number" class="block text-sm font-bold text-gray-700 mb-2">Nomor Resi</label>
+            <label for="awb_number" class="block text-sm font-bold text-gray-700 mb-2">Nomor Resi</label>
             <div class="flex gap-2">
                 <input
                     type="text"
-                    id="tracking_number"
-                    wire:model="tracking_number"
+                    id="awb_number"
+                    wire:model="awb_number"
                     placeholder="Masukkan nomor resi Anda"
                     class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-gold focus:border-gold transition"
                 >
@@ -34,7 +34,7 @@
                 <div class="flex flex-wrap justify-between gap-6">
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Nomor Resi</p>
-                        <p class="font-bold text-primary">{{ $result['tracking_number'] }}</p>
+                        <p class="font-bold text-primary">{{ $result['awb_number'] }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Status</p>

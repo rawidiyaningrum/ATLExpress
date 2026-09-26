@@ -81,7 +81,7 @@
             <table class="w-full border-collapse text-sm">
                 <thead>
                     <tr class="border-y border-gray-300 text-left dark:border-gray-600">
-                        <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">No. Tracking</th>
+                        <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Nomor AWB</th>
                         <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Rute</th>
                         <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Berat</th>
                         <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Dimensi</th>
@@ -90,10 +90,10 @@
                 </thead>
                 <tbody>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
-                        <td class="py-2 pr-3">{{ $shipment->tracking_number }}</td>
+                        <td class="py-2 pr-3">{{ $shipment->awb_number }}</td>
                         <td class="py-2 pr-3">{{ $shipment->origin }} &rarr; {{ $shipment->destination }}</td>
                         <td class="py-2 pr-3">{{ $shipment->weight ? $shipment->weight.' kg' : '-' }}</td>
-                        <td class="py-2 pr-3">{{ $shipment->final_dimensions ?: '-' }}</td>
+                        <td class="py-2 pr-3">{{ $shipment->dimensions ?: '-' }}</td>
                         <td class="py-2">{{ $shipment->final_tariff ? 'Rp '.number_format((float) $shipment->final_tariff, 0, ',', '.') : '-' }}</td>
                     </tr>
                 </tbody>
