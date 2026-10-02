@@ -62,7 +62,7 @@ echo "==> [10/12] verify schema"
 # Migrasi hanya diuji di SQLite, sedangkan produksi memakai PostgreSQL. Kolom
 # yang diharapkan didaftarkan di sini supaya kegagalan khusus pgsql tertangkap
 # eksplisit, bukan muncul sebagai 500 di halaman yang tidak dicek health check.
-EXPECTED_COLUMNS="invoices.status,finance_journals.journal_type,shipments.service_type,shipments.dimension_length,shipments.dimension_width,shipments.dimension_height,invoice_items.basis"
+EXPECTED_COLUMNS="invoices.status,finance_journals.journal_type,shipments.service_type,shipments.dimension_length,shipments.dimension_width,shipments.dimension_height,invoice_items.basis,invoice_items.real_expense,invoices.shipping_real_expense"
 
 MISSING="$(docker compose exec -T db psql -U "${DB_USERNAME:-atlexpress}" -d "${DB_DATABASE:-atlexpress}" -tAc "
     SELECT coalesce(string_agg(wanted.name, ', '), '')

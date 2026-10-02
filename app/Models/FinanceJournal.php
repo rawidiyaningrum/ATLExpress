@@ -50,6 +50,7 @@ class FinanceJournal extends Model
         'journal_type',
         'entry_date',
         'income',
+        'real_income',
         'cost_of_goods',
         'operational_cost',
         'tax',
@@ -62,6 +63,7 @@ class FinanceJournal extends Model
     protected $casts = [
         'entry_date' => 'date',
         'income' => 'decimal:2',
+        'real_income' => 'decimal:2',
         'cost_of_goods' => 'decimal:2',
         'operational_cost' => 'decimal:2',
         'tax' => 'decimal:2',
@@ -94,6 +96,45 @@ class FinanceJournal extends Model
         return $this->belongsTo(Shipment::class);
     }
 
+    /**
+     * @var Invoice|null
+     */
+    private $resolvedLinkedInvoice;
+
+    private bool $linkedInvoiceResolved = false;
+
+    /**
+     * Invoice asal jurnal ini, kalau ada.
+     *
+     * Jurnal dan invoice tidak punya foreign key langsung. Keduanya dihubungkan
+     * lewat shipment_id dan reference_label, yang berisi nomor invoice, sama
+     * seperti yang dipakai InvoiceService saat menyelaraskan jurnal.
+     *
+     * Hasilnya disimpan di memori karena form jurnal memakainya dari beberapa
+     * closure sekaligus pada satu render.
+     */
+    public function linkedInvoice(): ?Invoice
+    {
+        if ($this->linkedInvoiceResolved) {
+            return $this->resolvedLinkedInvoice;
+        }
+
+        $this->linkedInvoiceResolved = true;
+
+        if ($this->reference_label === null) {
+            return $this->resolvedLinkedInvoice = null;
+        }
+
+        return $this->resolvedLinkedInvoice = Invoice::query()
+            ->where('invoice_number', $this->reference_label)
+            ->when(
+                $this->shipment_id !== null,
+                fn ($query) => $query->where('shipment_id', $this->shipment_id),
+            )
+            ->latest('id')
+            ->first();
+    }
+
     public function isReceipt(): bool
     {
         return $this->journal_type === self::TYPE_RECEIPT;
@@ -107,6 +148,39 @@ class FinanceJournal extends Model
     public function typeLabel(): string
     {
         return self::TYPE_LABELS[$this->journal_type] ?? (string) $this->journal_type;
+    }
+
+    /**
+     * Nominal tagihan yang menjadi pembanding kas masuk, yaitu total invoice
+     * yang menjadi asal jurnal ini.
+     *
+     * Jurnal kas yang dibuat manual tidak punya invoice, jadi null.
+     */
+    public function invoiceTotal(): ?float
+    {
+        $invoice = $this->linkedInvoice();
+
+        return $invoice instanceof Invoice ? (float) $invoice->total : null;
+    }
+
+    /**
+     * Status "sama dengan nominal invoice" diturunkan dari nominal kas yang
+     * tersimpan, bukan disimpan terpisah, supaya tidak ada dua sumber
+     * kebenaran untuk hal yang sama.
+     *
+     * Nominal yang belum pernah dicatat dianggap belum sama, supaya operator
+     * memeriksa ulang nominal invoice daripada menerima centang yang bukan
+     * miliknya.
+     */
+    public function realIncomeMatchesInvoice(): bool
+    {
+        $invoiceTotal = $this->invoiceTotal();
+
+        if ($this->real_income === null || $invoiceTotal === null) {
+            return false;
+        }
+
+        return round((float) $this->real_income, 2) === round($invoiceTotal, 2);
     }
 
     /**
@@ -162,6 +236,10 @@ class FinanceJournal extends Model
      * jurnal, jurnal pendapatan dan jurnal kas masuk, dan keduanya tidak boleh
      * saling menimpa.
      *
+     * cost_of_goods hanya ditimpa kalauTOTAL sengaja menyertakan key itu.
+     * Jurnal yang modalnya diisi operator, misalnya jurnal manual tanpa
+     * invoice, tidak mengirim key itu supaya nilainya tidak tertimpa.
+     *
      * @param  array<string, mixed>  $totals
      */
     public static function syncFromTotals(string $reference, array $totals, ?int $shipmentId = null, ?string $entryDate = null, string $type = self::TYPE_REVENUE): self
@@ -175,6 +253,10 @@ class FinanceJournal extends Model
         $journal->income = (float) ($totals['income'] ?? 0);
         $journal->tax = (float) ($totals['tax'] ?? 0);
         $journal->entry_date = $entryDate ?? $journal->entry_date ?? now()->toDateString();
+
+        if (array_key_exists('cost_of_goods', $totals)) {
+            $journal->cost_of_goods = (float) $totals['cost_of_goods'];
+        }
 
         $journal->save();
 

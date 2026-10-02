@@ -103,7 +103,11 @@ trait InteractsWithFinancePeriod
     /**
      * Agregasi satu kali untuk seluruh nominal di periode berjalan.
      *
-     * @return array{entries: int, income: float, cost_of_goods: float, operational_cost: float, tax: float, total_expense: float, profit: float, average_percentage: float}
+     * real_expense adalah alias dari cost_of_goods supaya widget bisa menyebutnya
+     * dengan nama yang tepat: untuk jurnal dari invoice, kolom modal tersebut
+     * berisi jumlah pengeluaran real per item yang dicatat operator.
+     *
+     * @return array{entries: int, income: float, cost_of_goods: float, real_expense: float, operational_cost: float, tax: float, total_expense: float, profit: float, average_percentage: float}
      */
     protected function financeTotals(): array
     {
@@ -111,6 +115,7 @@ trait InteractsWithFinancePeriod
             ->selectRaw('count(*) as entries')
             ->selectRaw('coalesce(sum(income), 0) as income')
             ->selectRaw('coalesce(sum(cost_of_goods), 0) as cost_of_goods')
+            ->selectRaw('coalesce(sum(cost_of_goods), 0) as real_expense')
             ->selectRaw('coalesce(sum(operational_cost), 0) as operational_cost')
             ->selectRaw('coalesce(sum(tax), 0) as tax')
             ->selectRaw('coalesce(sum(total_expense), 0) as total_expense')
@@ -122,6 +127,7 @@ trait InteractsWithFinancePeriod
             'entries' => (int) ($totals?->entries ?? 0),
             'income' => (float) ($totals?->income ?? 0),
             'cost_of_goods' => (float) ($totals?->cost_of_goods ?? 0),
+            'real_expense' => (float) ($totals?->real_expense ?? 0),
             'operational_cost' => (float) ($totals?->operational_cost ?? 0),
             'tax' => (float) ($totals?->tax ?? 0),
             'total_expense' => (float) ($totals?->total_expense ?? 0),
@@ -132,11 +138,15 @@ trait InteractsWithFinancePeriod
 
     /**
      * Total kas masuk di periode berjalan.
+     *
+     * Yang dijumlahkan adalah nominal kas riil yang dicatat operator. Jurnal
+     * yang nominalnya belum dicatat jatuh ke total tagihannya, supaya kartu ini
+     * tidak ikut turun ke nol hanya karena satu jurnal belum sempat diisi.
      */
     protected function financeCashReceived(): float
     {
         return (float) ($this->financeReceiptQuery()
-            ->selectRaw('coalesce(sum(income), 0) as income')
+            ->selectRaw('coalesce(sum(coalesce(real_income, income)), 0) as income')
             ->value('income') ?? 0);
     }
 

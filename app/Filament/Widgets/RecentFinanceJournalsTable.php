@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\FinanceJournalResource;
 use App\Filament\Widgets\Concerns\InteractsWithFinancePeriod;
 use App\Models\FinanceJournal;
 use App\Models\Shipment;
@@ -21,7 +22,7 @@ class RecentFinanceJournalsTable extends TableWidget
     {
         return $table
             ->heading('Jurnal Terbaru')
-            ->description('Entri pendapatan dan kas masuk pada periode berjalan, diklik untuk mengubah modal dan biaya operasional.')
+            ->description('Entri pendapatan dan kas masuk pada periode berjalan, diklik untuk mencatat pengeluaran real per item invoice.')
             ->query($this->financeQuery()->with('shipment'))
             ->columns([
                 Tables\Columns\TextColumn::make('entry_date')
@@ -42,6 +43,16 @@ class RecentFinanceJournalsTable extends TableWidget
                         : null),
                 Tables\Columns\TextColumn::make('income')
                     ->label('Pendapatan')
+                    ->money('IDR')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('real_income')
+                    ->label('Kas Masuk Real')
+                    ->money('IDR')
+                    ->sortable()
+                    ->placeholder('Belum dicatat')
+                    ->description(fn (FinanceJournal $record): ?string => FinanceJournalResource::realIncomeDescription($record)),
+                Tables\Columns\TextColumn::make('cost_of_goods')
+                    ->label('Pengeluaran Real')
                     ->money('IDR')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_expense')

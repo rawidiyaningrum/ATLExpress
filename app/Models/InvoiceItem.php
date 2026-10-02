@@ -18,12 +18,14 @@ class InvoiceItem extends Model
         'quantity',
         'unit_price',
         'line_total',
+        'real_expense',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
         'line_total' => 'decimal:2',
+        'real_expense' => 'decimal:2',
     ];
 
     public function invoice(): BelongsTo

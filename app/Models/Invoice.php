@@ -94,6 +94,7 @@ class Invoice extends Model
         'billed_to_name',
         'billed_to_address',
         'shipping_cost',
+        'shipping_real_expense',
         'subtotal',
         'discount',
         'tax',
@@ -103,6 +104,7 @@ class Invoice extends Model
 
     protected $casts = [
         'shipping_cost' => 'decimal:2',
+        'shipping_real_expense' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
         'tax' => 'decimal:2',
@@ -122,6 +124,25 @@ class Invoice extends Model
     public function hasAdditionalItems(): bool
     {
         return $this->items()->where('type', '!=', 'shipping')->exists();
+    }
+
+    /**
+     * Total pengeluaran real yang dicatat operator dari halaman jurnal keuangan.
+     *
+     * Hanya ongkos kirim dan biaya tambahan yang dijumlahkan. Baris diskon dan
+     * pajak tidak punya biaya riil sendiri: diskon adalah pengurangan tagihan,
+     * sedangkan pajak sudah dibukukan lewat kolom tax di jurnal keuangan, jadi
+     * ikut dijumlahkan akan menghitung dua kali.
+     */
+    public function realExpenseTotal(): float
+    {
+        return round(
+            (float) $this->shipping_real_expense
+            + (float) $this->items()
+                ->whereNotIn('type', ['discount', 'tax'])
+                ->sum('real_expense'),
+            2,
+        );
     }
 
     /**

@@ -199,6 +199,12 @@ class InvoiceService
         $invoice->items()->delete();
         $invoice->items()->createMany($items);
 
+        // Perhatikan: item invoice dihapus penuh lalu dibuat ulang, jadi kolom
+        // real_expense ikut terhapus. Ini aman karena jalur ini hanya jalan
+        // untuk invoice draft, dan invoice draft belum punya jurnal keuangan
+        // tempat pengeluaran real dicatat. Jangan sampaikode ini ke invoice
+        // berstatus tertagih atau lunas, karena isLocked() di atas akan
+        // menggagalkan lebih dulu.
         $this->syncFinanceJournals($invoice->refresh());
 
         return $invoice->refresh();
@@ -267,6 +273,11 @@ class InvoiceService
      *
      * Jurnal kas hanya mencatat penerimaan kas. Pendapatan dan pajaknya sudah
      * diakui di jurnal pendapatan, jadi keduanya tidak boleh ikut diulang di sini.
+     *
+     * Modal jurnal pendapatan diambil dari pengeluaran real yang dicatat operator
+     * di halaman jurnal keuangan. Nilainya hanya dikirim kalau sudah ada yang
+     * tercatat, supaya modal yang masih diisi tangan tidak ikut tertimpa nol
+     * saat invoice ditagihkan ulang.
      */
     protected function syncFinanceJournals(Invoice $invoice): void
     {
@@ -276,19 +287,27 @@ class InvoiceService
             return;
         }
 
+        $revenueTotals = [
+            'income' => (float) $invoice->total,
+            'tax' => (float) $invoice->tax,
+        ];
+
+        $realExpense = $invoice->realExpenseTotal();
+
+        if ($realExpense > 0) {
+            $revenueTotals['cost_of_goods'] = $realExpense;
+        }
+
         FinanceJournal::syncFromTotals(
             $invoice->invoice_number,
-            [
-                'income' => (float) $invoice->total,
-                'tax' => (float) $invoice->tax,
-            ],
+            $revenueTotals,
             $invoice->shipment_id,
             $invoice->created_at?->toDateString(),
             FinanceJournal::TYPE_REVENUE,
         );
 
         if ($invoice->status === Invoice::STATUS_LUNAS) {
-            FinanceJournal::syncFromTotals(
+            $receipt = FinanceJournal::syncFromTotals(
                 $invoice->invoice_number,
                 [
                     'income' => (float) $invoice->total,
@@ -298,6 +317,14 @@ class InvoiceService
                 now()->toDateString(),
                 FinanceJournal::TYPE_RECEIPT,
             );
+
+            // Jurnal kas baru diasumsikan uangnya masuk utuh. Nominal riil
+            // yang sudah diisi operator tidak ditimpa, sama seperti modal di
+            // jurnal pendapatan, supaya tidak hilang saat invoice dilunasi
+            // ulang.
+            if ($receipt->real_income === null) {
+                $receipt->update(['real_income' => (float) $invoice->total]);
+            }
 
             return;
         }

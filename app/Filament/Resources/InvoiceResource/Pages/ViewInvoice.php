@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\InvoiceResource\Pages;
 
+use App\Filament\Resources\FinanceJournalResource;
 use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\InvoiceResource\Concerns\AppliesInvoiceStatus;
 use App\Filament\Resources\ShipmentResource\Pages\PrintInvoice as PrintShipmentInvoice;
+use App\Models\FinanceJournal;
 use App\Models\Invoice;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -26,9 +28,32 @@ class ViewInvoice extends ViewRecord
                     'record' => $this->record->shipment_id,
                 ])),
             ...$this->statusHeaderActions(),
+            Actions\Action::make('recordRealExpense')
+                ->label('Catat Pengeluaran Real')
+                ->icon('heroicon-o-calculator')
+                ->color('gray')
+                ->visible(fn (): bool => $this->revenueJournal() instanceof FinanceJournal)
+                ->url(fn (): string => FinanceJournalResource::getUrl('edit', [
+                    'record' => $this->revenueJournal(),
+                ])),
             Actions\EditAction::make()
                 ->visible(fn (): bool => $this->record->isDraft()),
         ];
+    }
+
+    /**
+     * Jurnal pendapatan milik invoice ini, tempat pengeluaran real dicatat.
+     *
+     * Jurnal kas masuk tidak dipakai karena isinya hanya penerimaan kas.
+     */
+    private function revenueJournal(): ?FinanceJournal
+    {
+        return FinanceJournal::query()
+            ->where('shipment_id', $this->record->shipment_id)
+            ->where('reference_label', $this->record->invoice_number)
+            ->where('journal_type', FinanceJournal::TYPE_REVENUE)
+            ->latest('id')
+            ->first();
     }
 
     /**

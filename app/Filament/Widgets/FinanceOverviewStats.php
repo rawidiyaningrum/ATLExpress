@@ -20,12 +20,18 @@ class FinanceOverviewStats extends StatsOverviewWidget
         $margin = $totals['income'] > 0
             ? FinanceJournal::percentage($totals['profit'], $totals['income'])
             : 0.0;
+        $efficiency = $totals['income'] > 0
+            ? round(($totals['total_expense'] / $totals['income']) * 100, 2)
+            : 0.0;
 
         return [
             Stat::make('Pendapatan', $this->rupiah($totals['income']))
                 ->description($this->financePeriodLabel())
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary'),
+            Stat::make('Pengeluaran Real', $this->rupiah($totals['real_expense']))
+                ->description('Modal dari pengeluaran real per item invoice')
+                ->descriptionIcon('heroicon-m-calculator'),
             Stat::make('Total Biaya', $this->rupiah($totals['total_expense']))
                 ->description('Modal, opex, dan pajak')
                 ->descriptionIcon('heroicon-m-receipt-percent'),
@@ -37,8 +43,12 @@ class FinanceOverviewStats extends StatsOverviewWidget
                 ->description('Profit dibagi pendapatan')
                 ->descriptionIcon('heroicon-m-percent-badge')
                 ->color($margin >= 0 ? 'success' : 'danger'),
+            Stat::make('Efisiensi Biaya', $this->percentage($efficiency))
+                ->description('Total biaya dibagi pendapatan')
+                ->descriptionIcon('heroicon-m-scale')
+                ->color($efficiency > 0 && $efficiency <= 100 ? 'success' : 'warning'),
             Stat::make('Kas Masuk', $this->rupiah($this->financeCashReceived()))
-                ->description('Invoice yang lunas pada '.$this->financePeriodLabel())
+                ->description('Kas riil dari invoice lunas pada '.$this->financePeriodLabel())
                 ->descriptionIcon('heroicon-m-wallet')
                 ->color('success'),
             Stat::make('Piutang Belum Lunas', $this->rupiah($receivable['total']))
