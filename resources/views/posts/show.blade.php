@@ -4,7 +4,7 @@
         <div class="absolute inset-0 opacity-10">
             <div class="absolute -top-40 -right-40 w-96 h-96 bg-gold rounded-full blur-3xl"></div>
         </div>
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav class="text-sm text-white/50 mb-6">
                 <a href="{{ route('home') }}" class="hover:text-gold transition">Beranda</a>
                 <span class="mx-2">/</span>
@@ -12,7 +12,7 @@
                 <span class="mx-2">/</span>
                 <span class="text-white">{{ Str::limit($post->title, 40) }}</span>
             </nav>
-            <h1 class="text-4xl lg:text-5xl font-extrabold max-w-4xl">{{ $post->title }}</h1>
+            <h1 class="text-4xl lg:text-5xl font-extrabold leading-tight max-w-4xl">{{ $post->title }}</h1>
             <div class="flex items-center gap-4 mt-6">
                 @if($post->category)
                     <span class="inline-block bg-gold/20 text-gold text-xs font-bold px-3 py-1.5 rounded-full">{{ $post->category->name }}</span>
@@ -32,8 +32,13 @@
                 </div>
             @endif
 
-            <article class="prose prose-lg max-w-none prose-headings:text-primary">
-                {!! $post->content !!}
+            @php
+                $content = preg_match('/<[a-z][^>]*>/i', $post->content)
+                    ? $post->content
+                    : '<p>' . e($post->content) . '</p>';
+            @endphp
+            <article class="prose prose-lg max-w-none prose-headings:text-primary prose-headings:font-bold prose-a:text-primary prose-p:leading-relaxed">
+                {!! $content !!}
             </article>
 
             <div class="mt-12 pt-8 border-t border-gray-200">
