@@ -97,6 +97,7 @@ class Invoice extends Model
         'shipping_real_expense',
         'subtotal',
         'discount',
+        'diskon',
         'tax',
         'total',
         'status',
@@ -107,6 +108,7 @@ class Invoice extends Model
         'shipping_real_expense' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
+        'diskon' => 'decimal:2',
         'tax' => 'decimal:2',
         'total' => 'decimal:2',
     ];
@@ -139,7 +141,7 @@ class Invoice extends Model
         return round(
             (float) $this->shipping_real_expense
             + (float) $this->items()
-                ->whereNotIn('type', ['discount', 'tax'])
+                ->whereNotIn('type', ['discount', 'diskon', 'tax'])
                 ->sum('real_expense'),
             2,
         );

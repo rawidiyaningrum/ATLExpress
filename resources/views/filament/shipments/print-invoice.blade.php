@@ -124,6 +124,13 @@
                         </div>
                     @endif
 
+                    @if ((float) $invoice->diskon > 0)
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-gray-500 dark:text-gray-400">Potongan Diskon</dt>
+                            <dd class="font-medium">- {{ $money($invoice->diskon) }}</dd>
+                        </div>
+                    @endif
+
                     <div class="flex justify-between gap-4 border-t border-gray-900 pt-2 text-base dark:border-gray-100">
                         <dt class="font-bold">Total Pembayaran Diterima / Dibayar</dt>
                         <dd class="font-bold">{{ $money($invoice->total) }}</dd>

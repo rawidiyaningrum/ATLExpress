@@ -75,6 +75,7 @@ class EditInvoice extends EditRecord
         $data['shipping_cost'] = $totals['shipping'];
         $data['subtotal'] = $totals['subtotal'];
         $data['discount'] = $totals['discount'];
+        $data['diskon'] = $totals['diskon'];
         $data['tax'] = $totals['tax'];
         $data['total'] = $totals['total'];
 

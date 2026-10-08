@@ -194,6 +194,10 @@ class InvoiceResource extends Resource
                     ->label('Potongan PPh (2%)')
                     ->money('IDR')
                     ->placeholder('-'),
+                Infolists\Components\TextEntry::make('diskon')
+                    ->label('Potongan Diskon')
+                    ->money('IDR')
+                    ->placeholder('-'),
                 Infolists\Components\TextEntry::make('total')
                     ->label('Total Pembayaran Diterima / Dibayar')
                     ->money('IDR')

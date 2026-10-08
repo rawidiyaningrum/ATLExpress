@@ -153,6 +153,11 @@ class ShipmentInvoiceFlowTest extends TestCase
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][2]['unit_price']
             === round($subtotal * 0.02, 2));
 
+        // Diskon 5% juga ikut subtotal berjalan, dipakai untuk potongan biasa.
+        $wizard->mountFormComponentAction('quickDiscountAction', 'quickDiscount');
+        $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][3]['unit_price']
+            === round($subtotal * 0.05, 2));
+
         // Baris isi manual tetap tersimpan tanpa basis.
         $wizard->fillForm([
             'invoice_items' => [
@@ -210,20 +215,27 @@ class ShipmentInvoiceFlowTest extends TestCase
         $wizard->set('data.invoice_items.0.type', InvoiceService::TYPE_ADDITIONAL);
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
             === round($tariff * InvoiceService::PPH_RATE, 2));
+
+        // Diskon juga diisi manual, nominal tidak terpengaruh pemilihan jenis.
+        $wizard->set('data.invoice_items.0.type', InvoiceService::TYPE_DISKON);
+        $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
+            === round($tariff * InvoiceService::PPH_RATE, 2));
     }
 
     public function test_invoice_calculation_keeps_discount_and_tax_out_of_the_subtotal(): void
     {
         $totals = app(InvoiceService::class)->calculate(100000, [
             ['description' => 'Packing kayu', 'type' => 'additional', 'quantity' => 1, 'unit_price' => 50000],
-            ['description' => 'Diskon 5%', 'type' => 'discount', 'quantity' => 1, 'unit_price' => 5000],
+            ['description' => 'Potongan PPh', 'type' => 'discount', 'quantity' => 1, 'unit_price' => 5000],
+            ['description' => 'Diskon kerjasama', 'type' => 'diskon', 'quantity' => 1, 'unit_price' => 20000],
             ['description' => 'PPN 11%', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 11000],
             ['description' => '', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 99999],
         ]);
 
         $this->assertSame(150000.0, $totals['subtotal'], 'hanya ongkir dan additional');
         $this->assertSame(5000.0, $totals['discount']);
+        $this->assertSame(20000.0, $totals['diskon']);
         $this->assertSame(11000.0, $totals['tax'], 'baris tanpa deskripsi diabaikan');
-        $this->assertSame(156000.0, $totals['total'], '150000 - 5000 + 11000');
+        $this->assertSame(136000.0, $totals['total'], '150000 - 5000 - 20000 + 11000');
     }
 }

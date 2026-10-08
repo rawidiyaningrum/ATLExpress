@@ -139,6 +139,16 @@ trait HasInvoiceForm
                                 InvoiceService::TYPE_DISCOUNT,
                                 $this->percentageOfBasis($get, InvoiceService::PPH_RATE),
                             )),
+                        Forms\Components\Actions\Action::make('quickDiscount')
+                            ->label('Diskon 5%')
+                            ->icon('heroicon-o-minus')
+                            ->action(fn (Forms\Get $get, Forms\Set $set) => $this->appendInvoiceItem(
+                                $get,
+                                $set,
+                                'Diskon',
+                                InvoiceService::TYPE_DISKON,
+                                $this->percentageOfBasis($get, 0.05),
+                            )),
                         Forms\Components\Actions\Action::make('quickPacking')
                             ->label('Packing Kayu')
                             ->icon('heroicon-o-plus')
@@ -179,6 +189,13 @@ trait HasInvoiceForm
 
                             return $discount > 0 ? 'Rp -'.$this->rupiah($discount) : 'Rp 0';
                         }),
+                    Forms\Components\Placeholder::make('invoice_diskon_total')
+                        ->label('Potongan Diskon')
+                        ->content(function (Forms\Get $get): string {
+                            $diskon = $this->invoiceTotals($get)['diskon'];
+
+                            return $diskon > 0 ? 'Rp -'.$this->rupiah($diskon) : 'Rp 0';
+                        }),
                     Forms\Components\Placeholder::make('invoice_grand_total')
                         ->label('Total Pembayaran Diterima / Dibayar')
                         ->content(function (Forms\Get $get): string {
@@ -218,7 +235,7 @@ trait HasInvoiceForm
     }
 
     /**
-     * @return array{shipping: float, additional: float, discount: float, tax: float, subtotal: float, total: float}
+     * @return array{shipping: float, additional: float, discount: float, diskon: float, tax: float, subtotal: float, total: float}
      */
     protected function invoiceTotals(Forms\Get $get): array
     {

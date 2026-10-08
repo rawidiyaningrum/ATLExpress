@@ -16,6 +16,11 @@ class InvoiceService
 
     public const TYPE_TAX = 'tax';
 
+    /**
+     * Diskon potongan tagihan, dipakai untuk potongan selain PPh (misal 5%).
+     */
+    public const TYPE_DISKON = 'diskon';
+
     public const BASIS_FINAL_TARIFF = 'final_tariff';
 
     public const BASIS_PREVIOUS_ITEMS = 'previous_items';
@@ -39,6 +44,7 @@ class InvoiceService
             self::TYPE_ADDITIONAL => 'Biaya Tambahan',
             self::TYPE_DISCOUNT => 'PPh (2%)',
             self::TYPE_TAX => 'PPN (11%)',
+            self::TYPE_DISKON => 'Diskon',
         ];
     }
 
@@ -79,17 +85,19 @@ class InvoiceService
      * pajak dihitung atas dasar yang tidak ikut terpengaruh diskon.
      *
      * @param  array<int, array<string, mixed>>  $items
-     * @return array{shipping: float, additional: float, discount: float, tax: float, subtotal: float, total: float}
+     * @return array{shipping: float, additional: float, discount: float, diskon: float, tax: float, subtotal: float, total: float}
      */
     public function calculate(float $shippingCost, array $items): array
     {
         $additional = 0.0;
         $discount = 0.0;
+        $diskon = 0.0;
         $tax = 0.0;
 
         foreach ($this->normaliseItems($items) as $item) {
             match ($item['type']) {
                 self::TYPE_DISCOUNT => $discount += $item['line_total'],
+                self::TYPE_DISKON => $diskon += $item['line_total'],
                 self::TYPE_TAX => $tax += $item['line_total'],
                 default => $additional += $item['line_total'],
             };
@@ -101,9 +109,10 @@ class InvoiceService
             'shipping' => round($shippingCost, 2),
             'additional' => round($additional, 2),
             'discount' => round($discount, 2),
+            'diskon' => round($diskon, 2),
             'tax' => round($tax, 2),
             'subtotal' => round($subtotal, 2),
-            'total' => round($subtotal - $discount + $tax, 2),
+            'total' => round($subtotal - $discount - $diskon + $tax, 2),
         ];
     }
 
@@ -228,6 +237,7 @@ class InvoiceService
             'shipping_cost' => $totals['shipping'],
             'subtotal' => $totals['subtotal'],
             'discount' => $totals['discount'],
+            'diskon' => $totals['diskon'],
             'tax' => $totals['tax'],
             'total' => $totals['total'],
             'status' => $status,
