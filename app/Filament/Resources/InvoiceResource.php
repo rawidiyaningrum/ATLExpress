@@ -91,11 +91,6 @@ class InvoiceResource extends Resource
                                 ->options($service->itemTypeOptions())
                                 ->default(InvoiceService::TYPE_ADDITIONAL)
                                 ->required(),
-                            Forms\Components\Select::make('basis')
-                                ->label('Dihitung dari')
-                                ->options($service->itemBasisOptions())
-                                ->default(InvoiceService::BASIS_FINAL_TARIFF)
-                                ->helperText('Dasar nominal baris ini.'),
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Jumlah')
                                 ->numeric()

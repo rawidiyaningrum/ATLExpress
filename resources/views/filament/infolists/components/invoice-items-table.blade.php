@@ -7,8 +7,7 @@
         }}
     >
         @include('filament.invoices.items-table', [
-            'invoice' => $getRecord(),
-            'itemBasisLabels' => app(\App\Services\InvoiceService::class)->itemBasisLabels(),
-        ])
+    'invoice' => $getRecord(),
+])
     </div>
 </x-dynamic-component>

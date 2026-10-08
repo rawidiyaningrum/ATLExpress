@@ -83,7 +83,6 @@ class InvoiceMenuTest extends TestCase
             ->assertOk()
             ->assertSee($invoice->invoice_number)
             ->assertSee('Packing kayu')
-            ->assertSee('Subtotal item sebelumnya')
             ->assertSee(number_format((float) $invoice->total, 0, ',', '.'));
 
         $this->actingAs($user)
@@ -112,7 +111,6 @@ class InvoiceMenuTest extends TestCase
                     [
                         'description' => 'Packing kayu',
                         'type' => 'additional',
-                        'basis' => InvoiceService::BASIS_PREVIOUS_ITEMS,
                         'quantity' => 2,
                         'unit_price' => 50000,
                     ],
@@ -141,11 +139,7 @@ class InvoiceMenuTest extends TestCase
         $this->assertSame(22000.0, (float) $invoice->tax);
         $this->assertSame(292000.0, (float) $invoice->total, '300000 - 30000 + 22000');
         $this->assertSame(3, $invoice->items()->count());
-        $this->assertSame(
-            InvoiceService::BASIS_PREVIOUS_ITEMS,
-            $invoice->items()->where('description', 'Packing kayu')->sole()->basis,
-            'basis per baris ikut tersimpan dari form edit',
-        );
+        $this->assertSame('Packing kayu', $invoice->items()->first()->description);
     }
 
     public function test_billed_invoice_is_locked_against_editing(): void

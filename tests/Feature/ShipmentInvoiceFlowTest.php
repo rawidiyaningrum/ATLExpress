@@ -62,8 +62,8 @@ class ShipmentInvoiceFlowTest extends TestCase
 
         $this->assertStringStartsWith('INV_ATL_', $invoice->invoice_number);
         $this->assertSame('draft', $invoice->status, 'invoice masih draft sebelum(create)');
-        $this->assertSame('Budi Santoso', $invoice->billed_to_name, 'billed-to default dari penerima');
-        $this->assertSame('Jl. Tujuan 9, Surabaya', $invoice->billed_to_address);
+        $this->assertSame('PT Kirim Sejahtera', $invoice->billed_to_name, 'billed-to default dari pengirim');
+        $this->assertSame('Jl. Gudang 1, Jakarta', $invoice->billed_to_address);
         $this->assertSame($tariff, (float) $invoice->shipping_cost, 'ongkos default dari tarif final');
         $this->assertSame($tariff, (float) $invoice->subtotal);
         $this->assertSame($ppn, (float) $invoice->tax);
@@ -113,7 +113,7 @@ class ShipmentInvoiceFlowTest extends TestCase
             ->assertSee(number_format((float) $invoice->total, 0, ',', '.'));
     }
 
-    public function test_quick_buttons_follow_the_selected_basis(): void
+    public function test_quick_buttons_compute_percentages_from_the_running_subtotal(): void
     {
         $this->seed(ShippingRateSeeder::class);
 
@@ -139,36 +139,30 @@ class ShipmentInvoiceFlowTest extends TestCase
 
         $tariff = (float) Shipment::firstOrFail()->final_tariff;
 
-        // Default: PPN dihitung dari tarif final.
+        // PPN 11% dihitung dari ongkos kirim (berat x ongkir per kilo).
         $wizard->mountFormComponentAction('quickPpnAction', 'quickPpn');
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
             === round($tariff * 0.11, 2));
-        $wizard->assertFormSet(fn (array $state): bool => $state['invoice_items'][0]['dihitung_dari']
-            === InvoiceService::BASIS_FINAL_TARIFF);
 
-        // Ganti basis ke subtotal item sebelumnya, lalu tambah packing kayu.
-        $wizard->fillForm(['invoice_basis' => InvoiceService::BASIS_PREVIOUS_ITEMS])
-            ->mountFormComponentAction('quickPackingAction', 'quickPacking');
+        // Tambah packing, subtotal berjalan naik; diskon 5% ikut subtotal itu.
+        $wizard->mountFormComponentAction('quickPackingAction', 'quickPacking');
 
         $subtotal = $tariff + 50000;
 
         $wizard->mountFormComponentAction('quickDiscountAction', 'quickDiscount');
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][2]['unit_price']
             === round($subtotal * 0.05, 2));
-        $wizard->assertFormSet(fn (array $state): bool => $state['invoice_items'][2]['dihitung_dari']
-            === InvoiceService::BASIS_PREVIOUS_ITEMS);
 
-        // Basis per baris bisa diganti manual dan ikut tersimpan.
+        // Baris isi manual tetap tersimpan tanpa basis.
         $wizard->fillForm([
             'invoice_items' => [
-                ['description' => 'Biaya layanan', 'type' => 'additional', 'dihitung_dari' => InvoiceService::BASIS_PREVIOUS_ITEMS, 'quantity' => 1, 'unit_price' => 25000],
+                ['description' => 'Biaya layanan', 'type' => 'additional', 'quantity' => 1, 'unit_price' => 25000],
             ],
         ])->goToWizardStep(5);
 
         $item = Invoice::sole()->items()->sole();
 
         $this->assertSame('Biaya layanan', $item->description);
-        $this->assertSame(InvoiceService::BASIS_PREVIOUS_ITEMS, $item->basis);
     }
 
     public function test_invoice_calculation_keeps_discount_and_tax_out_of_the_subtotal(): void

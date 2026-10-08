@@ -46,12 +46,14 @@ trait HasInvoiceForm
                         ->hiddenLabel()
                         ->content(function (): string {
                             $shipment = $this->invoiceShipment();
+                            $breakdown = $this->shippingBreakdownLabel($shipment);
 
                             return sprintf(
-                                'Digunakan otomatis: nama "%s", alamat "%s", ongkos kirim Rp %s. Isi atau ubah field di bawah bila perlu.',
-                                $shipment?->receiver_name ?? '-',
-                                $shipment?->receiver_address ?? '-',
-                                $this->rupiah((float) ($shipment?->final_tariff ?? 0)),
+                                'Digunakan otomatis: nama "%s", alamat "%s", ongkos kirim Rp %s (%s). Isi atau ubah field di bawah bila perlu.',
+                                $shipment?->sender_name ?? '-',
+                                $shipment?->sender_address ?? '-',
+                                $this->rupiah($this->defaultShippingCost($shipment)),
+                                $breakdown,
                             );
                         })
                         ->columnSpanFull(),
@@ -82,12 +84,6 @@ trait HasInvoiceForm
                                 ->required()
                                 ->maxLength(255)
                                 ->columnSpan(2),
-                            Forms\Components\Select::make('dihitung_dari')
-                                ->label('Dihitung dari')
-                                ->options($service->itemBasisOptions())
-                                ->default(InvoiceService::BASIS_FINAL_TARIFF)
-                                ->helperText('Dasar nominal baris ini. Tidak mengubah harga satuan yang sudah terisi.')
-                                ->live(),
                             Forms\Components\Select::make('type')
                                 ->label('Jenis')
                                 ->options($service->itemTypeOptions())
@@ -119,12 +115,6 @@ trait HasInvoiceForm
                         ->columns(2)
                         ->defaultItems(0)
                         ->addActionLabel('Tambah item'),
-                    Forms\Components\Select::make('invoice_basis')
-                        ->label('Dihitung dari')
-                        ->options($service->itemBasisOptions())
-                        ->default(InvoiceService::BASIS_FINAL_TARIFF)
-                        ->helperText('Dipakai tombol cepat di bawah, dan jadi default baris item yang baru.')
-                        ->live(),
                     Forms\Components\Actions::make([
                         Forms\Components\Actions\Action::make('quickPpn')
                             ->label('PPN 11%')
@@ -215,13 +205,13 @@ trait HasInvoiceForm
         return [
             'billed_to_name' => filled($state['invoice_billed_to_name'] ?? null)
                 ? $state['invoice_billed_to_name']
-                : $shipment?->receiver_name,
+                : $shipment?->sender_name,
             'billed_to_address' => filled($state['invoice_billed_to_address'] ?? null)
                 ? $state['invoice_billed_to_address']
-                : $shipment?->receiver_address,
+                : $shipment?->sender_address,
             'shipping_cost' => $shippingCost > 0
                 ? $shippingCost
-                : (float) ($shipment?->final_tariff ?? 0),
+                : $this->defaultShippingCost($shipment),
         ];
     }
 
@@ -237,7 +227,46 @@ trait HasInvoiceForm
     }
 
     /**
-     * Ongkos invoice, memakai tarif final shipment selama field belum diisi.
+     * Ongkos kirim bawaan invoice: berat (kg) x tarif per kilo.
+     *
+     * Bila berat atau tarif per kilo belum ada (misal shipment lama), memakai
+     * tarif final sebagai cadangan.
+     */
+    protected function defaultShippingCost(?Shipment $shipment): float
+    {
+        if ($shipment === null) {
+            return 0.0;
+        }
+
+        $weight = (float) $shipment->weight;
+        $unit = (float) $shipment->price_per_kg;
+
+        if ($weight > 0 && $unit > 0) {
+            return round($weight * $unit, 2);
+        }
+
+        return (float) ($shipment->final_tariff ?? 0);
+    }
+
+    /**
+     * Rincian ongkos kirim untuk placeholder form: "5 kg x Rp 20.000/kg".
+     */
+    protected function shippingBreakdownLabel(?Shipment $shipment): string
+    {
+        $weight = (float) ($shipment?->weight ?? 0);
+        $unit = (float) ($shipment?->price_per_kg ?? 0);
+
+        if ($weight <= 0 || $unit <= 0) {
+            return '-';
+        }
+
+        $trimmed = trim(rtrim(rtrim(number_format($weight, 2, ',', '.'), '0'), '.'));
+
+        return "{$trimmed} kg x Rp {$this->rupiah($unit)}/kg";
+    }
+
+    /**
+     * Ongkos invoice, memakai berat x tarif per kilo selama field belum diisi.
      */
     protected function invoiceShippingCost(Forms\Get $get): float
     {
@@ -247,40 +276,25 @@ trait HasInvoiceForm
             return $value;
         }
 
-        return (float) ($this->invoiceShipment()?->final_tariff ?? 0);
+        return $this->defaultShippingCost($this->invoiceShipment());
     }
 
     /**
-     * Persentase dari dasar yang dipilih di form invoice.
-     *
-     * "Tarif final" memakai ongkos kirim, sedangkan "Subtotal item sebelumnya"
-     * memakai subtotal berjalan dari ongkir ditambah item sebelumnya. Karena
-     * tombol cepat selalu menambah baris di akhir, keduanya sama-sama memakai
-     * subtotal berjalan saat tombol ditekan.
+     * Persentase dihitung dari subtotal berjalan: ongkos kirim ditambah
+     * biaya tambahan yang sudah tercatat sebelum baris ini ditambahkan.
      */
     protected function percentageOfBasis(Forms\Get $get, float $rate): float
     {
-        $basis = (string) $get('invoice_basis');
-        $value = match ($basis) {
-            InvoiceService::BASIS_PREVIOUS_ITEMS => $this->invoiceTotals($get)['subtotal'],
-            default => $this->invoiceShippingCost($get),
-        };
-
-        return round($value * $rate, 2);
+        return round($this->invoiceTotals($get)['subtotal'] * $rate, 2);
     }
 
     protected function appendInvoiceItem(Forms\Get $get, Forms\Set $set, string $description, string $type, float $unitPrice): void
     {
         $items = (array) $get('invoice_items');
 
-        $basis = (string) $get('invoice_basis');
-
         $items[] = [
             'description' => $description,
             'type' => $type,
-            'dihitung_dari' => in_array($basis, [InvoiceService::BASIS_FINAL_TARIFF, InvoiceService::BASIS_PREVIOUS_ITEMS], true)
-                ? $basis
-                : InvoiceService::BASIS_FINAL_TARIFF,
             'quantity' => 1,
             'unit_price' => $unitPrice,
         ];

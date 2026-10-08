@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ShipmentResource\Pages;
 
 use App\Filament\Resources\ShipmentResource;
-use App\Services\InvoiceService;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -41,7 +40,6 @@ class PrintInvoice extends Page
         return [
             'shipment' => $this->record,
             'invoice' => $this->record->latestInvoice,
-            'itemBasisLabels' => app(InvoiceService::class)->itemBasisLabels(),
         ];
     }
 

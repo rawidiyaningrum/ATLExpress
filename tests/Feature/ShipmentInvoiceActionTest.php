@@ -29,6 +29,7 @@ class ShipmentInvoiceActionTest extends TestCase
             'origin' => 'Jakarta',
             'destination' => 'Surabaya',
             'weight' => 5,
+            'price_per_kg' => 30000,
             'final_tariff' => 150000,
             'status' => 'in_transit',
         ], $attributes));
@@ -47,7 +48,7 @@ class ShipmentInvoiceActionTest extends TestCase
         $page = Livewire::actingAs(User::factory()->create())
             ->test(CreateShipmentInvoice::class, ['record' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Digunakan otomatis: nama "Budi Santoso"')
+            ->assertSee('Digunakan otomatis: nama "PT Kirim Sejahtera"')
             ->mountFormComponentAction('quickPpnAction', 'quickPpn')
             ->call('mountAction', 'saveDraft');
 
@@ -55,8 +56,8 @@ class ShipmentInvoiceActionTest extends TestCase
 
         $this->assertSame('draft', $invoice->status);
         $this->assertStringStartsWith('INV_ATL_', $invoice->invoice_number);
-        $this->assertSame('Budi Santoso', $invoice->billed_to_name, 'default dari data penerima');
-        $this->assertSame(150000.0, (float) $invoice->shipping_cost, 'default dari tarif final');
+        $this->assertSame('PT Kirim Sejahtera', $invoice->billed_to_name, 'default dari data pengirim');
+        $this->assertSame(150000.0, (float) $invoice->shipping_cost, 'default dari berat x ongkir per kilo');
         $this->assertSame(1, $invoice->items()->count(), 'baris PPN dari tombol cepat');
         $this->assertSame(16500.0, (float) $invoice->tax, 'PPN 11% dari tarif final');
         $this->assertSame(166500.0, (float) $invoice->total);
@@ -74,7 +75,7 @@ class ShipmentInvoiceActionTest extends TestCase
                 'invoice_billed_to_name' => 'PT Tempo billed',
                 'invoice_shipping_cost' => 200000,
                 'invoice_items' => [
-                    ['description' => 'Packing kayu', 'type' => 'additional', 'dihitung_dari' => InvoiceService::BASIS_FINAL_TARIFF, 'quantity' => 2, 'unit_price' => 50000],
+                    ['description' => 'Packing kayu', 'type' => 'additional', 'quantity' => 2, 'unit_price' => 50000],
                 ],
             ])
             ->call('mountAction', 'saveBilled')

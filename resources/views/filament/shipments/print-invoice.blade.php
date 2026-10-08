@@ -66,9 +66,9 @@
                     <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                         Ditagihkan kepada
                     </p>
-                    <p class="font-semibold">{{ $invoice->billed_to_name ?: ($shipment->receiver_name ?: '-') }}</p>
+                    <p class="font-semibold">{{ $invoice->billed_to_name ?: ($shipment->sender_name ?: '-') }}</p>
                     <p class="text-sm leading-relaxed">
-                        {{ $invoice->billed_to_address ?: ($shipment->receiver_address ?: '-') }}
+                        {{ $invoice->billed_to_address ?: ($shipment->sender_address ?: '-') }}
                     </p>
                 </div>
 
@@ -97,7 +97,6 @@
 
             @include('filament.invoices.items-table', [
                 'invoice' => $invoice,
-                'itemBasisLabels' => $itemBasisLabels,
                 'money' => $money,
             ])
 
