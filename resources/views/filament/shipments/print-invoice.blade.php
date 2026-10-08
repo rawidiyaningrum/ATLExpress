@@ -38,11 +38,14 @@
 
         <div class="rounded-xl border border-gray-200 bg-white p-8 text-gray-900 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
             <div class="flex items-start justify-between border-b-2 border-gray-900 pb-4 dark:border-gray-100">
-                <div>
-                    <p class="text-2xl font-bold uppercase tracking-wide">ATL Express</p>
-                    <p class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
-                        Invoice / Tagihan Pengiriman
-                    </p>
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo.png') }}" alt="ATL Express" class="h-12 w-12 rounded-lg object-contain">
+                    <div>
+                        <p class="text-2xl font-bold uppercase tracking-wide">ATL Express</p>
+                        <p class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                            Invoice / Tagihan Pengiriman
+                        </p>
+                    </div>
                 </div>
 
                 <div class="text-right">
