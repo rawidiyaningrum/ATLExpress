@@ -88,6 +88,7 @@ class Shipment extends Model
         'origin',
         'destination',
         'service_type',
+        'item_type',
         'weight',
         'status',
         'shipping_request_id',

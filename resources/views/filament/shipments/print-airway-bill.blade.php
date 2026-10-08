@@ -83,18 +83,26 @@
                     <tr class="border-y border-gray-300 text-left dark:border-gray-600">
                         <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Nomor AWB</th>
                         <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Rute</th>
+                        <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Jenis Pengiriman</th>
                         <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Berat</th>
-                        <th class="py-2 pr-3 font-semibold uppercase tracking-wider text-xs">Dimensi</th>
-                        <th class="py-2 font-semibold uppercase tracking-wider text-xs">Tarif Final</th>
+                        <th class="py-2 font-semibold uppercase tracking-wider text-xs">Dimensi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
                         <td class="py-2 pr-3">{{ $shipment->awb_number }}</td>
                         <td class="py-2 pr-3">{{ $shipment->origin }} &rarr; {{ $shipment->destination }}</td>
+                        <td class="py-2 pr-3">
+                            {{ $shipment->service_type
+                                ? (app(\App\Services\TariffCalculatorService::class)->serviceTypes()[$shipment->service_type] ?? ucfirst($shipment->service_type))
+                                : '-' }}
+                        </td>
                         <td class="py-2 pr-3">{{ $shipment->weight ? $shipment->weight.' kg' : '-' }}</td>
-                        <td class="py-2 pr-3">{{ $shipment->dimensions ?: '-' }}</td>
-                        <td class="py-2">{{ $shipment->final_tariff ? 'Rp '.number_format((float) $shipment->final_tariff, 0, ',', '.') : '-' }}</td>
+                        <td class="py-2">{{ $shipment->dimensions ?: '-' }}</td>
+                    </tr>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <td class="py-2 pr-3 text-xs font-semibold uppercase tracking-wider">Jenis/Isi Barang</td>
+                        <td class="py-2 pr-3" colspan="4">{{ $shipment->item_type ?: '-' }}</td>
                     </tr>
                 </tbody>
             </table>

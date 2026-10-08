@@ -128,6 +128,14 @@ class CreateShipment extends CreateRecord
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
+                Forms\Components\Section::make('Barang')
+                    ->description('Keterangan jenis atau isi barang, dicetak pada airway bill.')
+                    ->schema([
+                        Forms\Components\TextInput::make('item_type')
+                            ->label('Jenis/Isi Barang')
+                            ->placeholder('Contoh: Dokumen, sparepart elektronik')
+                            ->maxLength(255),
+                    ]),
                 Forms\Components\Section::make('Rute & Layanan')
                     ->description('Kota diambil dari tabel tarif. Pilih jenis layanan memakai tombol pada panel Informasi Tarif di bawah.')
                     ->schema([

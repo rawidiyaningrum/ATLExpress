@@ -91,6 +91,8 @@ class ShippingRequestResource extends Resource
             'receiver_name' => null,
             'origin' => $record->origin,
             'destination' => $record->destination,
+            'service_type' => $record->service_type,
+            'item_type' => $record->item_type ?: $record->notes,
             'weight' => $data['final_weight'],
             'status' => 'pending',
             'shipping_request_id' => $record->id,

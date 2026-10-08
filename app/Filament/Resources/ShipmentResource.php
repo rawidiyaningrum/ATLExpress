@@ -96,6 +96,12 @@ class ShipmentResource extends Resource
                     ->suffix('cm')
                     ->nullable(),
             ])->columns(2),
+            Forms\Components\Section::make('Barang')->schema([
+                Forms\Components\TextInput::make('item_type')
+                    ->label('Jenis/Isi Barang')
+                    ->placeholder('Contoh: Dokumen, sparepart elektronik')
+                    ->maxLength(255),
+            ]),
             Forms\Components\Section::make('Tarif')->schema([
                 Forms\Components\TextInput::make('price_per_kg')
                     ->label('Tarif per kg')
