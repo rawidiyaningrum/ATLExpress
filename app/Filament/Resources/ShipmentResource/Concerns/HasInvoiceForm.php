@@ -74,7 +74,7 @@ trait HasInvoiceForm
                 ])
                 ->columns(2),
             Forms\Components\Section::make('Item Tambahan')
-                ->description('Baris kosong diabaikan. Baris tanpa deskripsi tidak ikut disimpan.')
+                ->description('Pilih Jenis PPN (11%) atau PPh (2%), nominal terisi otomatis dari subtotal sebelum pajak (DPP). Baris kosong diabaikan.')
                 ->schema([
                     Forms\Components\Repeater::make('invoice_items')
                         ->hiddenLabel()
@@ -89,7 +89,10 @@ trait HasInvoiceForm
                                 ->options($service->itemTypeOptions())
                                 ->default(InvoiceService::TYPE_ADDITIONAL)
                                 ->required()
-                                ->live(),
+                                ->live()
+                                ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                                    $this->autofillItemFromDpp($get, $set);
+                                }),
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Jumlah')
                                 ->numeric()
@@ -124,7 +127,7 @@ trait HasInvoiceForm
                                 $set,
                                 'PPN 11%',
                                 InvoiceService::TYPE_TAX,
-                                $this->percentageOfBasis($get, 0.11),
+                                $this->percentageOfBasis($get, InvoiceService::PPN_RATE),
                             )),
                         Forms\Components\Actions\Action::make('quickPph')
                             ->label('PPh 2%')
@@ -134,17 +137,7 @@ trait HasInvoiceForm
                                 $set,
                                 'PPh 2%',
                                 InvoiceService::TYPE_DISCOUNT,
-                                $this->percentageOfBasis($get, 0.02),
-                            )),
-                        Forms\Components\Actions\Action::make('quickDiscount')
-                            ->label('Diskon 5%')
-                            ->icon('heroicon-o-plus')
-                            ->action(fn (Forms\Get $get, Forms\Set $set) => $this->appendInvoiceItem(
-                                $get,
-                                $set,
-                                'Diskon 5%',
-                                InvoiceService::TYPE_DISCOUNT,
-                                $this->percentageOfBasis($get, 0.05),
+                                $this->percentageOfBasis($get, InvoiceService::PPH_RATE),
                             )),
                         Forms\Components\Actions\Action::make('quickPacking')
                             ->label('Packing Kayu')
@@ -160,30 +153,39 @@ trait HasInvoiceForm
                         ->columnSpanFull(),
                 ]),
             Forms\Components\Section::make('Ringkasan')
-                ->description('Dihitung ulang otomatis dari ongkir dan item di atas.')
+                ->description('PPN dan PPh dihitung dari subtotal sebelum pajak (DPP).')
                 ->schema([
                     Forms\Components\Placeholder::make('invoice_subtotal')
-                        ->label('Subtotal')
+                        ->label('Subtotal Sebelum Pajak (DPP)')
                         ->content(function (Forms\Get $get): string {
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['subtotal']);
                         }),
-                    Forms\Components\Placeholder::make('invoice_discount_total')
-                        ->label('Diskon')
-                        ->content(function (Forms\Get $get): string {
-                            return 'Rp '.$this->rupiah($this->invoiceTotals($get)['discount']);
-                        }),
                     Forms\Components\Placeholder::make('invoice_tax_total')
-                        ->label('Pajak')
+                        ->label('PPN (11%)')
                         ->content(function (Forms\Get $get): string {
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['tax']);
                         }),
+                    Forms\Components\Placeholder::make('invoice_taxed_total')
+                        ->label('Jumlah Tagihan Termasuk PPN')
+                        ->content(function (Forms\Get $get): string {
+                            $totals = $this->invoiceTotals($get);
+
+                            return 'Rp '.$this->rupiah($totals['subtotal'] + $totals['tax']);
+                        }),
+                    Forms\Components\Placeholder::make('invoice_discount_total')
+                        ->label('Potongan PPh (2%)')
+                        ->content(function (Forms\Get $get): string {
+                            $discount = $this->invoiceTotals($get)['discount'];
+
+                            return $discount > 0 ? 'Rp -'.$this->rupiah($discount) : 'Rp 0';
+                        }),
                     Forms\Components\Placeholder::make('invoice_grand_total')
-                        ->label('Total Tagihan')
+                        ->label('Total Pembayaran Diterima / Dibayar')
                         ->content(function (Forms\Get $get): string {
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['total']);
                         }),
                 ])
-                ->columns(4),
+                ->columns(3),
         ];
     }
 
@@ -300,5 +302,30 @@ trait HasInvoiceForm
         ];
 
         $set('invoice_items', array_values($items));
+    }
+
+    /**
+     * Mengisi harga satuan baris item otomatis saat jenis PPN (11%) atau PPh
+     * (2%) dipilih, dihitung dari subtotal sebelum pajak (DPP).
+     *
+     * Panggilan berasal dari dalam baris repeater, jadi field form diakses
+     * relatif dua tingkat ke atas (../../) menuju container invoice.
+     */
+    protected function autofillItemFromDpp(Forms\Get $get, Forms\Set $set): void
+    {
+        $service = app(InvoiceService::class);
+
+        $shipping = (float) $get('../../invoice_shipping_cost');
+
+        if ($shipping <= 0) {
+            $shipping = $this->defaultShippingCost($this->invoiceShipment());
+        }
+
+        $dpp = $service->dpp($shipping, (array) $get('../../invoice_items'));
+        $suggestion = $service->unitPriceSuggestionForType((string) $get('type'), $dpp);
+
+        if ($suggestion !== null) {
+            $set('unit_price', $suggestion);
+        }
     }
 }

@@ -7,6 +7,7 @@
      - $money   opsional, closure format nominal. --}}
 @php
     $money ??= fn ($amount): string => 'Rp ' . number_format((float) $amount, 0, ',', '.');
+    $typeLabels = app(\App\Services\InvoiceService::class)->itemTypeLabels();
     $shipment = $invoice->shipment;
     $weight = (float) ($shipment?->weight ?? 0);
     $unit = (float) ($shipment?->price_per_kg ?? 0);
@@ -39,7 +40,7 @@
         @forelse ($invoice->items as $item)
             <tr class="border-b border-gray-200 dark:border-gray-700">
                 <td class="py-2 pe-3">{{ $item->description }}</td>
-                <td class="py-2 pe-3">{{ ucfirst($item->type) }}</td>
+                <td class="py-2 pe-3">{{ $typeLabels[$item->type] ?? ucfirst($item->type) }}</td>
                 <td class="py-2 pe-3 text-right">{{ $item->quantity }}</td>
                 <td class="py-2 pe-3 text-right">{{ $money($item->unit_price) }}</td>
                 <td class="py-2 text-right font-semibold">{{ $money($item->line_total) }}</td>

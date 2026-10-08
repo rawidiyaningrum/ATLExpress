@@ -103,30 +103,40 @@
             <div class="mt-6 flex justify-end">
                 <dl class="w-full max-w-sm space-y-1 text-sm">
                     <div class="flex justify-between gap-4">
-                        <dt class="text-gray-500 dark:text-gray-400">Subtotal</dt>
+                        <dt class="text-gray-500 dark:text-gray-400">Dasar Pengenaan Pajak (DPP)</dt>
                         <dd class="font-medium">{{ $money($invoice->subtotal) }}</dd>
+                    </div>
+
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-gray-500 dark:text-gray-400">PPN (11%)</dt>
+                        <dd class="font-medium">{{ $money($invoice->tax) }}</dd>
+                    </div>
+
+                    <div class="flex justify-between gap-4">
+                        <dt class="font-medium">Jumlah Tagihan Termasuk PPN</dt>
+                        <dd class="font-medium">{{ $money((float) $invoice->subtotal + (float) $invoice->tax) }}</dd>
                     </div>
 
                     @if ((float) $invoice->discount > 0)
                         <div class="flex justify-between gap-4">
-                            <dt class="text-gray-500 dark:text-gray-400">Diskon / potongan</dt>
+                            <dt class="text-gray-500 dark:text-gray-400">Potongan PPh 23 (2%)</dt>
                             <dd class="font-medium">- {{ $money($invoice->discount) }}</dd>
                         </div>
                     @endif
 
-                    @if ((float) $invoice->tax > 0)
-                        <div class="flex justify-between gap-4">
-                            <dt class="text-gray-500 dark:text-gray-400">Pajak</dt>
-                            <dd class="font-medium">{{ $money($invoice->tax) }}</dd>
-                        </div>
-                    @endif
-
                     <div class="flex justify-between gap-4 border-t border-gray-900 pt-2 text-base dark:border-gray-100">
-                        <dt class="font-bold">Total Tagihan</dt>
+                        <dt class="font-bold">Total Pembayaran Diterima / Dibayar</dt>
                         <dd class="font-bold">{{ $money($invoice->total) }}</dd>
                     </div>
                 </dl>
             </div>
+
+            @if ((float) $invoice->discount > 0)
+                <p class="mt-2 text-right text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                    ( * ) PPh dipotong oleh pihak pembeli/pemberi kerja saat melakukan pembayaran, dan pembeli wajib
+                    memberikan bukti potong PPh kepada pihak penagih.
+                </p>
+            @endif
 
             <div class="mt-10 grid grid-cols-2 gap-8 text-sm">
                 <div>

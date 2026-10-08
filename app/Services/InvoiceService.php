@@ -21,14 +21,24 @@ class InvoiceService
     public const BASIS_PREVIOUS_ITEMS = 'previous_items';
 
     /**
+     * PPN dikenakan dari Dasar Pengenaan Pajak (DPP), yaitu subtotal sebelum pajak.
+     */
+    public const PPN_RATE = 0.11;
+
+    /**
+     * PPh (biasanya PPh 23) dipotong pemberi kerja atas DPP yang sama.
+     */
+    public const PPH_RATE = 0.02;
+
+    /**
      * @return array<string, string>
      */
     public function itemTypeLabels(): array
     {
         return [
             self::TYPE_ADDITIONAL => 'Biaya Tambahan',
-            self::TYPE_DISCOUNT => 'Diskon / Potongan',
-            self::TYPE_TAX => 'Pajak',
+            self::TYPE_DISCOUNT => 'PPh (2%)',
+            self::TYPE_TAX => 'PPN (11%)',
         ];
     }
 
@@ -95,6 +105,44 @@ class InvoiceService
             'subtotal' => round($subtotal, 2),
             'total' => round($subtotal - $discount + $tax, 2),
         ];
+    }
+
+    /**
+     * Dasar Pengenaan Pajak (DPP): ongkos kirim ditambah biaya tambahan,
+     * tanpa PPN maupun PPh. Dipakai untuk mengisi nominal PPN/PPh secara
+     * otomatis.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     */
+    public function dpp(float $shippingCost, array $items): float
+    {
+        $additional = 0.0;
+
+        foreach ($items as $item) {
+            if (($item['type'] ?? null) !== self::TYPE_ADDITIONAL) {
+                continue;
+            }
+
+            $additional += max(1, (int) ($item['quantity'] ?? 1))
+                * max(0, (float) ($item['unit_price'] ?? 0));
+        }
+
+        return round($shippingCost + $additional, 2);
+    }
+
+    /**
+     * Nominal yang disarankan untuk sebuah jenis item, dihitung dari DPP.
+     *
+     * PPN 11% dan PPh 2% sama-sama berbasis DPP. Selain keduanya tidak ada
+     * saran, supaya baris biaya tambahan tetap diisi manual.
+     */
+    public function unitPriceSuggestionForType(string $type, float $dpp): ?float
+    {
+        return match ($type) {
+            self::TYPE_TAX => round($dpp * self::PPN_RATE, 2),
+            self::TYPE_DISCOUNT => round($dpp * self::PPH_RATE, 2),
+            default => null,
+        };
     }
 
     /**

@@ -90,7 +90,27 @@ class InvoiceResource extends Resource
                                 ->label('Jenis')
                                 ->options($service->itemTypeOptions())
                                 ->default(InvoiceService::TYPE_ADDITIONAL)
-                                ->required(),
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                                    $type = (string) $get('type');
+                                    $rate = match ($type) {
+                                        InvoiceService::TYPE_TAX => InvoiceService::PPN_RATE,
+                                        InvoiceService::TYPE_DISCOUNT => InvoiceService::PPH_RATE,
+                                        default => null,
+                                    };
+
+                                    if ($rate === null) {
+                                        return;
+                                    }
+
+                                    $dpp = app(InvoiceService::class)->dpp(
+                                        (float) $get('../../shipping_cost'),
+                                        (array) $get('../../invoice_items'),
+                                    );
+
+                                    $set('unit_price', round($dpp * $rate, 2));
+                                }),
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Jumlah')
                                 ->numeric()
@@ -160,18 +180,22 @@ class InvoiceResource extends Resource
             ]),
             Infolists\Components\Section::make('Total')->schema([
                 Infolists\Components\TextEntry::make('subtotal')
-                    ->label('Subtotal')
+                    ->label('Subtotal Sebelum Pajak (DPP)')
                     ->money('IDR'),
-                Infolists\Components\TextEntry::make('discount')
-                    ->label('Diskon')
+                Infolists\Components\TextEntry::make('tax')
+                    ->label('PPN (11%)')
                     ->money('IDR')
                     ->placeholder('-'),
-                Infolists\Components\TextEntry::make('tax')
-                    ->label('Pajak')
+                Infolists\Components\TextEntry::make('with_tax')
+                    ->label('Jumlah Tagihan Termasuk PPN')
+                    ->state(fn (Invoice $record): float => (float) $record->subtotal + (float) $record->tax)
+                    ->money('IDR'),
+                Infolists\Components\TextEntry::make('discount')
+                    ->label('Potongan PPh (2%)')
                     ->money('IDR')
                     ->placeholder('-'),
                 Infolists\Components\TextEntry::make('total')
-                    ->label('Total Tagihan')
+                    ->label('Total Pembayaran Diterima / Dibayar')
                     ->money('IDR')
                     ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
             ])->columns(2),

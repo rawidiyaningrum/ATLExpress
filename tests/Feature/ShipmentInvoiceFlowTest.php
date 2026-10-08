@@ -144,14 +144,14 @@ class ShipmentInvoiceFlowTest extends TestCase
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
             === round($tariff * 0.11, 2));
 
-        // Tambah packing, subtotal berjalan naik; diskon 5% ikut subtotal itu.
+        // Tambah packing, subtotal berjalan naik; PPh 2% ikut subtotal itu.
         $wizard->mountFormComponentAction('quickPackingAction', 'quickPacking');
 
         $subtotal = $tariff + 50000;
 
-        $wizard->mountFormComponentAction('quickDiscountAction', 'quickDiscount');
+        $wizard->mountFormComponentAction('quickPphAction', 'quickPph');
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][2]['unit_price']
-            === round($subtotal * 0.05, 2));
+            === round($subtotal * 0.02, 2));
 
         // Baris isi manual tetap tersimpan tanpa basis.
         $wizard->fillForm([
@@ -163,6 +163,53 @@ class ShipmentInvoiceFlowTest extends TestCase
         $item = Invoice::sole()->items()->sole();
 
         $this->assertSame('Biaya layanan', $item->description);
+    }
+
+    public function test_selecting_ppn_or_pph_item_type_fills_the_price_from_the_dpp(): void
+    {
+        $this->seed(ShippingRateSeeder::class);
+
+        $wizard = Livewire::actingAs(User::factory()->create())
+            ->test(CreateShipment::class)
+            ->fillForm([
+                'sender_name' => 'PT Kirim Sejahtera',
+                'receiver_name' => 'Budi Santoso',
+                'receiver_address' => 'Jl. Tujuan 9, Surabaya',
+                'origin' => 'Jakarta',
+                'destination' => 'Surabaya',
+            ])
+            ->mountFormComponentAction('pilih_daratAction', 'pilih_darat')
+            ->goToWizardStep(2)
+            ->fillForm([
+                'weight' => 5,
+                'dimension_length' => 30,
+                'dimension_width' => 20,
+                'dimension_height' => 15,
+            ])
+            ->goToWizardStep(3)
+            ->goToWizardStep(4)
+            ->fillForm([
+                'invoice_items' => [
+                    ['description' => 'Isi otomatis', 'type' => 'additional', 'quantity' => 1, 'unit_price' => 0],
+                ],
+            ]);
+
+        $tariff = (float) Shipment::firstOrFail()->final_tariff;
+
+        // PPN 11% dari DPP (ongkos kirim, belum ada biaya tambahan lain).
+        $wizard->set('data.invoice_items.0.type', InvoiceService::TYPE_TAX);
+        $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
+            === round($tariff * InvoiceService::PPN_RATE, 2));
+
+        // PPh 2% dari DPP yang sama.
+        $wizard->set('data.invoice_items.0.type', InvoiceService::TYPE_DISCOUNT);
+        $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
+            === round($tariff * InvoiceService::PPH_RATE, 2));
+
+        // Biaya tambahan tidak punya nominal otomatis: harga terakhir bertahan.
+        $wizard->set('data.invoice_items.0.type', InvoiceService::TYPE_ADDITIONAL);
+        $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
+            === round($tariff * InvoiceService::PPH_RATE, 2));
     }
 
     public function test_invoice_calculation_keeps_discount_and_tax_out_of_the_subtotal(): void
