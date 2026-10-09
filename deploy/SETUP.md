@@ -94,6 +94,39 @@ Backup DB (otomatis tiap `deploy.sh`, tersimpan di `backups/`; bisa juga manual)
 docker compose exec db pg_dump -U atlexpress -d atlexpress > backup_atlexpress_$(date +%F).sql
 ```
 
+## Backup & pindah ke VPS lain
+
+Semua data persisten yang harus dibawa: **database** (volume `dbdata`), **file upload** (`storage/app/public`), **`.env`** (termasuk `APP_KEY`), dan **volume TLS Caddy**. Kode cukup dari git.
+
+### Di VPS awal
+
+```bash
+cd /home/ubuntu/atlexpress
+bash deploy/backup.sh
+```
+
+Script menaruh app di maintenance mode, menjalankan `pg_dump`, mengarsipkan upload, menyalin `.env`, dan mem-backup volume `atlexpress_caddy_data`, lalu membungkusnya jadi `backups/migration-<ts>/atlexpress-backup-<ts>.tar.gz`. Transport ke VPS baru:
+
+```bash
+scp backups/migration-*/atlexpress-backup-*.tar.gz ubuntu@IP_VPS_BARU:~/
+```
+
+> Backup DB & migrate sengaja tidak mengubah skema; restore cukup mengembalikan dump lalu `deploy.sh` (migrate jadi no-op). Simpan `APP_KEY` dari `.env` — jangan di-generate ulang di VPS baru.
+
+### Di VPS baru
+
+1. Selesaikan prasyarat (Docker, DNS) & clone kode seperti bagian **Setup satu kali** di atas.
+2. Restore dari arsip:
+
+```bash
+cd /home/ubuntu/atlexpress
+bash deploy/restore.sh ~/atlexpress-backup-*.tar.gz
+```
+
+Script akan: menyiapkan `.env` bila belum ada, menyalakan `db`, menunggu `pg_isready`, restore database & upload, restore volume TLS Caddy, perbaiki permission, lalu menjalankan `deploy/deploy.sh`.
+
+3. Setelah verifikasi, arahkan DNS `atlexpress.biz.id` ke IP VPS baru. Karena cert Caddy ikut dipindah, tidak ada permintaan ulang ke Let's Encrypt (menghindari rate-limit). Baru setelah itu matikan service di VPS lama.
+
 ## Arsitektur ringkas
 
 ```
