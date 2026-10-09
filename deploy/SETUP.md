@@ -148,6 +148,11 @@ scheduler -> schedule:work (pengganti cron)
 - File upload Filament tersimpan di `storage/app/public` (host) dan ter-expose via symlink `storage:link` (otomatis oleh entrypoint).
 - Queue & cache & session memakai database → `migrate --force` di deploy.sh sudah mencakup tabel terkait.
 - Jika sertifikat SSL butuh dihilangkan saat tes (DNS belum siap): pertajuk `deploy/Caddyfile` ganti `atlexpress.biz.id` → `:80 { ... }` dan komentari `header {...}` bila perlu.
+- **`password authentication failed for user "atlexpress"`**: volume Postgres (`atlexpress_dbdata`) sudah di-init dengan password berbeda dari `DB_PASSWORD` di `.env` (volume hanya memakai `POSTGRES_PASSWORD` saat pertama dibuat; dump tidak membawa password role). `deploy/restore.sh` kini menyelaraskan password role otomatis; bila tetap gagal, reset volume lalu restore ulang:
+  ```bash
+  docker compose down && docker volume rm atlexpress_dbdata
+  docker compose up -d db   # tunggu sehat, lalu jalankan ulang deploy/restore.sh
+  ```
 
 ## SEO & Performance
 

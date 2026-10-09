@@ -41,7 +41,7 @@ trap restore_up EXIT
 
 echo "==> [1/6] dump database -> $OUT_DIR/atlexpress_db.sql.gz"
 docker compose exec -T db pg_dump -U "$DB_USERNAME" -d "$DB_DATABASE" \
-    --no-owner --no-privileges | gzip > "$OUT_DIR/atlexpress_db.sql.gz"
+    --no-owner --no-privileges --clean --if-exists | gzip > "$OUT_DIR/atlexpress_db.sql.gz"
 
 echo "==> [2/6] archive uploads -> $OUT_DIR/storage.tar.gz"
 tar czf "$OUT_DIR/storage.tar.gz" -C "$ROOT" storage/app/public

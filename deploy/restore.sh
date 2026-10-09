@@ -45,9 +45,10 @@ env_get() {
 }
 DB_USERNAME="$(env_get DB_USERNAME)"; DB_USERNAME="${DB_USERNAME:-atlexpress}"
 DB_DATABASE="$(env_get DB_DATABASE)"; DB_DATABASE="${DB_DATABASE:-atlexpress}"
+DB_PASSWORD="$(env_get DB_PASSWORD)"
 CADDY_VOLUME="${CADDY_VOLUME:-atlexpress_caddy_data}"
 
-echo "==> [3/8] start db"
+echo "==> [3/8] start db & sinkronkan password role"
 docker compose up -d db
 echo -n "    menunggu db siap"
 DB_READY=""
@@ -63,6 +64,18 @@ echo
 if [ -z "$DB_READY" ]; then
     echo "ERROR: database tidak siap dalam batas waktu."
     exit 1
+fi
+
+# Volume Postgres hanya memakai POSTGRES_PASSWORD saat pertama dibuat, dan dump
+# tidak membawa password role. Selaraskan password role dengan .env agar app
+# bisa authenticate walau volume sudah pernah di-init dengan password lain.
+# Lewat unix socket (local auth biasanya trust); -w agar tidak menggantung.
+if docker compose exec -T db psql -w -U "$DB_USERNAME" -d "$DB_DATABASE" \
+        -v pw="$DB_PASSWORD" -c "ALTER ROLE \"$DB_USERNAME\" WITH PASSWORD :'pw';" >/dev/null 2>&1; then
+    echo "    password role disinkronkan dengan .env."
+else
+    echo "    PERINGATAN: gagal sinkronkan password (local auth bukan trust)."
+    echo "    Jika migrate gagal auth, reset volume: docker compose down && docker volume rm atlexpress_dbdata, lalu restore ulang."
 fi
 
 echo "==> [4/8] restore database"
