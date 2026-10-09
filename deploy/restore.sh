@@ -85,7 +85,14 @@ echo "==> [5/8] restore uploads"
 tar xzf "$WORK/storage.tar.gz" -C "$ROOT"
 
 echo "==> [6/8] restore caddy volume ($CADDY_VOLUME)"
-docker volume create "$CADDY_VOLUME" >/dev/null
+# Buat volume dengan label Compose agar tidak memicu warning
+# "volume ... already exists but was not created by Docker Compose".
+if ! docker volume inspect "$CADDY_VOLUME" >/dev/null 2>&1; then
+    docker volume create \
+        --label "com.docker.compose.project=${COMPOSE_PROJECT_NAME:-atlexpress}" \
+        --label "com.docker.compose.volume=caddy_data" \
+        "$CADDY_VOLUME" >/dev/null
+fi
 docker run --rm -v "$CADDY_VOLUME":/data -v "$WORK":/backup alpine \
     sh -c "tar xzf /backup/caddy_data.tar.gz -C /data"
 

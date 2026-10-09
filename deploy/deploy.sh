@@ -95,8 +95,14 @@ fi
 echo "schema OK"
 
 echo "==> [11/12] warm SEO endpoints"
-curl -fsS "$APP_URL/sitemap.xml" -o /dev/null && echo "sitemap OK"
-curl -fsS "$APP_URL/robots.txt" -o /dev/null && echo "robots OK"
+# Uji lewat loopback (--resolve ke 127.0.0.1) agar tidak bergantung hairpin NAT:
+# banyak VPS tidak bisa mengakses IP publiknya sendiri dari dalam.
+APP_HOST="${APP_URL#*://}"; APP_HOST="${APP_HOST%%/*}"
+curl -fsS --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL/sitemap.xml" -o /dev/null && echo "sitemap OK"
+curl -fsS --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL/robots.txt" -o /dev/null && echo "robots OK"
 
 echo "==> [12/12] health check"
-curl -fsSI "$APP_URL" >/dev/null && echo "OK: $APP_URL"
+curl -fsSI --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL" >/dev/null && echo "OK (loopback): $APP_URL"
+# Probe eksternal non-fatal: gagal di sini normal bila hairpin tidak didukung.
+curl -fsSI "$APP_URL" >/dev/null 2>&1 && echo "OK (external): $APP_URL" \
+    || echo "catatan: akses dari dalam VPS lewat IP publik gagal (hairpin) — normal"
