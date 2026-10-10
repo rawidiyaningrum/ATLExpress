@@ -42,6 +42,8 @@ class CreateShipmentInvoice extends Page
 
     public function mount(int|string $record): void
     {
+        abort_unless(auth()->user()?->isAdmin() ?? false, 403);
+
         $this->record = $this->resolveRecord($record);
 
         abort_if(

@@ -225,6 +225,32 @@ class TariffCalculatorService
         );
     }
 
+    /**
+     * Seluruh kabupaten yang tersedia di seluruh pricelist, tanpa terikat
+     * kota asal. Dipakai dropdown "Lokasi" pada input tracking.
+     *
+     * @return array<int, string>
+     */
+    public function getAllKabupatens(): array
+    {
+        return $this->sortCities(
+            ShippingRate::whereNotNull('kabupaten_tujuan')
+                ->distinct()
+                ->pluck('kabupaten_tujuan')
+                ->all()
+        );
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getAllKabupatenOptions(): array
+    {
+        $kabupatens = $this->getAllKabupatens();
+
+        return array_combine($kabupatens, $kabupatens);
+    }
+
     public function getDestinations(string $origin, string $kabupaten = ''): array
     {
         $query = ShippingRate::where('origin_city', $origin);

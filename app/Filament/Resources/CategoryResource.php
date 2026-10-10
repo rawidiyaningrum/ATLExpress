@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
 use Filament\Forms;
@@ -12,6 +13,8 @@ use Filament\Tables\Table;
 
 class CategoryResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';

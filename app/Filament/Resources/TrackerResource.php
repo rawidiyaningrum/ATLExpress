@@ -3,32 +3,33 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Concerns\OnlyAdmins;
-use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\TrackerResource\Pages;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-class UserResource extends Resource
+class TrackerResource extends Resource
 {
     use OnlyAdmins;
 
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-map-pin';
 
     protected static ?string $navigationGroup = 'Management';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationLabel = 'Manajemen Admin';
+    protected static ?string $navigationLabel = 'Input User Tracker';
 
-    protected static ?string $modelLabel = 'Admin';
+    protected static ?string $modelLabel = 'User Tracker';
 
-    protected static ?string $pluralModelLabel = 'Admin';
+    protected static ?string $pluralModelLabel = 'User Tracker';
 
     public static function form(Form $form): Form
     {
@@ -43,7 +44,7 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255)
-                    ->unique(),
+                    ->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('password')
                     ->label('Password')
                     ->password()
@@ -54,7 +55,7 @@ class UserResource extends Resource
             Forms\Components\Section::make('Mode Pendaftaran')->schema([
                 Forms\Components\Toggle::make('as_invitation')
                     ->label('Buat sebagai undangan')
-                    ->helperText('Staff akan melengkapi pendaftaran sendiri di '.url('admin/register').' menggunakan email ini.')
+                    ->helperText('Tracker akan melengkapi pendaftaran sendiri di '.url('admin/register').' menggunakan email ini.')
                     ->default(fn (?Model $record) => filled($record?->invited_at)),
             ]),
         ]);
@@ -87,16 +88,19 @@ class UserResource extends Resource
                     ->sortable(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (User $record) => $record->id !== auth()->id()),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (User $record) => $record->id !== auth()->id()),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('role', User::ROLE_TRACKER);
     }
 
     public static function getRelations(): array
@@ -107,9 +111,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
-            'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'index' => Pages\ListTrackers::route('/'),
+            'create' => Pages\CreateTracker::route('/create'),
+            'edit' => Pages\EditTracker::route('/{record}/edit'),
         ];
     }
 }

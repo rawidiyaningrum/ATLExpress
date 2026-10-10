@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\PostResource\Pages;
-use App\Models\Category;
 use App\Models\Post;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,6 +13,8 @@ use Filament\Tables\Table;
 
 class PostResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = Post::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';

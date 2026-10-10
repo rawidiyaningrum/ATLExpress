@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\SettingResource\Pages;
 use App\Models\Setting;
 use Filament\Forms;
@@ -12,6 +13,8 @@ use Filament\Tables\Table;
 
 class SettingResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = Setting::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-8-tooth';

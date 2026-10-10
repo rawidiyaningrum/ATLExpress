@@ -28,6 +28,11 @@ class FinanceDashboard extends Page
 
     protected static string $view = 'filament.pages.finance-dashboard';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
     /**
      * State form. Harus dideklarasikan sebagai properti supaya Livewire
      * meninggalkannya utuh saat render dan saat form diisi dari mount().

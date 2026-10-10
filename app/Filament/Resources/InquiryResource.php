@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\InquiryResource\Pages;
 use App\Models\Inquiry;
 use Filament\Forms;
@@ -12,6 +13,8 @@ use Filament\Tables\Table;
 
 class InquiryResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = Inquiry::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
@@ -75,7 +78,7 @@ class InquiryResource extends Resource
                     ->icon('heroicon-o-check')
                     ->requiresConfirmation()
                     ->action(fn (Inquiry $record) => $record->update(['is_read' => true]))
-                    ->visible(fn (Inquiry $record) => !$record->is_read),
+                    ->visible(fn (Inquiry $record) => ! $record->is_read),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

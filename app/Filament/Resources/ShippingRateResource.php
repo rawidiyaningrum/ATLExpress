@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\ShippingRateResource\Pages;
 use App\Models\ShippingRate;
 use Filament\Forms;
@@ -14,6 +15,8 @@ use Illuminate\Support\Collection;
 
 class ShippingRateResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = ShippingRate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';

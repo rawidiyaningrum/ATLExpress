@@ -21,6 +21,16 @@ class Shipment extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
+     * Status yang dianggap sebagai pengiriman aktif dan boleh diisi posisi
+     * tracking oleh user tracker.
+     *
+     * @var array<int, string>
+     */
+    public const ACTIVE_STATUSES = [
+        self::STATUS_IN_TRANSIT,
+    ];
+
+    /**
      * Urutan status shipment, dipakai form, tabel, dan widget dashboard.
      *
      * @var array<int, string>
@@ -75,6 +85,14 @@ class Shipment extends Model
     public static function statusLabel(?string $status): string
     {
         return $status === null ? '-' : (self::STATUS_LABELS[$status] ?? $status);
+    }
+
+    /**
+     * Apakah shipment masih aktif (layak diisi posisi tracking).
+     */
+    public function isActive(): bool
+    {
+        return in_array($this->status, self::ACTIVE_STATUSES, true);
     }
 
     protected $fillable = [

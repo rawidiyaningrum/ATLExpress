@@ -13,6 +13,10 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLE_TRACKER = 'tracker';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -22,6 +26,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'role',
         'invited_at',
     ];
 
@@ -52,5 +57,20 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isTracker(): bool
+    {
+        return $this->role === self::ROLE_TRACKER;
+    }
+
+    public function scopeTrackers($query)
+    {
+        return $query->where('role', self::ROLE_TRACKER);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\ServiceResource\Pages;
 use App\Models\Service;
 use Filament\Forms;
@@ -12,6 +13,8 @@ use Filament\Tables\Table;
 
 class ServiceResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = Service::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';

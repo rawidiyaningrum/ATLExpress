@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ShipmentResource extends Resource
 {
@@ -20,6 +21,35 @@ class ShipmentResource extends Resource
     protected static ?string $navigationGroup = 'Shipping';
 
     protected static ?int $navigationSort = 1;
+
+    /**
+     * Shipment hanya bisa dibaca oleh user tracker (read-only). Seluruh aksi
+     * tulis tetap khusus admin.
+     */
+    public static function canViewAny(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
 
     public static function form(Form $form): Form
     {
@@ -150,6 +180,14 @@ class ShipmentResource extends Resource
         return $shipment->latestInvoice !== null || $shipment->status !== 'cancelled';
     }
 
+    /**
+     * Apakah user yang sedang login boleh mengelola (menulis) shipment.
+     */
+    public static function canManage(?Shipment $shipment = null): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -198,7 +236,7 @@ class ShipmentResource extends Resource
                     ->label(fn (Shipment $record): string => static::invoiceActionLabel($record))
                     ->icon('heroicon-o-receipt-percent')
                     ->color('gray')
-                    ->visible(fn (Shipment $record): bool => static::canShowInvoiceAction($record))
+                    ->visible(fn (Shipment $record): bool => static::canManage($record) && static::canShowInvoiceAction($record))
                     ->url(fn (Shipment $record): string => static::invoiceActionUrl($record)),
                 Tables\Actions\Action::make('printAwb')
                     ->label('Cetak AWB')
@@ -206,8 +244,10 @@ class ShipmentResource extends Resource
                     ->color('gray')
                     ->visible(fn (Shipment $record): bool => filled($record->awb_number))
                     ->url(fn (Shipment $record): string => Pages\PrintAirwayBill::getUrl(['record' => $record])),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Shipment $record): bool => static::canManage($record)),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn (Shipment $record): bool => static::canManage($record)),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

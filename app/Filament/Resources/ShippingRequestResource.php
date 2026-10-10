@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\OnlyAdmins;
 use App\Filament\Resources\ShippingRequestResource\Pages;
 use App\Models\Shipment;
 use App\Models\ShippingRequest;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class ShippingRequestResource extends Resource
 {
+    use OnlyAdmins;
+
     protected static ?string $model = ShippingRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
