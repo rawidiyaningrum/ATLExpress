@@ -8,7 +8,7 @@ use App\Models\Invoice;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Services\InvoiceService;
-use Database\Seeders\ShippingRateSeeder;
+use Database\Seeders\PricelistSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ class ShipmentInvoiceFlowTest extends TestCase
 
     public function test_operator_can_create_print_an_invoice_from_the_wizard(): void
     {
-        $this->seed(ShippingRateSeeder::class);
+        $this->seed(PricelistSeeder::class);
 
         $wizard = Livewire::actingAs(User::factory()->create())
             ->test(CreateShipment::class)
@@ -31,6 +31,7 @@ class ShipmentInvoiceFlowTest extends TestCase
                 'receiver_phone' => '081300000001',
                 'receiver_address' => 'Jl. Tujuan 9, Surabaya',
                 'origin' => 'Jakarta',
+                'kabupaten_tujuan' => 'Kota Surabaya',
                 'destination' => 'Surabaya',
             ])
             ->mountFormComponentAction('pilih_daratAction', 'pilih_darat')
@@ -115,7 +116,7 @@ class ShipmentInvoiceFlowTest extends TestCase
 
     public function test_quick_buttons_compute_percentages_from_the_running_subtotal(): void
     {
-        $this->seed(ShippingRateSeeder::class);
+        $this->seed(PricelistSeeder::class);
 
         $wizard = Livewire::actingAs(User::factory()->create())
             ->test(CreateShipment::class)
@@ -124,6 +125,7 @@ class ShipmentInvoiceFlowTest extends TestCase
                 'receiver_name' => 'Budi Santoso',
                 'receiver_address' => 'Jl. Tujuan 9, Surabaya',
                 'origin' => 'Jakarta',
+                'kabupaten_tujuan' => 'Kota Surabaya',
                 'destination' => 'Surabaya',
             ])
             ->mountFormComponentAction('pilih_daratAction', 'pilih_darat')
@@ -172,7 +174,7 @@ class ShipmentInvoiceFlowTest extends TestCase
 
     public function test_selecting_ppn_or_pph_item_type_fills_the_price_from_the_dpp(): void
     {
-        $this->seed(ShippingRateSeeder::class);
+        $this->seed(PricelistSeeder::class);
 
         $wizard = Livewire::actingAs(User::factory()->create())
             ->test(CreateShipment::class)
@@ -181,6 +183,7 @@ class ShipmentInvoiceFlowTest extends TestCase
                 'receiver_name' => 'Budi Santoso',
                 'receiver_address' => 'Jl. Tujuan 9, Surabaya',
                 'origin' => 'Jakarta',
+                'kabupaten_tujuan' => 'Kota Surabaya',
                 'destination' => 'Surabaya',
             ])
             ->mountFormComponentAction('pilih_daratAction', 'pilih_darat')

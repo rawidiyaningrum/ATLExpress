@@ -3,14 +3,14 @@
 namespace App\Services;
 
 use App\Models\ShippingRate;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class TariffCalculatorService
 {
-    public function calculate(string $origin, string $destination, float $weight, ?string $serviceType = null): array
+    public function calculate(string $origin, string $kabupaten, string $destination, float $weight, ?string $serviceType = null): array
     {
-        $query = ShippingRate::where('origin_city', $origin)
-            ->where('destination_city', $destination);
+        $query = $this->routeQuery($origin, $kabupaten, $destination);
 
         if ($serviceType) {
             $query->where('service_type', $serviceType);
@@ -40,11 +40,11 @@ class TariffCalculatorService
      * dikembalikan dengan meets_min_weight = false supaya wizard bisa memberi
      * peringatan alih-alih memblokir operator.
      *
-     * @return array{rate_id: int, service_type: string, price_per_kg: float, min_weight: float, estimated_days: int, meets_min_weight: bool}|null
+     * @return array{rate_id: int, service_type: string, price_per_kg: float, min_weight: float, estimated_days: string, meets_min_weight: bool}|null
      */
-    public function rateFor(string $origin, string $destination, string $serviceType, ?float $weight = null): ?array
+    public function rateFor(string $origin, string $kabupaten, string $destination, string $serviceType, ?float $weight = null): ?array
     {
-        $rates = $this->ratesFor($origin, $destination, $serviceType);
+        $rates = $this->ratesFor($origin, $kabupaten, $destination, $serviceType);
 
         if ($rates->isEmpty()) {
             return null;
@@ -70,16 +70,15 @@ class TariffCalculatorService
      * yang dipilih rateFor() untuk layanan tersebut tanpa berat, sehingga angka
      * di tabel perbandingan dan di langkah 2 tidak pernah berbeda.
      *
-     * @return array<string, array{service_type: string, service_label: string, price_per_kg: float, min_weight: float, estimated_days: int, rate_id: int}>
+     * @return array<string, array{service_type: string, service_label: string, price_per_kg: float, min_weight: float, estimated_days: string, rate_id: int}>
      */
-    public function ratesForRoute(string $origin, string $destination): array
+    public function ratesForRoute(string $origin, string $kabupaten, string $destination): array
     {
         if ($origin === '' || $destination === '') {
             return [];
         }
 
-        $rows = ShippingRate::where('origin_city', $origin)
-            ->where('destination_city', $destination)
+        $rows = $this->routeQuery($origin, $kabupaten, $destination)
             ->orderByDesc('min_weight')
             ->orderBy('id')
             ->get()
@@ -112,12 +111,12 @@ class TariffCalculatorService
      *
      * @return array<string, string>
      */
-    public function availableServiceTypes(string $origin, string $destination): array
+    public function availableServiceTypes(string $origin, string $kabupaten, string $destination): array
     {
         $labels = $this->serviceTypes();
         $available = [];
 
-        foreach (array_keys($this->ratesForRoute($origin, $destination)) as $serviceType) {
+        foreach (array_keys($this->ratesForRoute($origin, $kabupaten, $destination)) as $serviceType) {
             $available[$serviceType] = $labels[$serviceType] ?? ucfirst($serviceType);
         }
 
@@ -127,14 +126,36 @@ class TariffCalculatorService
     /**
      * @return Collection<int, ShippingRate>
      */
-    protected function ratesFor(string $origin, string $destination, string $serviceType): Collection
+    protected function ratesFor(string $origin, string $kabupaten, string $destination, string $serviceType): Collection
     {
-        return ShippingRate::where('origin_city', $origin)
-            ->where('destination_city', $destination)
+        return $this->routeQuery($origin, $kabupaten, $destination)
             ->where('service_type', $serviceType)
             ->orderByDesc('min_weight')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Query dasar untuk satu rute.
+     *
+     * Kabupaten bertindak sebagai penyaring tambahan. Bila kabupaten dipilih,
+     * baris tanpa kabupaten (mis. tarif udara lama) tetap ikut karena dianggap
+     * berlaku untuk semua kabupaten; kota yang sama di kabupaten lain justru
+     * disaring keluar supaya harga tidak tertukar.
+     */
+    protected function routeQuery(string $origin, string $kabupaten, string $destination): Builder
+    {
+        $query = ShippingRate::where('origin_city', $origin)
+            ->where('destination_city', $destination);
+
+        if ($kabupaten !== '') {
+            $query->where(function (Builder $inner) use ($kabupaten): void {
+                $inner->where('kabupaten_tujuan', $kabupaten)
+                    ->orWhereNull('kabupaten_tujuan');
+            });
+        }
+
+        return $query;
     }
 
     /**
@@ -188,11 +209,31 @@ class TariffCalculatorService
         return $this->sortCities(ShippingRate::distinct()->pluck('origin_city')->all());
     }
 
-    public function getDestinations(string $origin): array
+    /**
+     * Daftar kabupaten untuk sebuah kota asal.
+     *
+     * @return array<int, string>
+     */
+    public function getKabupatens(string $origin): array
     {
         return $this->sortCities(
-            ShippingRate::where('origin_city', $origin)->distinct()->pluck('destination_city')->all()
+            ShippingRate::where('origin_city', $origin)
+                ->whereNotNull('kabupaten_tujuan')
+                ->distinct()
+                ->pluck('kabupaten_tujuan')
+                ->all()
         );
+    }
+
+    public function getDestinations(string $origin, string $kabupaten = ''): array
+    {
+        $query = ShippingRate::where('origin_city', $origin);
+
+        if ($kabupaten !== '') {
+            $query->where('kabupaten_tujuan', $kabupaten);
+        }
+
+        return $this->sortCities($query->distinct()->pluck('destination_city')->all());
     }
 
     /**
@@ -231,9 +272,69 @@ class TariffCalculatorService
     /**
      * @return array<string, string>
      */
-    public function getDestinationOptions(string $origin): array
+    public function getKabupatenOptions(string $origin): array
     {
-        $destinations = $this->getDestinations($origin);
+        $kabupatens = $this->getKabupatens($origin);
+
+        return array_combine($kabupatens, $kabupatens);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getDestinationOptions(string $origin, string $kabupaten = ''): array
+    {
+        $destinations = $this->getDestinations($origin, $kabupaten);
+
+        return array_combine($destinations, $destinations);
+    }
+
+    /**
+     * Kabupaten yang cocok dengan kata kunci di mana saja dalam nama.
+     *
+     * Dipakai pencarian bertipe "anywhere" di dropdown Filament: keyword
+     * dicocokkan dengan lower(...) LIKE %keyword% supaya huruf besar-kecil
+     * tidak berpengaruh dan kata kunci di tengah nama tetap ketemu.
+     *
+     * @return array<string, string>
+     */
+    public function searchKabupatenOptions(string $origin, string $search): array
+    {
+        if ($origin === '' || trim($search) === '') {
+            return [];
+        }
+
+        $kabupatens = $this->sortCities(
+            ShippingRate::where('origin_city', $origin)
+                ->whereNotNull('kabupaten_tujuan')
+                ->whereRaw('lower(kabupaten_tujuan) like ?', ['%'.mb_strtolower(trim($search)).'%'])
+                ->distinct()
+                ->pluck('kabupaten_tujuan')
+                ->all()
+        );
+
+        return array_combine($kabupatens, $kabupatens);
+    }
+
+    /**
+     * Kota tujuan di bawah sebuah kabupaten yang cocok dengan kata kunci.
+     *
+     * @return array<string, string>
+     */
+    public function searchDestinationOptions(string $origin, string $kabupaten, string $search): array
+    {
+        if ($origin === '' || trim($search) === '') {
+            return [];
+        }
+
+        $query = ShippingRate::where('origin_city', $origin)
+            ->whereRaw('lower(destination_city) like ?', ['%'.mb_strtolower(trim($search)).'%']);
+
+        if ($kabupaten !== '') {
+            $query->where('kabupaten_tujuan', $kabupaten);
+        }
+
+        $destinations = $this->sortCities($query->distinct()->pluck('destination_city')->all());
 
         return array_combine($destinations, $destinations);
     }

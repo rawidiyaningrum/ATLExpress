@@ -1,0 +1,429 @@
+origin_city,kabupaten_tujuan,destination_city,service_type,min_weight,price_per_kg,estimated_days
+Jakarta,Kab. Aceh Barat,Meulaboh,udara,50 kg,60500.0,1-2 HARI
+Jakarta,Kab. Aceh Barat Daya,BlangPidie,udara,50 kg,60500.0,2-3 HARI
+Jakarta,Kab. Aceh Besar,Jantho,udara,50 kg,60200.0,2-3 HARI
+Jakarta,Kab. Aceh Jaya,Krueng Sabee,udara,50 kg,61500.0,1-2 HARI
+Jakarta,Kab. Aceh Selatan,Tapak Tuan,udara,50 kg,61500.0,1-2 HARI
+Jakarta,Kab. Aceh Singkil,Singkil,udara,50 kg,61500.0,3-4 HARI
+Jakarta,Kab. Tamlang,Kuala Simpang,udara,50 kg,60500.0,2-3 HARI
+Jakarta,Kab. Aceh Tengah ,Takengon,udara,50 kg,60800.0,1-2 HARI
+Jakarta,Kab. Aceh Tenggara,Kutacane,udara,50 kg,60800.0,3-4 HARI
+Jakarta,Kab. Aceh Timur,Idi Rayeuk,udara,50 kg,61500.0,2-3 HARI
+Jakarta,Kab. Aceh Utara,Lhoksukon,udara,50 kg,61500.0,2-3 HARI
+Jakarta,Kab. Bener Meriah,Simpang Tiga Radelon,udara,50 kg,60400.0,2-3 HARI
+Jakarta,Kab. Bireuen,Kab Bireuen,udara,50 kg,61500.0,2-3 HARI
+Jakarta,Kab. Gayo Lues,Blang Kejeren,udara,50 kg,60500.0,1-2 HARI
+Jakarta,Kab. Nagan Raya,Suka Makmue,udara,50 kg,57148.0,2-3 HARI
+Jakarta,Kab. Pidie,Sigli,udara,50 kg,56448.0,2-3 HARI
+Jakarta,Kab. Pidie Jaya,Meuredeu,udara,50 kg,56448.0,2-3 HARI
+Jakarta,Kab. Simeuleu,Sinabang,udara,50 kg,64848.0,3-4 HARI
+Jakarta,Kota Banda Aceh,Banda Aceh,udara,50 kg,52082.0,3-4 HARI
+Jakarta,Kota Langsa,Langsa,udara,50 kg,57148.0,2-3 HARI
+Jakarta,Kota Lhokseumawe,Lhokseumawe,udara,50 kg,56448.0,2-3 HARI
+Jakarta,Kota Sabang,Sabang,udara,50 kg,57848.0,1-2 HARI
+Jakarta,Kota Subulussalam,Subulissalam,udara,50 kg,59248.0,3-4 HARI
+Jakarta,Kab. Asahan,Kisaran,udara,50 kg,50850.0,1-2 HARI
+Jakarta,Kab. Batubara,Umapuluh,udara,50 kg,51400.0,2-3 HARI
+Jakarta,Kab. Dairi,Sidikalang,udara,50 kg,59255.0,3-4 HARI
+Jakarta,Kab. Deli Serdang,Lubuk Pakam,udara,50 kg,49800.0,3-4 HARI
+Jakarta,Kab. Humbang Hasudutan,Dolok Sanggul,udara,50 kg,53300.0,1-2 HARI
+Jakarta,Kab. Karo,Kabanjahe,udara,50 kg,59255.0,2-3 HARI
+Jakarta,Kab. Labuhan Batu,Rantau Prapat,udara,50 kg,51550.0,2-3 HARI
+Jakarta,Kab. Langkat,Stabat,udara,50 kg,50300.0,2-3 HARI
+Jakarta,Kab. Mandailing Natal,Panyabungan,udara,50 kg,54400.0,3-4 HARI
+Jakarta,Kab. Nias,Guning Sitoli,udara,50 kg,59255.0,3-4 HARI
+Jakarta,Kab. Nias Selatan,Teluk Dalam,udara,50 kg,59255.0,3-4 HARI
+Jakarta,Kab. Padang Lawas,Sibuhuan,udara,50 kg,52600.0,2-3 HARI
+Jakarta,Kab. Padang Lawas Utara,Gunung Tua,udara,50 kg,52255.0,2-3 HARI
+Jakarta,Kab. Pakpak bharat,Salak,udara,50 kg,54250.0,1-2 HARI
+Jakarta,Kab. Samosir,Pangururan,udara,50 kg,53600.0,1-2 HARI
+Jakarta,Kab. Serdang Bedagai,Sei Rampah,udara,50 kg,51450.0,1-2 HARI
+Jakarta,Kab. Simalungun,Pematang Siantar,udara,50 kg,51500.0,1-2 HARI
+Jakarta,Kab. Tapanuli Selatan,Padang Sidempuan,udara,50 kg,51550.0,1-2 HARI
+Jakarta,Kab. Tapanuli Tengah,Sibolga,udara,50 kg,52200.0,1-2 HARI
+Jakarta,Kab. Tapanuli Utara,Tarutung,udara,50 kg,52255.0,3-4 HARI
+Jakarta,Kab. Toba Samosir,Balige,udara,50 kg,52255.0,2-3 HARI
+Jakarta,Kota Binjai,Binjai,udara,50 kg,50950.0,1-2 HARI
+Jakarta,Kota Medan,Medan,udara,50 kg,48850.0,1-2 HARI
+Jakarta,Kota Padang Sidempuan,Padang Sidempuan,udara,50 kg,51300.0,3-4 HARI
+Jakarta,Kota Pematang Siantar,Pematang Siantar,udara,50 kg,50450.0,1-2 HARI
+Jakarta,Kota Sibolga,Sibolga,udara,50 kg,52500.0,1-2 HARI
+Jakarta,Kota Tanjung Balai,Tanjung Balai,udara,50 kg,50450.0,1-2 HARI
+Jakarta,Kota Tebing Tinggi,Tebing Tinggi,udara,50 kg,50500.0,1-2 HARI
+Jakarta,Kab. Bengkulu Selatan,Manna,udara,50 kg,41550.0,2-3 HARI
+Jakarta,Kab. Bengkulu Utara,Arga Makmur,udara,50 kg,41350.0,2-3 HARI
+Jakarta,Kab. Kaur,Kaur,udara,50 kg,42000.0,2-3 HARI
+Jakarta,Kab. Kepahiang,Kepahiang,udara,50 kg,40700.0,2-3 HARI
+Jakarta,Kab. Lebong,kab. Lebong,udara,50 kg,41800.0,2-3 HARI
+Jakarta,Kab. Muko-Muko,Muko-muko,udara,50 kg,41600.0,2-3 HARI
+Jakarta,Kab. Rejang Lebong,Curup,udara,50 kg,41050.0,2-3 HARI
+Jakarta,Kab. Seluma,Tais,udara,50 kg,40700.0,2-3 HARI
+Jakarta,Kota. Bengkulu,Bengkulu,udara,50 kg,40600.0,1-2 HARI
+Jakarta,Kab. Batang hari,Muara Bulian,udara,50 kg,42300.0,2-3 HARI
+Jakarta,Kab. Bungo,Muara Bungo,udara,50 kg,42500.0,2-3 HARI
+Jakarta,Kab. Kerinci,Sungai Penuh,udara,50 kg,44800.0,2-3 HARI
+Jakarta,Kab. Merangin,Bangko,udara,50 kg,42850.0,2-3 HARI
+Jakarta,Kab. Muaro Jambi,Sengeti,udara,50 kg,42200.0,2-3 HARI
+Jakarta,Kab. Sarolangun,Sarolangun,udara,50 kg,42400.0,2-3 HARI
+Jakarta,Kab. Tanjung Jabung Timur,Muarasabak,udara,50 kg,42450.0,2-3 HARI
+Jakarta,Kab. Tanjung Jabung Barat,Kualatungkai,udara,50 kg,42750.0,2-3 HARI
+Jakarta,Kab. Tebo,Muara Tebo,udara,50 kg,41950.0,2-3 HARI
+Jakarta,Kota Jambi,Jambi,udara,50 kg,40400.0,1-2 HARI
+Jakarta,Kab. Bengkalis,Bengkalis,udara,50 kg,56915.0,2-3 HARI
+Jakarta,Kab. Indragiri Hilir,Tembilahan,udara,50 kg,54395.0,2-3 HARI
+Jakarta,Kab. Indragiri Hulu,Rengat,udara,50 kg,54395.0,2-3 HARI
+Jakarta,Kab. Kampar,Bangkinang,udara,50 kg,52295.0,2-3 HARI
+Jakarta,Kab. Kuantan Singingi,Teluk Kuantan,udara,50 kg,55795.0,2-3 HARI
+Jakarta,Kab. Palalawan,Pangkalan Kerinci,udara,50 kg,52295.0,2-3 HARI
+Jakarta,Kab. Rokan Hulu,Pasir Pangaraian,udara,50 kg,54935.0,2-3 HARI
+Jakarta,Kab. Rokan Hilir,Bagan Siapi api,udara,50 kg,55095.0,2-3 HARI
+Jakarta,Kab.Siak,Siaks Indrapura,udara,50 kg,54395.0,2-3 HARI
+Jakarta,Kota Dumai,Dumai,udara,50 kg,52295.0,2-3 HARI
+Jakarta,Kota Pekanbaru,Pekanbaru,udara,50 kg,48000.0,1-2 HARI
+Jakarta,Kab. Agam,Lubuk Basung,udara,50 kg,55250.0,2-3 HARI
+Jakarta,Kab. Dharmasraya,Pualu Punjung,udara,50 kg,55800.0,2-3 HARI
+Jakarta,Kab. Limapuluh kota,Sarilamek,udara,50 kg,54950.0,2-3 HARI
+Jakarta,Kab. Kepulauan Mentawai,Tuapejat,udara,50 kg,60200.0,2-3 HARI
+Jakarta,Kab. Padang Pariaman,Pariaman,udara,50 kg,54650.0,2-3 HARI
+Jakarta,Kab. Pasaman,Lubuk Sikaping,udara,50 kg,55600.0,2-3 HARI
+Jakarta,Kab. Pasaman Barat,Simpang Empat,udara,50 kg,55450.0,2-3 HARI
+Jakarta,Kab. Pesisir Selatan,Painan,udara,50 kg,53750.0,2-3 HARI
+Jakarta,Kab. Sijunjung,Muara,udara,50 kg,54850.0,2-3 HARI
+Jakarta,Kab. Solok,Arosuka,udara,50 kg,54600.0,2-3 HARI
+Jakarta,Kab. Solok Selatan,Padang Aro,udara,50 kg,55500.0,2-3 HARI
+Jakarta,Kab. Tanah Datar,Batu Sangkar,udara,50 kg,54150.0,2-3 HARI
+Jakarta,Kota Bukittinggi,Bukittinggi,udara,50 kg,54050.0,1-2 HARI
+Jakarta,Kota Padang ,Padang,udara,50 kg,52350.0,1-2 HARI
+Jakarta,Kota Padang Panjang,Padang Panjang,udara,50 kg,53200.0,1-2 HARI
+Jakarta,Kota Pariaman,Pariaman,udara,50 kg,53350.0,2-3 HARI
+Jakarta,Kota Payakumbuh,Payakumbuh,udara,50 kg,54200.0,2-3 HARI
+Jakarta,Kota Sawahlunto,Sawahlunto,udara,50 kg,54600.0,2-3 HARI
+Jakarta,Kota Solok,Solok,udara,50 kg,53250.0,2-3 HARI
+Jakarta,Kab. Banyuasin,Pangkalan Balai,udara,50 kg,45700.0,2-3 HARI
+Jakarta,Kab. Empat Lawang,Tebing Tinggi,udara,50 kg,45700.0,2-3 HARI
+Jakarta,Kab. Lahat,Lahat,udara,50 kg,45800.0,2-3 HARI
+Jakarta,Kab. Muara Enim,Muara Enim,udara,50 kg,45350.0,2-3 HARI
+Jakarta,Kab. Musi Banyuasin,Sekayu,udara,50 kg,45200.0,2-3 HARI
+Jakarta,Kab. Musi Rawas,Muara Beliti Baru,udara,50 kg,46350.0,2-3 HARI
+Jakarta,Kab. Ogan Ilir,Indralaya,udara,50 kg,44300.0,2-3 HARI
+Jakarta,Kab. Ogan Komering Ilir,Kayu Agung,udara,50 kg,44800.0,2-3 HARI
+Jakarta,Kab. Ogan Komering Ulu,Baturaja,udara,50 kg,45650.0,2-3 HARI
+Jakarta,Kab. OKU Timur,Martapura,udara,50 kg,44350.0,2-3 HARI
+Jakarta,Kab. OKU Selatan,Muaradua,udara,50 kg,45850.0,2-3 HARI
+Jakarta,Kota Lubuk Linggau,Lubuk Linggau,udara,50 kg,45100.0,2-3 HARI
+Jakarta,Kota Pagar Alam,Pagar Alam,udara,50 kg,47450.0,2-3 HARI
+Jakarta,Kota Palembang,Palembang,udara,50 kg,43150.0,1-2 HARI
+Jakarta,Kota Prabumulih,Prabumulih,udara,50 kg,44350.0,1-2 HARI
+Jakarta,Kab. Lampung Barat,Liwa,udara,50 kg,45350.0,2-3 HARI
+Jakarta,kab. Lampung Selatan,Kalianda,udara,50 kg,42150.0,2-3 HARI
+Jakarta,Kab. Lampung Tengah,Gunung Sugih,udara,50 kg,42800.0,2-3 HARI
+Jakarta,Kab. Lampung Timur,Sukadana,udara,50 kg,42100.0,2-3 HARI
+Jakarta,Kab. Lampung Utara,Kotabumi,udara,50 kg,43100.0,2-3 HARI
+Jakarta,Kab. Way Kanan,Blambangan Umpu,udara,50 kg,42300.0,2-3 HARI
+Jakarta,Kab. Tanggamus,Kota Agung,udara,50 kg,42950.0,2-3 HARI
+Jakarta,Kab. Tulang Bawang,Manggala,udara,50 kg,45150.0,2-3 HARI
+Jakarta,Kab. Pesawaran,Gedong Tataan,udara,50 kg,42300.0,2-3 HARI
+Jakarta,Kota Bandar Lampung,Bandar Lampung,udara,50 kg,39900.0,1-2 HARI
+Jakarta,Kota Metro,Metro,udara,50 kg,42250.0,2-3 HARI
+Jakarta,Kab. Bangka,Sungaiilat,udara,100 kg,48650.0,2-3 HARI
+Jakarta,Kab. Bangka Barat,Kelapa,udara,100 kg,50650.0,2-3 HARI
+Jakarta,Kab. Bangka Tengah,Koba,udara,100 kg,49500.0,2-3 HARI
+Jakarta,Kab. Bangka Selatan,Toboali,udara,100 kg,50350.0,2-3 HARI
+Jakarta,Kab. Belitung Barat,Tanjung Pandan,udara,100 kg,47200.0,2-3 HARI
+Jakarta,Kab. Belitung Timur ,Manggar,udara,100 kg,50100.0,2-3 HARI
+Jakarta,Kota Pangkal Pinang,Pangkal Pinang,udara,100 kg,47000.0,1-2 HARI
+Jakarta,Kab. Karimun,Tanjung Balai Karimun,udara,100 kg,62857.2,2-3 HARI
+Jakarta,Kab. Bintan,Bandar Seri Bentan,udara,100 kg,51250.0,2-3 HARI
+Jakarta,Kab. Lingga,Daik,udara,100 kg,54300.0,2-3 HARI
+Jakarta,Kab. Natuna,Ranai,udara,100 kg,62857.2,2-3 HARI
+Jakarta,Kota Batam,Batam,udara,100 kg,46550.0,1-2 HARI
+Jakarta,Kota Tanjung Pinang,Tanjung Pinang,udara,100 kg,46450.0,1-2 HARI
+Jakarta,Kab. Badung,Menguwi,udara,50 kg,42400.0,1-2 HARI
+Jakarta,Kab. Bangli,Bangli,udara,50 kg,46450.0,2-3 HARI
+Jakarta,Kab. Buleleng,Singaraja,udara,50 kg,48350.0,2-3 HARI
+Jakarta,Kab. Gianyar,Gianyar,udara,50 kg,44050.0,2-3 HARI
+Jakarta,Kab. Jembrana,Negara,udara,50 kg,47750.0,2-3 HARI
+Jakarta,Kab. Karangasem,Amiapura,udara,50 kg,48450.0,2-3 HARI
+Jakarta,Kab. Klungkung,Samarapura,udara,50 kg,46800.0,2-3 HARI
+Jakarta,Kab. Tabanan,Tabanan,udara,50 kg,44050.0,2-3 HARI
+Jakarta,Kota Denpasar,Denpasar,udara,50 kg,39600.0,1-2 HARI
+Jakarta,Kab. Bima,Woha,udara,100 kg,56750.0,2-3 HARI
+Jakarta,Kab. Dompu,Dompu,udara,100 kg,56900.0,2-3 HARI
+Jakarta,Kab. Lombok Barat,Gerung,udara,100 kg,51750.0,2-3 HARI
+Jakarta,Kab. Lombok Tengah,Praya,udara,100 kg,52400.0,2-3 HARI
+Jakarta,Kab. Lombok Timur,Selong,udara,100 kg,53050.0,2-3 HARI
+Jakarta,Kab. Sumbawa,Sumbawa Besar,udara,100 kg,54500.0,2-3 HARI
+Jakarta,Kab.Sumbawa Barat,Taliwang,udara,100 kg,55450.0,2-3 HARI
+Jakarta,Kota Mataram,Mataram,udara,100 kg,49750.0,1-2 HARI
+Jakarta,Kota Bima,Bima,udara,100 kg,56200.0,2-3 HARI
+Jakarta,Kab. Alor,Kalabahi,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Belu,Atambua,udara,100 kg,85899.8,2-3 HARI
+Jakarta,Kab. Ende,Ende,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Flores Timur,Larantuka,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Kupang,Oelamasi,udara,100 kg,81699.8,2-3 HARI
+Jakarta,Kab. Lembata,Lewoleba,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Manggarai,Ruteng,udara,100 kg,92199.8,2-3 HARI
+Jakarta,Kab. Manggarai Barat,Labuan Bajo,udara,100 kg,97099.8,2-3 HARI
+Jakarta,Kab. Manggarai Timur,Borong,udara,100 kg,97099.8,2-3 HARI
+Jakarta,Kab. Nagekeo,Mbay,udara,100 kg,92899.8,2-3 HARI
+Jakarta,Kab. Ngada,Bajawa,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Rote Ndao,Baa,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Sikka,Maumere,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Sumba Barat,Walkabubak,udara,100 kg,97099.8,2-3 HARI
+Jakarta,Kab. Sumba Brat daya,Tambolaka,udara,100 kg,97099.8,2-3 HARI
+Jakarta,Kab. Sumba Tengah,Waibakul,udara,100 kg,97099.8,2-3 HARI
+Jakarta,Kab. Sumba Timur,waingapu,udara,100 kg,90099.8,2-3 HARI
+Jakarta,Kab. Timur Tengah Selatan,Soe,udara,100 kg,85899.8,2-3 HARI
+Jakarta,Kab. Timur tengah utara,Kafamenanu,udara,100 kg,85899.8,2-3 HARI
+Jakarta,Kota Kupang ,Kupang,udara,100 kg,75399.8,1-2 HARI
+Jakarta,Kab. Bengkayang,Bengkayang,udara,100 kg,52750.0,2-3 HARI
+Jakarta,Kab. Kapuas Hulu,Putussibau,udara,100 kg,61050.0,2-3 HARI
+Jakarta,Kab. Ketapang,Ketapang,udara,100 kg,55150.0,2-3 HARI
+Jakarta,Kab. Kayong Utara,Sukadana/Teluk Melang,udara,100 kg,57750.0,2-3 HARI
+Jakarta,Kab. Landak,Ngabang,udara,100 kg,52100.0,2-3 HARI
+Jakarta,Kab. Melawi,Nanga Pinoh,udara,100 kg,54350.0,2-3 HARI
+Jakarta,Kab. Pontianak,Mempawah,udara,100 kg,51000.0,1-2 HARI
+Jakarta,Kab. Sambas,Sambas,udara,100 kg,52200.0,2-3 HARI
+Jakarta,Kab. Sanggau,Sanggau,udara,100 kg,52300.0,2-3 HARI
+Jakarta,Kab. Sekadau,Sekadau Hilir,udara,100 kg,52750.0,2-3 HARI
+Jakarta,Kab. Sintang,Sintang,udara,100 kg,52750.0,2-3 HARI
+Jakarta,Kab. Kubu raya,Sungai raya,udara,100 kg,49950.0,2-3 HARI
+Jakarta,Kota Pontianak,Pontianak,udara,100 kg,48850.0,1-2 HARI
+Jakarta,Kota Singkawang ,Singkawang,udara,100 kg,50750.0,1-2 HARI
+Jakarta,Kab. Balangan,Paringin,udara,100 kg,54000.0,2-3 HARI
+Jakarta,Kab. Banjar  ,Martapura,udara,100 kg,51850.0,1-2 HARI
+Jakarta,Kab. Barito Kuala,Marabahan,udara,100 kg,52750.0,2-3 HARI
+Jakarta,Kab. Hulu Sungai Selatan,Kandangan,udara,100 kg,52550.0,2-3 HARI
+Jakarta,Kab. Hulu Sungai Tengah,Barabai,udara,100 kg,53950.0,2-3 HARI
+Jakarta,Kab. Hulu Sungai Utara,Amuntai,udara,100 kg,53100.0,2-3 HARI
+Jakarta,Kab. Kota Baru,Kotabaru,udara,100 kg,54800.0,2-3 HARI
+Jakarta,Kab. Tanah Laut,Pelaihari,udara,100 kg,52450.0,2-3 HARI
+Jakarta,Kab. Tabalong,Tanjung,udara,100 kg,54000.0,2-3 HARI
+Jakarta,Kab. Tanah Bambu,Batu Licin,udara,100 kg,53900.0,2-3 HARI
+Jakarta,Kab. Tapin,Rantau   ,udara,100 kg,52300.0,2-3 HARI
+Jakarta,Kab. Banjarbaru,Banjarbaru,udara,100 kg,52000.0,1-2 HARI
+Jakarta,Kota Banjarmasin,Banjarmasin,udara,50 kg,50250.0,1-2 HARI
+Jakarta,Kab. Barito Selatan,Buntok,udara,100 kg,52000.0,2-3 HARI
+Jakarta,Kab. Barito Timur,Tamiang Layang,udara,100 kg,52750.0,2-3 HARI
+Jakarta,Kab. Barito Utara,Muara Teweh,udara,100 kg,52650.0,2-3 HARI
+Jakarta,Kab. Gunung Mas,Kuala Kurun,udara,100 kg,52850.0,2-3 HARI
+Jakarta,Kab. Kapuas  ,Kuala Kapuas,udara,100 kg,53950.0,2-3 HARI
+Jakarta,Kab. Katingan,Kasongan,udara,100 kg,49950.0,2-3 HARI
+Jakarta,Kab. Kotawaringin Barat,Pangkalan Bun,udara,100 kg,52650.0,2-3 HARI
+Jakarta,Kab. Kotawaringin Timur,Sampit,udara,100 kg,51750.0,1-2 HARI
+Jakarta,Kab. Lamandau,Nanga Bulik,udara,100 kg,57100.0,2-3 HARI
+Jakarta,Kab. Murung Raya,Puruk Cahu,udara,100 kg,57500.0,2-3 HARI
+Jakarta,Kab. Pulang Pisau,Pulang Pisau,udara,100 kg,52050.0,2-3 HARI
+Jakarta,Kab. Sukamara,Sukamara,udara,100 kg,58800.0,2-3 HARI
+Jakarta,Kab. Seruyan,Kuala Pembuang,udara,100 kg,55600.0,2-3 HARI
+Jakarta,Kota Palangkaraya,Palangkaraya,udara,100 kg,47300.0,1-2 HARI
+Jakarta,Kab. Berau,Tanjung Redep,udara,100 kg,76820.8,2-3 HARI
+Jakarta,Kab. Bulungan,Tanjung Selor,udara,100 kg,80320.8,2-3 HARI
+Jakarta,Kab. Kutai Barat,Sendawar,udara,100 kg,62820.8,2-3 HARI
+Jakarta,Kab. Kutai Kartanegara,Tenggarong,udara,100 kg,61000.0,2-3 HARI
+Jakarta,Kab. Kutai Timur,Sanggata,udara,100 kg,59320.8,2-3 HARI
+Jakarta,Kab. Malinau,Malinau,udara,100 kg,65500.0,2-3 HARI
+Jakarta,Kab. Nunukan,Nunukan,udara,100 kg,77500.0,2-3 HARI
+Jakarta,Kab Paser,Tanah Grogot,udara,100 kg,68000.0,2-3 HARI
+Jakarta,Kab. Penajam Paser Utara,Penajam,udara,100 kg,66700.0,2-3 HARI
+Jakarta,Kab. Tana Tidung,Tana Tidung,udara,100 kg,70100.0,2-3 HARI
+Jakarta,Kota Balikpapan,Balikpapan,udara,100 kg,55120.8,1-2 HARI
+Jakarta,Kota Bontang,Bontang,udara,100 kg,59800.0,2-3 HARI
+Jakarta,Kota Samarinda,Samarinda,udara,100 kg,56520.8,1-2 HARI
+Jakarta,Kota Tarakan,Tarakan,udara,100 kg,70350.0,1-2 HARI
+Jakarta,Kab. Boalemo,Tilamuta,udara,100 kg,74510.0,2-3 HARI
+Jakarta,Kab. Bone Bolango,Suwawa,udara,100 kg,74150.0,2-3 HARI
+Jakarta,Kab. Gorontalo,Limboto,udara,100 kg,73800.0,1-2 HARI
+Jakarta,Kab. Gorontalo Utara,Kwandang,udara,100 kg,74500.0,1-2 HARI
+Jakarta,Kab. Pahuwato,Marisa,udara,100 kg,74400.0,2-3 HARI
+Jakarta,Kota Gorontalo,Gorontalo,udara,100 kg,72200.0,1-2 HARI
+Jakarta,Kab. Bantaeng,Bantaeng,udara,100 kg,62950.0,2-3 HARI
+Jakarta,Kab. Barru,Barru,udara,100 kg,61950.0,2-3 HARI
+Jakarta,Kab. Bone ,Watampone,udara,100 kg,62700.0,2-3 HARI
+Jakarta,Kab. Bulukamba,Bulukamba,udara,100 kg,62500.0,2-3 HARI
+Jakarta,Kab. Enrekang,Enrekang,udara,100 kg,64500.0,2-3 HARI
+Jakarta,Kab. Gowa,Sunggumunasa,udara,100 kg,61850.0,2-3 HARI
+Jakarta,Kab. Janeponto,Janeponto,udara,100 kg,63350.0,2-3 HARI
+Jakarta,Kab. Luwu Utara,Belopa,udara,100 kg,60500.0,2-3 HARI
+Jakarta,Kab. Luwu Timur,Soroako/Malili,udara,100 kg,61500.0,2-3 HARI
+Jakarta,Kab. Luwu Utara,Masamba,udara,100 kg,61500.0,2-3 HARI
+Jakarta,Kab Maros,Maros,udara,100 kg,61500.0,2-3 HARI
+Jakarta,Kab. Pangkajane Kepulauan,Pangkajane,udara,100 kg,65927.4,2-3 HARI
+Jakarta,Kab.Pinrang,Pinrang,udara,100 kg,63000.0,2-3 HARI
+Jakarta,Kab. Selayar,Benteng,udara,100 kg,63000.0,2-3 HARI
+Jakarta,Kab. Sinjai,Sinjai,udara,100 kg,67327.4,2-3 HARI
+Jakarta,Kab. Sindenreng Rappang,Sidenreng,udara,100 kg,67327.4,2-3 HARI
+Jakarta,Kab. Soppeng,Watansoppeng,udara,100 kg,63000.0,2-3 HARI
+Jakarta,Kab. Takalar,Takalar,udara,100 kg,62500.0,2-3 HARI
+Jakarta,Kab. Tana toraja,Makale,udara,100 kg,65000.0,2-3 HARI
+Jakarta,Kab. Wajo,Sengkang,udara,100 kg,62500.0,2-3 HARI
+Jakarta,Kota Makassar,Makassar,udara,100 kg,59627.4,1-2 HARI
+Jakarta,Kota Palopo,Palopo,udara,100 kg,70127.4,2-3 HARI
+Jakarta,Kota Pare-Pare,Pare-Pare,udara,100 kg,67327.4,2-3 HARI
+Jakarta,Kab. Bombana,Rumbia,udara,100 kg,82000.0,2-3 HARI
+Jakarta,Kab. Buton&Buton Utara,Pasar Wajo,udara,100 kg,82000.0,2-3 HARI
+Jakarta,Kab. Kolaka,Kolaka,udara,100 kg,72565.0,2-3 HARI
+Jakarta,Kab. Kolaka Utara,Lasusua,udara,100 kg,82500.0,2-3 HARI
+Jakarta,Kab. Konawe,Unaaha,udara,100 kg,68500.0,2-3 HARI
+Jakarta,Kab. Konawe Utara/Selatan,Wanggodo/Andolo,udara,100 kg,78500.0,2-3 HARI
+Jakarta,Kab. Muna,Raha ,udara,100 kg,71500.0,2-3 HARI
+Jakarta,Kab. Wakatobi,Wangi-wangi,udara,100 kg,81500.0,2-3 HARI
+Jakarta,Kota Bau-bau,Bau-Bau,udara,100 kg,71000.0,2-3 HARI
+Jakarta,Kota Kendari,Kendari,udara,100 kg,64000.0,1-2 HARI
+Jakarta,Kab. Bolaang Mongondow,Kotamobagu,udara,100 kg,78775.0,2-3 HARI
+Jakarta,Kab. Bolaang Mongondow Timur,Boroko,udara,100 kg,82271.0,2-3 HARI
+Jakarta,Kab kepulauan Sangihe,Tahuna,udara,100 kg,89700.0,2-3 HARI
+Jakarta,Kab. Kepulauan talaud,Melonguane,udara,100 kg,89700.0,2-3 HARI
+Jakarta,Kab. Minahasa,Tondano,udara,100 kg,75800.0,2-3 HARI
+Jakarta,Kab. Minahasa Utara,Airmadidi,udara,100 kg,73500.0,2-3 HARI
+Jakarta,Kab. Minahasa Selatan,Amurang,udara,100 kg,76500.0,2-3 HARI
+Jakarta,Kab. Minahasa Tenggara,Ratahan,udara,100 kg,76500.0,2-3 HARI
+Jakarta,Kota Bitung,Bitung,udara,100 kg,75800.0,2-3 HARI
+Jakarta,Kota Manado,Manado,udara,100 kg,72000.0,1-2 HARI
+Jakarta,Kota Tomohon,Tomohon,udara,100 kg,75200.0,1-2 HARI
+Jakarta,Kab. Majane,Majane,udara,100 kg,77500.0,2-3 HARI
+Jakarta,Kab. Mamasa,Mamasa,udara,100 kg,77500.0,2-3 HARI
+Jakarta,Kab. Mamuju,Mamuju,udara,100 kg,77800.0,2-3 HARI
+Jakarta,Kab. Mamuju Utara,Pasangkayu,udara,100 kg,79800.0,2-3 HARI
+Jakarta,Kab. Polewali Mandar,Polewali,udara,100 kg,77500.0,2-3 HARI
+Jakarta,Kab. Banggai,Luwuk,udara,100 kg,74800.0,2-3 HARI
+Jakarta,Kab. Banggai Kepulauan,Banggai,udara,100 kg,90200.0,2-3 HARI
+Jakarta,Kab. Buol,Buol,udara,100 kg,81200.0,2-3 HARI
+Jakarta,Kab. Donggala,Bunawa,udara,100 kg,75500.0,2-3 HARI
+Jakarta,Kab. Morowali,Bungku,udara,100 kg,82400.0,2-3 HARI
+Jakarta,Kab. Parigi Moutong,Parigi,udara,100 kg,72800.0,2-3 HARI
+Jakarta,Kab. Poso,Poso,udara,100 kg,71500.0,2-3 HARI
+Jakarta,Kab. Tojo Una Una,Ampana,udara,100 kg,72500.0,2-3 HARI
+Jakarta,Kab. Toli-Toli,Tolitoli,udara,100 kg,76800.0,2-3 HARI
+Jakarta,Kota Palu,Palu,udara,100 kg,68500.0,1-2 HARI
+Jakarta,Kab. Buru,Namlea,udara,100 kg,88000.0,2-3 HARI
+Jakarta,Kab. Kepulauan Aru,Dobo,udara,100 kg,97000.0,2-3 HARI
+Jakarta,Kab. Maluku Tengah,Masohi,udara,100 kg,84000.0,2-3 HARI
+Jakarta,Kab. Maluku Tenggara,Tual,udara,100 kg,95000.0,2-3 HARI
+Jakarta,Kab. Maluku Tenggara Barat,Saumiaki,udara,100 kg,94000.0,2-3 HARI
+Jakarta,Kab. Seram Bagian Barat,Piru,udara,100 kg,82000.0,2-3 HARI
+Jakarta,Kab. Seram Bagian Timur,Dataran Hunimoa,udara,100 kg,90000.0,2-3 HARI
+Jakarta,Kota Ambon,Ambon,udara,100 kg,70000.0,1-2 HARI
+Jakarta,Kab. Halmahera Barat,Jallolo,udara,100 kg,78856.2,2-3 HARI
+Jakarta,Kab. Halmahera Selatan,Labuha,udara,100 kg,80206.2,2-3 HARI
+Jakarta,Kab. Halmahera Tengah,Weda,udara,100 kg,78856.2,2-3 HARI
+Jakarta,Kab. Halmahera Timur,Maba,udara,100 kg,89656.2,2-3 HARI
+Jakarta,Kab. Halmahera Utara,Tobelo,udara,100 kg,82906.2,2-3 HARI
+Jakarta,Kab. Kepulauan Sula,Sanana,udara,100 kg,85606.2,2-3 HARI
+Jakarta,Kota Ternate,Ternate,udara,100 kg,70000.0,1-2 HARI
+Jakarta,Kota Tidore,Tidore,udara,100 kg,70000.0,2-3 HARI
+Jakarta,Kab. Fak-fak,Fak-fak,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kab. Kaimana,Kaimana,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kab. Raja Ampat,Waisal,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kab. Sorong ,Abun,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kab. Sorong Selatan,Teminabuan,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kab. Teluk Bintuni,Bintuni,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kab. Teluk Wondama,Rasel,udara,100 kg,121207.05,2-3 HARI
+Jakarta,Kota Sorong,Sorong,udara,100 kg,97582.05,1-2 HARI
+Jakarta,Kab. Mimika,Timika,udara,100 kg,170800.0,2-3 HARI
+Jakarta,Kab. Nabire,Nabire,udara,100 kg,171439.8,2-3 HARI
+Jakarta,Kab. Manokwari,Manokwari,udara,100 kg,111370.0,2-3 HARI
+Jakarta,Kab. Paniai,Enarotari,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Asmat,Agats,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Biak Numfor,Biak,udara,100 kg,115416.0,2-3 HARI
+Jakarta,Kab. Boven Digoel,Tanah Merah,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Jayapura,sentani,udara,100 kg,117516.0,2-3 HARI
+Jakarta,Kab. Jayawijaya,Wamena,udara,100 kg,145516.0,2-3 HARI
+Jakarta,Kab. Keerom,Waris,udara,100 kg,131516.0,2-3 HARI
+Jakarta,Maapi,Kepi,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Merauke,Merauke,udara,100 kg,154772.8,2-3 HARI
+Jakarta,Kab. Pegunungan Bintang,Oksibil,udara,100 kg,166516.0,2-3 HARI
+Jakarta,Kab. Puncak Jaya,Mulia,udara,100 kg,194516.0,2-3 HARI
+Jakarta,Kab. Sarmi,Sarmi,udara,100 kg,138516.0,2-3 HARI
+Jakarta,Kab. Supiori,Sorendiweri,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Tolikora,Karubaga,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Waropen,Botawa,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Yakuhimo,Sumonai,udara,100 kg,180516.0,2-3 HARI
+Jakarta,Kab. Yapen Waropen,Serui,udara,100 kg,187516.0,2-3 HARI
+Jakarta,Kab. Memberamo Raya,Burmeso,udara,100 kg,187516.0,2-3 HARI
+Jakarta,Kota Jayapura,Jayapura,udara,100 kg,114716.0,1-2 HARI
+Jakarta,Kab. Banjarnegara,Banjarnegara,udara,30 kg,36660.0,1-2 HARI
+Jakarta,Kab. Banyumas,Banyumas,udara,30 kg,36660.0,1-2 HARI
+Jakarta,Kab. Batang ,Batang,udara,30 kg,36660.0,1-2 HARI
+Jakarta,Kab. Blora,Blora,udara,30 kg,36660.0,1-2 HARI
+Jakarta,Kab. Brebes,Brebes,udara,30 kg,36660.0,1-2 HARI
+Jakarta,Kab. Demak,Demak,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kab. Jepara,Jepara,udara,30 kg,34500.0,2-3 Hari
+Jakarta,Kab. Kendal,Kendal,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kab. Kudus,Kudus,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kab. Pati,Pati,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Pekalongan,Pekalongan,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Pemalang,Pemalang,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Rembang,Rembang,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Tegal,Tegal,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kota Salatiga,Salatiga,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kota Semarang,Semarang,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kab. Magelang,Magelang,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kab. Cilacap,Cilacap,udara,30 kg,37500.0,1-2 HARI
+Jakarta,Kab. Boyolali,Boyolali,udara,30 kg,35500.0,1-2 HARI
+Jakarta,Kab. Karanganyar,Karanganyar,udara,30 kg,34400.0,1-2 HARI
+Jakarta,Kab. Kebumen,Kebumen,udara,30 kg,36600.0,1-2 HARI
+Jakarta,Kab. Klaten ,Klaten,udara,30 kg,34500.0,1-2 HARI
+Jakarta,Kab. Purworejo,Purworejo,udara,30 kg,36500.0,1-2 HARI
+Jakarta,Kab. Sragen,Sragen,udara,30 kg,36000.0,1-2 HARI
+Jakarta,Kab. Sukoharjo,Sukoharjo,udara,30 kg,36000.0,1-2 HARI
+Jakarta,Kab. Temanggung,Temanggung,udara,30 kg,36000.0,1-2 HARI
+Jakarta,Kab. Wonogiri,Wonogiri,udara,30 kg,36000.0,1-2 HARI
+Jakarta,Kab. Wonosobo,Wonosobo,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kota Magelang ,Magelang,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kota Surakarta,solo,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Bangkalan,Bangkalan,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Banyuwangi,Banyuwangi,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Blitar,Blitar,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Bondowoso,Bondowoso,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Gresik,Gresik,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Jember,Jember,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Jombang,Jombang,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Kediri,Kediri,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Lamongan,Lamongan,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Lumajang,Lumajang,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Madiun,Madiun,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Magetan,Magetan,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Malang ,Malang,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Mojokerto,Mojokerto,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Nganjuk,Nganjuk,udara,30 kg,40000.0,1-2 HARI
+Jakarta,Kab. Ngawi,Ngawi,udara,30 kg,40000.0,1-2 HARI
+Jakarta,Kab. Pacitan,Pacitan,udara,30 kg,40000.0,1-2 HARI
+Jakarta,Kab. Ponorogo,Ponorogo,udara,30 kg,40000.0,1-2 HARI
+Jakarta,Kab. Probolinggo,Probolinggo,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Sidoarjo,Sidoarjo,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Situbondo,Situbondo,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Sumenep,Sumenep,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kab. Tuban,Tuban,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kota Pasuruan,Pasuruan,udara,30 kg,38000.0,1-2 HARI
+Jakarta,Kota Surabaya,Surabaya,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Bantul,Bantul,udara,30 kg,33000.0,1-2 HARI
+Jakarta,Kab Gunung Kidul,Kidul,udara,30 kg,37000.0,1-2 HARI
+Jakarta,Kab. Kulon Progo,Kulon Progo,udara,30 kg,35000.0,1-2 HARI
+Jakarta,Kab. Sleman,Sleman,udara,30 kg,34000.0,1-2 HARI
+Jakarta,Kota Jogyakarta,Jogyakarta,udara,30 kg,31000.0,1-2 HARI
+Jakarta,Kota BANDUNG,Bandung,udara,30 kg,12700.0,1-2 HARI
+Jakarta,Kab Bandung,Kab Bandung,udara,30 kg,14600.0,1-2 HARI
+Jakarta,Kab Bandung,Bandung Barat,udara,30 kg,14800.0,1-2 HARI
+Jakarta,Kab Bekasi,Kab Bekasi,udara,30 kg,12000.0,1-2 HARI
+Jakarta,Kota Bogor ,Kota Bogor ,udara,30 kg,12000.0,1-2 HARI
+Jakarta,Kab. Bogor,Kab. Bogor,udara,30 kg,12000.0,1-2 HARI
+Jakarta,Kab Banajr,Kab Banajr,udara,30 kg,13000.0,1-2 HARI
+Jakarta,Kota Cirebon,Kota Cirebon,udara,30 kg,12700.0,1-2 HARI
+Jakarta,Kab Cirebon,Kab Cirebon,udara,30 kg,15000.0,1-2 HARI
+Jakarta,Kota Ciamis,Kota Ciamis,udara,30 kg,15000.0,1-2 HARI
+Jakarta,Kab. Ciamis,Kab. Ciamis,udara,30 kg,17300.0,1-2 HARI
+Jakarta,Kota Garut,Kota Garut,udara,30 kg,15000.0,1-2 HARI
+Jakarta,Kab. Garut,Kab. Garut,udara,30 kg,17300.0,1-2 HARI
+Jakarta,Kab. Indramayu,Kab. Indramayu,udara,30 kg,17700.0,1-2 HARI
+Jakarta,Kab. Karawang,Kab. Karawang,udara,30 kg,16800.0,1-2 HARI
+Jakarta,Kab. Kuningan,Kab. Kuningan,udara,30 kg,19300.0,1-2 HARI
+Jakarta,Kab. Majalengka,Kab. Majalengka,udara,30 kg,19100.0,1-2 HARI
+Jakarta,Kab Purwakarta,Kab Purwakarta,udara,30 kg,13400.0,1-2 HARI
+Jakarta,PANGANDARAN,PANGANDARAN,udara,30 kg,19900.0,1-2 HARI
+Jakarta,Kota Sukabumi,Kota Sukabumi,udara,30 kg,12800.0,1-2 HARI
+Jakarta,Kab. Sukabumi,Kab. Sukabumi,udara,30 kg,14300.0,1-2 HARI
+Jakarta,Kab. Subang,Kab. Subang,udara,30 kg,15100.0,1-2 HARI
+Jakarta,Kab Sumedang,Kab Sumedang,udara,30 kg,15300.0,1-2 HARI
+Jakarta,Kota Tasikmalaya ,Kota Tasikmalaya ,udara,30 kg,12450.0,1-2 HARI
+Jakarta,Kab. Tasikmalaya,Kab. Tasikmalaya,udara,30 kg,13700.0,1-2 HARI

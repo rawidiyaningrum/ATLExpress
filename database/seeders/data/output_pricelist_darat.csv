@@ -1,0 +1,429 @@
+origin_city,kabupaten_tujuan,destination_city,service_type,min_weight,price_per_kg,estimated_days
+Jakarta,Kab. Aceh Barat,Meulaboh,darat,50 kg,12750,8-9 HARI
+Jakarta,Kab. Aceh Barat Daya,BlangPidie,darat,50 kg,12000,8-9 HARI
+Jakarta,Kab. Aceh Besar,Jantho,darat,50 kg,12000,8-9 HARI
+Jakarta,Kab. Aceh Jaya,Krueng Sabee,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Aceh Selatan,Tapak Tuan,darat,50 kg,13500,8-9 HARI
+Jakarta,Kab. Aceh Singkil,Singkil,darat,50 kg,15000,8-9 HARI
+Jakarta,Kab. Tamlang,Kuala Simpang,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Aceh Tengah ,Takengon,darat,50 kg,12000,8-9 HARI
+Jakarta,Kab. Aceh Tenggara,Kutacane,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Aceh Timur,Idi Rayeuk,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Aceh Utara,Lhoksukon,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Bener Meriah,Simpang Tiga Radelon,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Bireuen,Kab Bireuen,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Gayo Lues,Blang Kejeren,darat,50 kg,15000,8-9 HARI
+Jakarta,Kab. Nagan Raya,Suka Makmue,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Pidie,Sigli,darat,50 kg,12750,8-9 HARI
+Jakarta,Kab. Pidie Jaya,Meuredeu,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Simeuleu,Sinabang,darat,50 kg,17000,8-9 HARI
+Jakarta,Kota Banda Aceh,Banda Aceh,darat,50 kg,10000,7-8 HARI
+Jakarta,Kota Langsa,Langsa,darat,50 kg,14250,7-8 HARI
+Jakarta,Kota Lhokseumawe,Lhokseumawe,darat,50 kg,14250,7-8 HARI
+Jakarta,Kota Sabang,Sabang,darat,50 kg,14250,7-8 HARI
+Jakarta,Kota Subulussalam,Subulissalam,darat,50 kg,15000,8-9 HARI
+Jakarta,Kab. Asahan,Kisaran,darat,50 kg,11300,8-9 HARI
+Jakarta,Kab. Batubara,Umapuluh,darat,50 kg,12750,8-9 HARI
+Jakarta,Kab. Dairi,Sidikalang,darat,50 kg,14250,8-9 HARI
+Jakarta,Kab. Deli Serdang,Lubuk Pakam,darat,50 kg,11250,8-9 HARI
+Jakarta,Kab. Humbang Hasudutan,Dolok Sanggul,darat,50 kg,12800,8-9 HARI
+Jakarta,Kab. Karo,Kabanjahe,darat,50 kg,14100,8-9 HARI
+Jakarta,Kab. Labuhan Batu,Rantau Prapat,darat,50 kg,11800,8-9 HARI
+Jakarta,Kab. Langkat,Stabat,darat,50 kg,12000,8-9 HARI
+Jakarta,Kab. Mandailing Natal,Panyabungan,darat,50 kg,12300,8-9 HARI
+Jakarta,Kab. Nias,Guning Sitoli,darat,50 kg,14300,8-9 HARI
+Jakarta,Kab. Nias Selatan,Teluk Dalam,darat,50 kg,14800,8-9 HARI
+Jakarta,Kab. Padang Lawas,Sibuhuan,darat,50 kg,13100,8-9 HARI
+Jakarta,Kab. Padang Lawas Utara,Gunung Tua,darat,50 kg,12850,8-9 HARI
+Jakarta,Kab. Pakpak bharat,Salak,darat,50 kg,12400,8-9 HARI
+Jakarta,Kab. Samosir,Pangururan,darat,50 kg,12600,8-9 HARI
+Jakarta,Kab. Serdang Bedagai,Sei Rampah,darat,50 kg,12000,8-9 HARI
+Jakarta,Kab. Simalungun,Pematang Siantar,darat,50 kg,11300,8-9 HARI
+Jakarta,Kab. Tapanuli Selatan,Padang Sidempuan,darat,50 kg,12800,8-9 HARI
+Jakarta,Kab. Tapanuli Tengah,Sibolga,darat,50 kg,12700,8-9 HARI
+Jakarta,Kab. Tapanuli Utara,Tarutung,darat,50 kg,12750,8-9 HARI
+Jakarta,Kab. Toba Samosir,Balige,darat,50 kg,11100,8-9 HARI
+Jakarta,Kota Binjai,Binjai,darat,50 kg,11250,8-9 HARI
+Jakarta,Kota Medan,Medan,darat,50 kg,8500,6-7 HARI
+Jakarta,Kota Padang Sidempuan,Padang Sidempuan,darat,50 kg,10800,6-8 HARI
+Jakarta,Kota Pematang Siantar,Pematang Siantar,darat,50 kg,10900,6-8 HARI
+Jakarta,Kota Sibolga,Sibolga,darat,50 kg,10600,6-8 HARI
+Jakarta,Kota Tanjung Balai,Tanjung Balai,darat,50 kg,11000,6-8 HARI
+Jakarta,Kota Tebing Tinggi,Tebing Tinggi,darat,50 kg,10100,6-8 HARI
+Jakarta,Kab. Bengkulu Selatan,Manna,darat,50 kg,9750,6-8 HARI
+Jakarta,Kab. Bengkulu Utara,Arga Makmur,darat,50 kg,9000,6-8 HARI
+Jakarta,Kab. Kaur,Kaur,darat,50 kg,10500,6-8 HARI
+Jakarta,Kab. Kepahiang,Kepahiang,darat,50 kg,90000,6-8 HARI
+Jakarta,Kab. Lebong,kab. Lebong,darat,50 kg,10500,6-8 HARI
+Jakarta,Kab. Muko-Muko,Muko-muko,darat,50 kg,10500,6-8 HARI
+Jakarta,Kab. Rejang Lebong,Curup,darat,50 kg,10500,6-8 HARI
+Jakarta,Kab. Seluma,Tais,darat,50 kg,9000,6-8 HARI
+Jakarta,Kota. Bengkulu,Bengkulu,darat,50 kg,7500,5-6 HARI
+Jakarta,Kab. Batang hari,Muara Bulian,darat,50 kg,11500,5-7 HARI
+Jakarta,Kab. Bungo,Muara Bungo,darat,50 kg,11300,5-7 HARI
+Jakarta,Kab. Kerinci,Sungai Penuh,darat,50 kg,10800,5-7 HARI
+Jakarta,Kab. Merangin,Bangko,darat,50 kg,11800,5-7 HARI
+Jakarta,Kab. Muaro Jambi,Sengeti,darat,50 kg,12200,5-7 HARI
+Jakarta,Kab. Sarolangun,Sarolangun,darat,50 kg,11000,5-7 HARI
+Jakarta,Kab. Tanjung Jabung Timur,Muarasabak,darat,50 kg,12000,5-7 HARI
+Jakarta,Kab. Tanjung Jabung Barat,Kualatungkai,darat,50 kg,11700,5-7 HARI
+Jakarta,Kab. Tebo,Muara Tebo,darat,50 kg,11300,5-7 HARI
+Jakarta,Kota Jambi,Jambi,darat,50 kg,7000,4-5 HARI
+Jakarta,Kab. Bengkalis,Bengkalis,darat,50 kg,14300,6-8 HARI
+Jakarta,Kab. Indragiri Hilir,Tembilahan,darat,50 kg,12400,6-8 HARI
+Jakarta,Kab. Indragiri Hulu,Rengat,darat,50 kg,11800,6-8 HARI
+Jakarta,Kab. Kampar,Bangkinang,darat,50 kg,12100,6-8 HARI
+Jakarta,Kab. Kuantan Singingi,Teluk Kuantan,darat,50 kg,13200,6-8 HARI
+Jakarta,Kab. Palalawan,Pangkalan Kerinci,darat,50 kg,12800,6-8 HARI
+Jakarta,Kab. Rokan Hulu,Pasir Pangaraian,darat,50 kg,12300,6-8 HARI
+Jakarta,Kab. Rokan Hilir,Bagan Siapi api,darat,50 kg,12500,6-8 HARI
+Jakarta,Kab.Siak,Siaks Indrapura,darat,50 kg,12900,6-8 HARI
+Jakarta,Kota Dumai,Dumai,darat,50 kg,12300,6-8 HARI
+Jakarta,Kota Pekanbaru,Pekanbaru,darat,50 kg,7500,4-5 HARI
+Jakarta,Kab. Agam,Lubuk Basung,darat,50 kg,12900,6-8 HARI
+Jakarta,Kab. Dharmasraya,Pualu Punjung,darat,50 kg,14000,6-8 HARI
+Jakarta,Kab. Limapuluh kota,Sarilamek,darat,50 kg,13700,6-8 HARI
+Jakarta,Kab. Kepulauan Mentawai,Tuapejat,darat,50 kg,15800,6-8 HARI
+Jakarta,Kab. Padang Pariaman,Pariaman,darat,50 kg,13600,6-8 HARI
+Jakarta,Kab. Pasaman,Lubuk Sikaping,darat,50 kg,13600,6-8 HARI
+Jakarta,Kab. Pasaman Barat,Simpang Empat,darat,50 kg,13300,6-8 HARI
+Jakarta,Kab. Pesisir Selatan,Painan,darat,50 kg,12000,6-8 HARI
+Jakarta,Kab. Sijunjung,Muara,darat,50 kg,14100,6-8 HARI
+Jakarta,Kab. Solok,Arosuka,darat,50 kg,14000,6-8 HARI
+Jakarta,Kab. Solok Selatan,Padang Aro,darat,50 kg,13800,6-8 HARI
+Jakarta,Kab. Tanah Datar,Batu Sangkar,darat,50 kg,13500,6-8 HARI
+Jakarta,Kota Bukittinggi,Bukittinggi,darat,50 kg,11000,5-6 HARI
+Jakarta,Kota Padang ,Padang,darat,50 kg,9000,5-6 HARI
+Jakarta,Kota Padang Panjang,Padang Panjang,darat,50 kg,10000,6-8 HARI
+Jakarta,Kota Pariaman,Pariaman,darat,50 kg,10000,6-8 HARI
+Jakarta,Kota Payakumbuh,Payakumbuh,darat,50 kg,13300,6-7 HARI
+Jakarta,Kota Sawahlunto,Sawahlunto,darat,50 kg,14200,6-7 HARI
+Jakarta,Kota Solok,Solok,darat,50 kg,12100,6-7 HARI
+Jakarta,Kab. Banyuasin,Pangkalan Balai,darat,50 kg,12300,5-6 HARI
+Jakarta,Kab. Empat Lawang,Tebing Tinggi,darat,50 kg,12900,5-6 HARI
+Jakarta,Kab. Lahat,Lahat,darat,50 kg,12400,5-6 HARI
+Jakarta,Kab. Muara Enim,Muara Enim,darat,50 kg,11800,5-6 HARI
+Jakarta,Kab. Musi Banyuasin,Sekayu,darat,50 kg,11900,5-6 HARI
+Jakarta,Kab. Musi Rawas,Muara Beliti Baru,darat,50 kg,13600,5-6 HARI
+Jakarta,Kab. Ogan Ilir,Indralaya,darat,50 kg,12500,5-6 HARI
+Jakarta,Kab. Ogan Komering Ilir,Kayu Agung,darat,50 kg,12700,5-6 HARI
+Jakarta,Kab. Ogan Komering Ulu,Baturaja,darat,50 kg,13200,5-6 HARI
+Jakarta,Kab. OKU Timur,Martapura,darat,50 kg,12100,5-6 HARI
+Jakarta,Kab. OKU Selatan,Muaradua,darat,50 kg,12800,5-6 HARI
+Jakarta,Kota Lubuk Linggau,Lubuk Linggau,darat,50 kg,13000,5-6 HARI
+Jakarta,Kota Pagar Alam,Pagar Alam,darat,50 kg,13500,5-6 HARI
+Jakarta,Kota Palembang,Palembang,darat,50 kg,6000,4-5 HARI
+Jakarta,Kota Prabumulih,Prabumulih,darat,50 kg,10700,4-5 HARI
+Jakarta,Kab. Lampung Barat,Liwa,darat,50 kg,13000,4-5 HARI
+Jakarta,kab. Lampung Selatan,Kalianda,darat,50 kg,12500,4-5 HARI
+Jakarta,Kab. Lampung Tengah,Gunung Sugih,darat,50 kg,12500,4-5 HARI
+Jakarta,Kab. Lampung Timur,Sukadana,darat,50 kg,12500,4-5 HARI
+Jakarta,Kab. Lampung Utara,Kotabumi,darat,50 kg,12500,4-5 HARI
+Jakarta,Kab. Way Kanan,Blambangan Umpu,darat,50 kg,13500,4-5 HARI
+Jakarta,Kab. Tanggamus,Kota Agung,darat,50 kg,14000,4-5 HARI
+Jakarta,Kab. Tulang Bawang,Manggala,darat,50 kg,14000,4-5 HARI
+Jakarta,Kab. Pesawaran,Gedong Tataan,darat,50 kg,13000,4-5 HARI
+Jakarta,Kota Bandar Lampung,Bandar Lampung,darat,50 kg,5500,2-3 HARI
+Jakarta,Kota Metro,Metro,darat,50 kg,7500,4-5 HARI
+Jakarta,Kab. Bangka,Sungaiilat,darat,100 kg,9500,5-6 HARI
+Jakarta,Kab. Bangka Barat,Kelapa,darat,100 kg,11000,5-6 HARI
+Jakarta,Kab. Bangka Tengah,Koba,darat,100 kg,10500,5-6 HARI
+Jakarta,Kab. Bangka Selatan,Toboali,darat,100 kg,11500,5-6 HARI
+Jakarta,Kab. Belitung Barat,Tanjung Pandan,darat,100 kg,10000,5-6 HARI
+Jakarta,Kab. Belitung Timur ,Manggar,darat,100 kg,11000,5-6 HARI
+Jakarta,Kota Pangkal Pinang,Pangkal Pinang,darat,100 kg,9500,4-5 HARI
+Jakarta,Kab. Karimun,Tanjung Balai Karimun,darat,100 kg,20500,8-10 HARI
+Jakarta,Kab. Bintan,Bandar Seri Bentan,darat,100 kg,20500,8-9 HARI
+Jakarta,Kab. Lingga,Daik,darat,100 kg,25000,8-9 HARI
+Jakarta,Kab. Natuna,Ranai,darat,100 kg,20000,8-10 HARI
+Jakarta,Kota Batam,Batam,darat,100 kg,10000,6-7 HARI
+Jakarta,Kota Tanjung Pinang,Tanjung Pinang,darat,100 kg,12000,6-7 HARI
+Jakarta,Kab. Badung,Menguwi,darat,50 kg,8500,6-7 HARI
+Jakarta,Kab. Bangli,Bangli,darat,50 kg,9500,6-7 HARI
+Jakarta,Kab. Buleleng,Singaraja,darat,50 kg,10000,6-7 HARI
+Jakarta,Kab. Gianyar,Gianyar,darat,50 kg,10500,6-7 HARI
+Jakarta,Kab. Jembrana,Negara,darat,50 kg,11000,6-7 HARI
+Jakarta,Kab. Karangasem,Amiapura,darat,50 kg,11500,6-7 HARI
+Jakarta,Kab. Klungkung,Samarapura,darat,50 kg,12000,6-7 HARI
+Jakarta,Kab. Tabanan,Tabanan,darat,50 kg,11000,6-7 HARI
+Jakarta,Kota Denpasar,Denpasar,darat,50 kg,7000,5-6 HARI
+Jakarta,Kab. Bima,Woha,darat,100 kg,13500,8-10 HARI
+Jakarta,Kab. Dompu,Dompu,darat,100 kg,10500,8-10 HARI
+Jakarta,Kab. Lombok Barat,Gerung,darat,100 kg,13000,8-10 HARI
+Jakarta,Kab. Lombok Tengah,Praya,darat,100 kg,13000,8-10 HARI
+Jakarta,Kab. Lombok Timur,Selong,darat,100 kg,13000,8-10 HARI
+Jakarta,Kab. Sumbawa,Sumbawa Besar,darat,100 kg,10500,8-9 HARI
+Jakarta,Kab.Sumbawa Barat,Taliwang,darat,100 kg,10000,8-9 HARI
+Jakarta,Kota Mataram,Mataram,darat,100 kg,10500,6-7 HARI
+Jakarta,Kota Bima,Bima,darat,100 kg,13500,8-9 HARI
+Jakarta,Kab. Alor,Kalabahi,darat,100 kg,15000,11-12 HARI
+Jakarta,Kab. Belu,Atambua,darat,100 kg,14000,11-12 HARI
+Jakarta,Kab. Ende,Ende,darat,100 kg,13500,11-12 HARI
+Jakarta,Kab. Flores Timur,Larantuka,darat,100 kg,14250,11-12 HARI
+Jakarta,Kab. Kupang,Oelamasi,darat,100 kg,14250,11-12 HARI
+Jakarta,Kab. Lembata,Lewoleba,darat,100 kg,18000,11-12 HARI
+Jakarta,Kab. Manggarai,Ruteng,darat,100 kg,13000,11-12 HARI
+Jakarta,Kab. Manggarai Barat,Labuan Bajo,darat,100 kg,13000,11-12 HARI
+Jakarta,Kab. Manggarai Timur,Borong,darat,100 kg,27000,11-12 HARI
+Jakarta,Kab. Nagekeo,Mbay,darat,100 kg,27000,11-12 HARI
+Jakarta,Kab. Ngada,Bajawa,darat,100 kg,19500,11-12 HARI
+Jakarta,Kab. Rote Ndao,Baa,darat,100 kg,13500,11-12 HARI
+Jakarta,Kab. Sikka,Maumere,darat,100 kg,14000,11-12 HARI
+Jakarta,Kab. Sumba Barat,Walkabubak,darat,100 kg,13500,11-12 HARI
+Jakarta,Kab. Sumba Brat daya,Tambolaka,darat,100 kg,15000,11-12 HARI
+Jakarta,Kab. Sumba Tengah,Waibakul,darat,100 kg,22000,11-12 HARI
+Jakarta,Kab. Sumba Timur,waingapu,darat,100 kg,27000,11-12 HARI
+Jakarta,Kab. Timur Tengah Selatan,Soe,darat,100 kg,18000,11-12 HARI
+Jakarta,Kab. Timur tengah utara,Kafamenanu,darat,100 kg,19500,11-12 HARI
+Jakarta,Kota Kupang ,Kupang,darat,100 kg,11000,9-10 HARI
+Jakarta,Kab. Bengkayang,Bengkayang,darat,100 kg,14000,7-8 HARI
+Jakarta,Kab. Kapuas Hulu,Putussibau,darat,100 kg,15750,7-8 HARI
+Jakarta,Kab. Ketapang,Ketapang,darat,100 kg,13500,7-8 HARI
+Jakarta,Kab. Kayong Utara,Sukadana/Teluk Melang,darat,100 kg,15000,7-8 HARI
+Jakarta,Kab. Landak,Ngabang,darat,100 kg,12000,7-8 HARI
+Jakarta,Kab. Melawi,Nanga Pinoh,darat,100 kg,12750,7-8 HARI
+Jakarta,Kab. Pontianak,Mempawah,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Sambas,Sambas,darat,100 kg,13000,7-8 HARI
+Jakarta,Kab. Sanggau,Sanggau,darat,100 kg,13000,7-8 HARI
+Jakarta,Kab. Sekadau,Sekadau Hilir,darat,100 kg,15000,7-8 HARI
+Jakarta,Kab. Sintang,Sintang,darat,100 kg,12000,7-8 HARI
+Jakarta,Kab. Kubu raya,Sungai raya,darat,100 kg,15000,7-8 HARI
+Jakarta,Kota Pontianak,Pontianak,darat,100 kg,8500,5-6 HARI
+Jakarta,Kota Singkawang ,Singkawang,darat,100 kg,10500,7-8 HARI
+Jakarta,Kab. Balangan,Paringin,darat,100 kg,11500,8-9 HARI
+Jakarta,Kab. Banjar  ,Martapura,darat,100 kg,10000,7-8 HARI
+Jakarta,Kab. Barito Kuala,Marabahan,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Hulu Sungai Selatan,Kandangan,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Hulu Sungai Tengah,Barabai,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Hulu Sungai Utara,Amuntai,darat,100 kg,10500,8-9 HARI
+Jakarta,Kab. Kota Baru,Kotabaru,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Tanah Laut,Pelaihari,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Tabalong,Tanjung,darat,100 kg,11000,7-8 HARI
+Jakarta,Kab. Tanah Bambu,Batu Licin,darat,100 kg,11250,8-9 HARI
+Jakarta,Kab. Tapin,Rantau   ,darat,100 kg,12500,7-8 HARI
+Jakarta,Kab. Banjarbaru,Banjarbaru,darat,100 kg,12550,6-7 HARI
+Jakarta,Kota Banjarmasin,Banjarmasin,darat,50 kg,10500,5-6 HARI
+Jakarta,Kab. Barito Selatan,Buntok,darat,100 kg,12000,8-9 HARI
+Jakarta,Kab. Barito Timur,Tamiang Layang,darat,100 kg,12000,8-9 HARI
+Jakarta,Kab. Barito Utara,Muara Teweh,darat,100 kg,12000,8-9 HARI
+Jakarta,Kab. Gunung Mas,Kuala Kurun,darat,100 kg,14000,10-12 HARI
+Jakarta,Kab. Kapuas  ,Kuala Kapuas,darat,100 kg,14000,10-12 HARI
+Jakarta,Kab. Katingan,Kasongan,darat,100 kg,14000,10-12 HARI
+Jakarta,Kab. Kotawaringin Barat,Pangkalan Bun,darat,100 kg,13500,10-12 HARI
+Jakarta,Kab. Kotawaringin Timur,Sampit,darat,100 kg,13550,10-12 HARI
+Jakarta,Kab. Lamandau,Nanga Bulik,darat,100 kg,13500,10-12 HARI
+Jakarta,Kab. Murung Raya,Puruk Cahu,darat,100 kg,13500,10-12 HARI
+Jakarta,Kab. Pulang Pisau,Pulang Pisau,darat,100 kg,14000,10-12 HARI
+Jakarta,Kab. Sukamara,Sukamara,darat,100 kg,14000,10-12 HARI
+Jakarta,Kab. Seruyan,Kuala Pembuang,darat,100 kg,13500,10-12 HARI
+Jakarta,Kota Palangkaraya,Palangkaraya,darat,100 kg,11000,8-9 HARI
+Jakarta,Kab. Berau,Tanjung Redep,darat,100 kg,15000,10-12 HARI
+Jakarta,Kab. Bulungan,Tanjung Selor,darat,100 kg,16000,10-12 HARI
+Jakarta,Kab. Kutai Barat,Sendawar,darat,100 kg,14000,10-12 HARI
+Jakarta,Kab. Kutai Kartanegara,Tenggarong,darat,100 kg,13500,10-12 HARI
+Jakarta,Kab. Kutai Timur,Sanggata,darat,100 kg,13500,10-12 HARI
+Jakarta,Kab. Malinau,Malinau,darat,100 kg,18000,10-12 HARI
+Jakarta,Kab. Nunukan,Nunukan,darat,100 kg,20000,10-12 HARI
+Jakarta,Kab Paser,Tanah Grogot,darat,100 kg,15000,10-12 HARI
+Jakarta,Kab. Penajam Paser Utara,Penajam,darat,100 kg,14500,10-12 HARI
+Jakarta,Kab. Tana Tidung,Tana Tidung,darat,100 kg,14500,10-12 HARI
+Jakarta,Kota Balikpapan,Balikpapan,darat,100 kg,10500,10-12 HARI
+Jakarta,Kota Bontang,Bontang,darat,100 kg,12500,7-8 HARI
+Jakarta,Kota Samarinda,Samarinda,darat,100 kg,11500,7-8 HARI
+Jakarta,Kota Tarakan,Tarakan,darat,100 kg,15000,9-11 HAR
+Jakarta,Kab. Boalemo,Tilamuta,darat,100 kg,17000,12-14 HARI
+Jakarta,Kab. Bone Bolango,Suwawa,darat,100 kg,18000,12-14 HARI
+Jakarta,Kab. Gorontalo,Limboto,darat,100 kg,15500,12-14 HARI
+Jakarta,Kab. Gorontalo Utara,Kwandang,darat,100 kg,16500,12-14 HARI
+Jakarta,Kab. Pahuwato,Marisa,darat,100 kg,16000,12-14 HARI
+Jakarta,Kota Gorontalo,Gorontalo,darat,100 kg,14000,11-12 HARI
+Jakarta,Kab. Bantaeng,Bantaeng,darat,100 kg,14500,8-10 HARI
+Jakarta,Kab. Barru,Barru,darat,100 kg,13000,8-10 HARI
+Jakarta,Kab. Bone ,Watampone,darat,100 kg,12500,8-10 HARI
+Jakarta,Kab. Bulukamba,Bulukamba,darat,100 kg,13500,8-10 HARI
+Jakarta,Kab. Enrekang,Enrekang,darat,100 kg,14500,8-10 HARI
+Jakarta,Kab. Gowa,Sunggumunasa,darat,100 kg,11000,8-10 HARI
+Jakarta,Kab. Janeponto,Janeponto,darat,100 kg,13500,8-10 HARI
+Jakarta,Kab. Luwu Utara,Belopa,darat,100 kg,16500,8-10 HARI
+Jakarta,Kab. Luwu Timur,Soroako/Malili,darat,100 kg,16500,8-10 HARI
+Jakarta,Kab. Luwu Utara,Masamba,darat,100 kg,17000,8-10 HARI
+Jakarta,Kab Maros,Maros,darat,100 kg,13500,8-10 HARI
+Jakarta,Kab. Pangkajane Kepulauan,Pangkajane,darat,100 kg,13500,8-10 HARI
+Jakarta,Kab.Pinrang,Pinrang,darat,100 kg,14000,8-10 HARI
+Jakarta,Kab. Selayar,Benteng,darat,100 kg,18000,8-10 HARI
+Jakarta,Kab. Sinjai,Sinjai,darat,100 kg,17500,8-10 HARI
+Jakarta,Kab. Sindenreng Rappang,Sidenreng,darat,100 kg,15000,8-10 HARI
+Jakarta,Kab. Soppeng,Watansoppeng,darat,100 kg,14000,8-10 HARI
+Jakarta,Kab. Takalar,Takalar,darat,100 kg,15500,8-10 HARI
+Jakarta,Kab. Tana toraja,Makale,darat,100 kg,14500,8-10 HARI
+Jakarta,Kab. Wajo,Sengkang,darat,100 kg,14000,8-10 HARI
+Jakarta,Kota Makassar,Makassar,darat,100 kg,9500,6-7 HARI
+Jakarta,Kota Palopo,Palopo,darat,100 kg,12500,8-10 HARI
+Jakarta,Kota Pare-Pare,Pare-Pare,darat,100 kg,13000,8-10 HARI
+Jakarta,Kab. Bombana,Rumbia,darat,100 kg,19000,12-13 HARI
+Jakarta,Kab. Buton&Buton Utara,Pasar Wajo,darat,100 kg,19000,12-13 HARI
+Jakarta,Kab. Kolaka,Kolaka,darat,100 kg,15000,12-13 HARI
+Jakarta,Kab. Kolaka Utara,Lasusua,darat,100 kg,15000,12-13 HARI
+Jakarta,Kab. Konawe,Unaaha,darat,100 kg,16500,12-13 HARI
+Jakarta,Kab. Konawe Utara/Selatan,Wanggodo/Andolo,darat,100 kg,15000,12-13 HARI
+Jakarta,Kab. Muna,Raha ,darat,100 kg,15000,12-13 HARI
+Jakarta,Kab. Wakatobi,Wangi-wangi,darat,100 kg,18600,12-13 HARI
+Jakarta,Kota Bau-bau,Bau-Bau,darat,100 kg,13000,12-13 HARI
+Jakarta,Kota Kendari,Kendari,darat,100 kg,11500,10-12 HARI
+Jakarta,Kab. Bolaang Mongondow,Kotamobagu,darat,100 kg,17000,12-14 HARI
+Jakarta,Kab. Bolaang Mongondow Timur,Boroko,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab kepulauan Sangihe,Tahuna,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Kepulauan talaud,Melonguane,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Minahasa,Tondano,darat,100 kg,12000,12-14 HARI
+Jakarta,Kab. Minahasa Utara,Airmadidi,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Minahasa Selatan,Amurang,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Minahasa Tenggara,Ratahan,darat,100 kg,15000,12-14 HARI
+Jakarta,Kota Bitung,Bitung,darat,100 kg,18000,12-14 HARI
+Jakarta,Kota Manado,Manado,darat,100 kg,11500,10-12 HARI
+Jakarta,Kota Tomohon,Tomohon,darat,100 kg,12000,10-12 HARI
+Jakarta,Kab. Majane,Majane,darat,100 kg,11250,12-14 HARI
+Jakarta,Kab. Mamasa,Mamasa,darat,100 kg,11250,12-14 HARI
+Jakarta,Kab. Mamuju,Mamuju,darat,100 kg,10500,12-14 HARI
+Jakarta,Kab. Mamuju Utara,Pasangkayu,darat,100 kg,16500,12-14 HARI
+Jakarta,Kab. Polewali Mandar,Polewali,darat,100 kg,10500,12-14 HARI
+Jakarta,Kab. Banggai,Luwuk,darat,100 kg,22100,12-14 HARI
+Jakarta,Kab. Banggai Kepulauan,Banggai,darat,100 kg,27100,12-14 HARI
+Jakarta,Kab. Buol,Buol,darat,100 kg,20800,12-14 HARI
+Jakarta,Kab. Donggala,Bunawa,darat,100 kg,13000,12-14 HARI
+Jakarta,Kab. Morowali,Bungku,darat,100 kg,16500,12-14 HARI
+Jakarta,Kab. Parigi Moutong,Parigi,darat,100 kg,14200,12-14 HARI
+Jakarta,Kab. Poso,Poso,darat,100 kg,12600,12-14 HARI
+Jakarta,Kab. Tojo Una Una,Ampana,darat,100 kg,13800,12-14 HARI
+Jakarta,Kab. Toli-Toli,Tolitoli,darat,100 kg,14900,12-14 HARI
+Jakarta,Kota Palu,Palu,darat,100 kg,12000,10-12 HARI
+Jakarta,Kab. Buru,Namlea,darat,100 kg,16000,10-12 HARI
+Jakarta,Kab. Kepulauan Aru,Dobo,darat,100 kg,16400,10-12 HARI
+Jakarta,Kab. Maluku Tengah,Masohi,darat,100 kg,16700,10-12 HARI
+Jakarta,Kab. Maluku Tenggara,Tual,darat,100 kg,17000,10-12 HARI
+Jakarta,Kab. Maluku Tenggara Barat,Saumiaki,darat,100 kg,16900,10-12 HARI
+Jakarta,Kab. Seram Bagian Barat,Piru,darat,100 kg,16500,10-12 HARI
+Jakarta,Kab. Seram Bagian Timur,Dataran Hunimoa,darat,100 kg,16400,10-12 HARI
+Jakarta,Kota Ambon,Ambon,darat,100 kg,11000,9-10 HARI
+Jakarta,Kab. Halmahera Barat,Jallolo,darat,100 kg,20000,10-12 HARI
+Jakarta,Kab. Halmahera Selatan,Labuha,darat,100 kg,20000,10-12 HARI
+Jakarta,Kab. Halmahera Tengah,Weda,darat,100 kg,17000,10-12 HARI
+Jakarta,Kab. Halmahera Timur,Maba,darat,100 kg,16200,10-12 HARI
+Jakarta,Kab. Halmahera Utara,Tobelo,darat,100 kg,15500,10-12 HARI
+Jakarta,Kab. Kepulauan Sula,Sanana,darat,100 kg,15500,10-12 HARI
+Jakarta,Kota Ternate,Ternate,darat,100 kg,12000,9-10 HARI
+Jakarta,Kota Tidore,Tidore,darat,100 kg,15000,10-12 HARI
+Jakarta,Kab. Fak-fak,Fak-fak,darat,100 kg,19000,12-14 HARI
+Jakarta,Kab. Kaimana,Kaimana,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Raja Ampat,Waisal,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Sorong ,Abun,darat,100 kg,18000,12-14 HARI
+Jakarta,Kab. Sorong Selatan,Teminabuan,darat,100 kg,18000,12-14 HARI
+Jakarta,Kab. Teluk Bintuni,Bintuni,darat,100 kg,18000,12-14 HARI
+Jakarta,Kab. Teluk Wondama,Rasel,darat,100 kg,20000,12-14 HARI
+Jakarta,Kota Sorong,Sorong,darat,100 kg,15000,10-12 HARI
+Jakarta,Kab. Mimika,Timika,darat,100 kg,17000,12-14 HARI
+Jakarta,Kab. Nabire,Nabire,darat,100 kg,17000,12-14 HARI
+Jakarta,Kab. Manokwari,Manokwari,darat,100 kg,17000,10-12 HARI
+Jakarta,Kab. Paniai,Enarotari,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Asmat,Agats,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Biak Numfor,Biak,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Boven Digoel,Tanah Merah,darat,100 kg,17000,12-14 HARI
+Jakarta,Kab. Jayapura,sentani,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Jayawijaya,Wamena,darat,100 kg,17000,12-14 HARI
+Jakarta,Kab. Keerom,Waris,darat,100 kg,18000,12-14 HARI
+Jakarta,Maapi,Kepi,darat,100 kg,16000,12-14 HARI
+Jakarta,Kab. Merauke,Merauke,darat,100 kg,16000,10-12 HARI
+Jakarta,Kab. Pegunungan Bintang,Oksibil,darat,100 kg,22000,12-14 HARI
+Jakarta,Kab. Puncak Jaya,Mulia,darat,100 kg,21000,12-14 HARI
+Jakarta,Kab. Sarmi,Sarmi,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Supiori,Sorendiweri,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Tolikora,Karubaga,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Waropen,Botawa,darat,100 kg,20000,12-14 HARI
+Jakarta,Kab. Yakuhimo,Sumonai,darat,100 kg,15000,12-14 HARI
+Jakarta,Kab. Yapen Waropen,Serui,darat,100 kg,18000,12-14 HARI
+Jakarta,Kab. Memberamo Raya,Burmeso,darat,100 kg,18000,12-14 HARI
+Jakarta,Kota Jayapura,Jayapura,darat,100 kg,11000,10-12 HARI
+Jakarta,Kab. Banjarnegara,Banjarnegara,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Banyumas,Banyumas,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Batang ,Batang,darat,30 kg,6800,2-3 HARI
+Jakarta,Kab. Blora,Blora,darat,30 kg,8500,2-3 HARI
+Jakarta,Kab. Brebes,Brebes,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Demak,Demak,darat,30 kg,8500,2-3 HARI
+Jakarta,Kab. Jepara,Jepara,darat,30 kg,8500,2-3 HARI
+Jakarta,Kab. Kendal,Kendal,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Kudus,Kudus,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Pati,Pati,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Pekalongan,Pekalongan,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Pemalang,Pemalang,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Rembang,Rembang,darat,30 kg,7300,2-3 HARI
+Jakarta,Kab. Tegal,Tegal,darat,30 kg,7500,2-3 HARI
+Jakarta,Kota Salatiga,Salatiga,darat,30 kg,7000,2-3 HARI
+Jakarta,Kota Semarang,Semarang,darat,30 kg,5500,2-3 HARI
+Jakarta,Kab. Magelang,Magelang,darat,30 kg,6800,2-3 HARI
+Jakarta,Kab. Cilacap,Cilacap,darat,30 kg,8500,2-3 HARI
+Jakarta,Kab. Boyolali,Boyolali,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Karanganyar,Karanganyar,darat,30 kg,8500,2-3 HARI
+Jakarta,Kab. Kebumen,Kebumen,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Klaten ,Klaten,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Purworejo,Purworejo,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Sragen,Sragen,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Sukoharjo,Sukoharjo,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Temanggung,Temanggung,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Wonogiri,Wonogiri,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Wonosobo,Wonosobo,darat,30 kg,7600,2-3 HARI
+Jakarta,Kota Magelang ,Magelang,darat,30 kg,7500,2-3 HARI
+Jakarta,Kota Surakarta,solo,darat,30 kg,6000,2-3 HARI
+Jakarta,Kab. Bangkalan,Bangkalan,darat,30 kg,9500,2-3 HARI
+Jakarta,Kab. Banyuwangi,Banyuwangi,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Blitar,Blitar,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Bondowoso,Bondowoso,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Gresik,Gresik,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Jember,Jember,darat,30 kg,8500,2-3 HARI
+Jakarta,Kab. Jombang,Jombang,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Kediri,Kediri,darat,30 kg,6500,2-3 HARI
+Jakarta,Kab. Lamongan,Lamongan,darat,30 kg,6500,2-3 HARI
+Jakarta,Kab. Lumajang,Lumajang,darat,30 kg,7700,2-3 HARI
+Jakarta,Kab. Madiun,Madiun,darat,30 kg,6000,2-3 HARI
+Jakarta,Kab. Magetan,Magetan,darat,30 kg,7700,2-3 HARI
+Jakarta,Kab. Malang ,Malang,darat,30 kg,6500,2-3 HARI
+Jakarta,Kab. Mojokerto,Mojokerto,darat,30 kg,6500,2-3 HARI
+Jakarta,Kab. Nganjuk,Nganjuk,darat,30 kg,6500,2-3 HARI
+Jakarta,Kab. Ngawi,Ngawi,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Pacitan,Pacitan,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Ponorogo,Ponorogo,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Probolinggo,Probolinggo,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Sidoarjo,Sidoarjo,darat,30 kg,6500,2-3 HARI
+Jakarta,Kab. Situbondo,Situbondo,darat,30 kg,7700,2-3 HARI
+Jakarta,Kab. Sumenep,Sumenep,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Tuban,Tuban,darat,30 kg,7500,2-3 HARI
+Jakarta,Kota Pasuruan,Pasuruan,darat,30 kg,8000,2-3 HARI
+Jakarta,Kota Surabaya,Surabaya,darat,30 kg,6000,2-3 HARI
+Jakarta,Kab. Bantul,Bantul,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab Gunung Kidul,Kidul,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Kulon Progo,Kulon Progo,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Sleman,Sleman,darat,30 kg,7000,2-3 HARI
+Jakarta,Kota Jogyakarta,Jogyakarta,darat,30 kg,6000,2-3 HARI
+Jakarta,Kota BANDUNG,Bandung,darat,30 kg,5500,2-3 HARI
+Jakarta,Kab Bandung,Kab Bandung,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab Bandung,Bandung Barat,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab Bekasi,Kab Bekasi,darat,30 kg,4000,2-3 HARI
+Jakarta,Kota Bogor ,Kota Bogor ,darat,30 kg,3000,2-3 HARI
+Jakarta,Kab. Bogor,Kab. Bogor,darat,30 kg,3000,2-3 HARI
+Jakarta,Kab Banajr,Kab Banajr,darat,30 kg,8000,2-3 HARI
+Jakarta,Kota Cirebon,Kota Cirebon,darat,30 kg,5500,2-3 HARI
+Jakarta,Kab Cirebon,Kab Cirebon,darat,30 kg,7000,2-3 HARI
+Jakarta,Kota Ciamis,Kota Ciamis,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Ciamis,Kab. Ciamis,darat,30 kg,7500,2-3 HARI
+Jakarta,Kota Garut,Kota Garut,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Garut,Kab. Garut,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Indramayu,Kab. Indramayu,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Karawang,Kab. Karawang,darat,30 kg,8000,2-3 HARI
+Jakarta,Kab. Kuningan,Kab. Kuningan,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Majalengka,Kab. Majalengka,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab Purwakarta,Kab Purwakarta,darat,30 kg,7000,2-3 HARI
+Jakarta,PANGANDARAN,PANGANDARAN,darat,30 kg,12000,2-3 HARI
+Jakarta,Kota Sukabumi,Kota Sukabumi,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Sukabumi,Kab. Sukabumi,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab. Subang,Kab. Subang,darat,30 kg,7500,2-3 HARI
+Jakarta,Kab Sumedang,Kab Sumedang,darat,30 kg,7500,2-3 HARI
+Jakarta,Kota Tasikmalaya ,Kota Tasikmalaya ,darat,30 kg,7000,2-3 HARI
+Jakarta,Kab. Tasikmalaya,Kab. Tasikmalaya,darat,30 kg,8500,2-3 HARI

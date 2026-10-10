@@ -86,6 +86,7 @@ class Shipment extends Model
         'receiver_phone',
         'receiver_address',
         'origin',
+        'kabupaten_tujuan',
         'destination',
         'service_type',
         'item_type',

@@ -147,17 +147,35 @@ class CreateShipment extends CreateRecord
                             ->rule(fn (): array => [Rule::in(array_keys(app(TariffCalculatorService::class)->getOriginOptions()))])
                             ->live()
                             ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                                $set('kabupaten_tujuan', null);
+                                $set('destination', null);
+                                $this->syncServiceType($get, $set);
+                                $this->applyRate($get, $set);
+                            }),
+                        Forms\Components\Select::make('kabupaten_tujuan')
+                            ->label('Kabupaten Tujuan')
+                            ->options(fn (Forms\Get $get): array => app(TariffCalculatorService::class)->getKabupatenOptions((string) $get('origin')))
+                            ->getSearchResultsUsing(fn (Forms\Get $get, string $search): array => app(TariffCalculatorService::class)->searchKabupatenOptions((string) $get('origin'), $search))
+                            ->getOptionLabelUsing(fn ($value): ?string => blank($value) ? null : (string) $value)
+                            ->searchable()
+                            ->required()
+                            ->disabled(fn (Forms\Get $get): bool => blank($get('origin')))
+                            ->rule(fn (Forms\Get $get): array => [Rule::in(array_keys(app(TariffCalculatorService::class)->getKabupatenOptions((string) $get('origin'))))])
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
                                 $set('destination', null);
                                 $this->syncServiceType($get, $set);
                                 $this->applyRate($get, $set);
                             }),
                         Forms\Components\Select::make('destination')
                             ->label('Kota Tujuan')
-                            ->options(fn (Forms\Get $get): array => app(TariffCalculatorService::class)->getDestinationOptions((string) $get('origin')))
+                            ->options(fn (Forms\Get $get): array => app(TariffCalculatorService::class)->getDestinationOptions((string) $get('origin'), (string) $get('kabupaten_tujuan')))
+                            ->getSearchResultsUsing(fn (Forms\Get $get, string $search): array => app(TariffCalculatorService::class)->searchDestinationOptions((string) $get('origin'), (string) $get('kabupaten_tujuan'), $search))
+                            ->getOptionLabelUsing(fn ($value): ?string => blank($value) ? null : (string) $value)
                             ->searchable()
                             ->required()
-                            ->disabled(fn (Forms\Get $get): bool => blank($get('origin')))
-                            ->rule(fn (Forms\Get $get): array => [Rule::in(array_keys(app(TariffCalculatorService::class)->getDestinationOptions((string) $get('origin'))))])
+                            ->disabled(fn (Forms\Get $get): bool => blank($get('kabupaten_tujuan')))
+                            ->rule(fn (Forms\Get $get): array => [Rule::in(array_keys(app(TariffCalculatorService::class)->getDestinationOptions((string) $get('origin'), (string) $get('kabupaten_tujuan'))))])
                             ->live()
                             ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
                                 $this->syncServiceType($get, $set);
@@ -167,7 +185,7 @@ class CreateShipment extends CreateRecord
                             ->required()
                             ->rule(fn (Forms\Get $get): array => [Rule::in(array_keys($this->availableServices($get)))]),
                     ])
-                    ->columns(2),
+                    ->columns(3),
                 $this->tariffComparisonSection(),
             ]);
     }
@@ -324,10 +342,11 @@ class CreateShipment extends CreateRecord
     protected function currentRate(Forms\Get $get): ?array
     {
         $origin = $get('origin');
+        $kabupaten = $get('kabupaten_tujuan');
         $destination = $get('destination');
         $serviceType = $get('service_type');
 
-        if (blank($origin) || blank($destination) || blank($serviceType)) {
+        if (blank($origin) || blank($kabupaten) || blank($destination) || blank($serviceType)) {
             return null;
         }
 
@@ -335,6 +354,7 @@ class CreateShipment extends CreateRecord
 
         return app(TariffCalculatorService::class)->rateFor(
             (string) $origin,
+            (string) $kabupaten,
             (string) $destination,
             (string) $serviceType,
             $weight > 0 ? $weight : null,
@@ -347,7 +367,7 @@ class CreateShipment extends CreateRecord
      */
     protected function routeIsKnown(Forms\Get $get): bool
     {
-        return filled($get('origin')) && filled($get('destination'));
+        return filled($get('origin')) && filled($get('kabupaten_tujuan')) && filled($get('destination'));
     }
 
     /**
@@ -355,12 +375,13 @@ class CreateShipment extends CreateRecord
      */
     protected function availableServices(Forms\Get $get): array
     {
-        if (blank($get('origin')) || blank($get('destination'))) {
+        if (blank($get('origin')) || blank($get('kabupaten_tujuan')) || blank($get('destination'))) {
             return [];
         }
 
         return app(TariffCalculatorService::class)->availableServiceTypes(
             (string) $get('origin'),
+            (string) $get('kabupaten_tujuan'),
             (string) $get('destination'),
         );
     }
@@ -370,12 +391,13 @@ class CreateShipment extends CreateRecord
      */
     protected function rateForService(Forms\Get $get, string $serviceType): ?array
     {
-        if (blank($get('origin')) || blank($get('destination'))) {
+        if (blank($get('origin')) || blank($get('kabupaten_tujuan')) || blank($get('destination'))) {
             return null;
         }
 
         return app(TariffCalculatorService::class)->rateFor(
             (string) $get('origin'),
+            (string) $get('kabupaten_tujuan'),
             (string) $get('destination'),
             $serviceType,
         );

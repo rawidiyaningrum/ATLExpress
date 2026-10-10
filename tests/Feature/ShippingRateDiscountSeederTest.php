@@ -39,7 +39,7 @@ class ShippingRateDiscountSeederTest extends TestCase
 
     public function test_only_the_price_is_touched(): void
     {
-        $rate = $this->rate('Meulaboh', 'darat', 50, 15000, 9);
+        $rate = $this->rate('Meulaboh', 'darat', 50, 15000, '9');
 
         $this->seed(ShippingRateDiscountSeeder::class);
 
@@ -47,7 +47,7 @@ class ShippingRateDiscountSeederTest extends TestCase
 
         $this->assertSame('8000.00', $fresh->price_per_kg);
         $this->assertSame('50.00', $fresh->min_weight);
-        $this->assertSame(9, $fresh->estimated_days);
+        $this->assertSame('9', $fresh->estimated_days);
         $this->assertSame('Meulaboh', $fresh->destination_city);
         $this->assertSame('Jakarta', $fresh->origin_city);
     }
@@ -81,7 +81,7 @@ class ShippingRateDiscountSeederTest extends TestCase
         $this->assertSame(0, ShippingRate::query()->count());
     }
 
-    private function rate(string $city, string $serviceType, int $minWeight, float $price, int $days = 2): ShippingRate
+    private function rate(string $city, string $serviceType, int $minWeight, float $price, string $days = '2'): ShippingRate
     {
         return ShippingRate::create([
             'origin_city' => 'Jakarta',

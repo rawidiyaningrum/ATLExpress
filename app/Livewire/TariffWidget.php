@@ -11,22 +11,39 @@ use Livewire\Component;
 class TariffWidget extends Component
 {
     public $origin = '';
+
+    public $kabupaten = '';
+
     public $destination = '';
+
     public $weight = 1;
+
     public $origins = [];
+
+    public $kabupatens = [];
+
     public $destinations = [];
+
     public $results = [];
 
     public $showBooking = false;
+
     public $bookingSuccess = false;
 
     public $name = '';
+
     public $phone = '';
+
     public $email = '';
+
     public $pickup_address = '';
+
     public $item_type = '';
+
     public $dimensions = '';
+
     public $notes = '';
+
     public $service_type = '';
 
     protected TariffCalculatorService $tariffService;
@@ -39,19 +56,30 @@ class TariffWidget extends Component
 
     public function updatedOrigin()
     {
-        $this->destinations = $this->tariffService->getDestinations($this->origin);
+        $this->kabupatens = $this->tariffService->getKabupatens($this->origin);
+        $this->kabupaten = '';
+        $this->destinations = [];
         $this->destination = '';
+        $this->results = [];
+    }
+
+    public function updatedKabupaten()
+    {
+        $this->destinations = $this->tariffService->getDestinations($this->origin, $this->kabupaten);
+        $this->destination = '';
+        $this->results = [];
     }
 
     public function calculate()
     {
         $this->validate([
             'origin' => 'required|string',
+            'kabupaten' => 'required|string',
             'destination' => 'required|string',
             'weight' => 'required|numeric|min:0.5',
         ]);
 
-        $this->results = $this->tariffService->calculate($this->origin, $this->destination, $this->weight);
+        $this->results = $this->tariffService->calculate($this->origin, $this->kabupaten, $this->destination, $this->weight);
     }
 
     public function openBooking()

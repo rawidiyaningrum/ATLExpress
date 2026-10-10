@@ -41,6 +41,9 @@ class ShippingRateResource extends Resource
                     ->label('Kota Asal')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('kabupaten_tujuan')
+                    ->label('Kabupaten Tujuan')
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('destination_city')
                     ->label('Kota Tujuan')
                     ->required()
@@ -66,8 +69,8 @@ class ShippingRateResource extends Resource
                     ->prefix('Rp'),
                 Forms\Components\TextInput::make('estimated_days')
                     ->label('Estimasi Pengiriman')
-                    ->numeric()
                     ->required()
+                    ->placeholder('mis. 2-3')
                     ->suffix('hari'),
             ])->columns(2),
         ]);
@@ -81,6 +84,11 @@ class ShippingRateResource extends Resource
                     ->label('Kota Asal')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('kabupaten_tujuan')
+                    ->label('Kabupaten Tujuan')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('destination_city')
                     ->label('Kota Tujuan')
                     ->searchable()
@@ -194,7 +202,6 @@ class ShippingRateResource extends Resource
                                 ->placeholder('Kosongkan jika tidak diubah'),
                             Forms\Components\TextInput::make('estimated_days')
                                 ->label('Estimasi hari (baru)')
-                                ->numeric()
                                 ->placeholder('Kosongkan jika tidak diubah'),
                         ])
                         ->action(function (Collection $records, array $data): void {
@@ -207,7 +214,7 @@ class ShippingRateResource extends Resource
                                 $updates['min_weight'] = $data['min_weight'];
                             }
                             if (filled($data['estimated_days'] ?? null)) {
-                                $updates['estimated_days'] = (int) $data['estimated_days'];
+                                $updates['estimated_days'] = $data['estimated_days'];
                             }
 
                             if ($updates !== []) {

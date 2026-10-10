@@ -1,6 +1,6 @@
 <div>
     <form wire:submit="calculate" class="space-y-4">
-        <div class="grid sm:grid-cols-2 gap-4">
+        <div class="grid sm:grid-cols-3 gap-4">
             <div>
                 <label for="origin" class="block text-sm font-bold text-gray-700 mb-2">Asal *</label>
                 <select id="origin" wire:model.live="origin" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-gold focus:border-gold transition">
@@ -14,13 +14,33 @@
                 @enderror
             </div>
             <div>
+                <label for="kabupaten" class="block text-sm font-bold text-gray-700 mb-2">Kabupaten Tujuan *</label>
+                <x-searchable-select
+                    name="kabupaten"
+                    id="kabupaten"
+                    :options="$kabupatens"
+                    :selected="$kabupaten"
+                    placeholder="Pilih Kabupaten"
+                    search-placeholder="Cari kabupaten..."
+                    :disabled="empty($kabupatens)"
+                    wire:key="kabupaten-select"
+                />
+                @error('kabupaten')
+                    <p class="mt-1 text-accent text-xs">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
                 <label for="destination" class="block text-sm font-bold text-gray-700 mb-2">Tujuan *</label>
-                <select id="destination" wire:model="destination" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-gold focus:border-gold transition">
-                    <option value="">Pilih Kota Tujuan</option>
-                    @foreach($destinations as $city)
-                        <option value="{{ $city }}">{{ $city }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="destination"
+                    id="destination"
+                    :options="$destinations"
+                    :selected="$destination"
+                    placeholder="Pilih Kota Tujuan"
+                    search-placeholder="Cari kota tujuan..."
+                    :disabled="empty($destinations)"
+                    wire:key="destination-select"
+                />
                 @error('destination')
                     <p class="mt-1 text-accent text-xs">{{ $message }}</p>
                 @enderror

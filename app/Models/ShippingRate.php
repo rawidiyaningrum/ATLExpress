@@ -11,6 +11,7 @@ class ShippingRate extends Model
 
     protected $fillable = [
         'origin_city',
+        'kabupaten_tujuan',
         'destination_city',
         'service_type',
         'min_weight',
@@ -21,6 +22,5 @@ class ShippingRate extends Model
     protected $casts = [
         'min_weight' => 'decimal:2',
         'price_per_kg' => 'decimal:2',
-        'estimated_days' => 'integer',
     ];
 }

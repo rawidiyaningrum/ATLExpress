@@ -33,7 +33,7 @@ class ShippingRateDiscountSeeder extends Seeder
         $rates = ShippingRate::query()->get(['id', 'price_per_kg']);
 
         if ($rates->isEmpty()) {
-            $this->command->error('Tabel tarif kosong, jalankan ShippingRateSeeder dulu.');
+            $this->command->error('Tabel tarif kosong, jalankan PricelistSeeder dulu.');
 
             return;
         }

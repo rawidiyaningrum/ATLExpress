@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             ArticleTipsSeeder::class,
             ArticleUsahaSeeder::class,
             ShipmentSeeder::class,
-            ShippingRateSeeder::class,
+            PricelistSeeder::class,
             InquirySeeder::class,
         ]);
     }
