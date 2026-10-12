@@ -159,7 +159,7 @@
                     @endif
 
                     <div class="flex justify-between gap-4 border-t border-gray-900 pt-2 text-base dark:border-gray-100">
-                        <dt class="font-bold">Total Pembayaran Diterima / Dibayar</dt>
+                        <dt class="font-bold">Total Tagihan</dt>
                         <dd class="font-bold">{{ $money($invoice->total) }}</dd>
                     </div>
                 </dl>

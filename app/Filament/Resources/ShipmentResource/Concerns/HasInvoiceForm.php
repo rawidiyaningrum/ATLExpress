@@ -226,7 +226,7 @@ trait HasInvoiceForm
                             return $discount > 0 ? 'Rp -'.$this->rupiah($discount) : 'Rp 0';
                         }),
                     Forms\Components\Placeholder::make('invoice_grand_total')
-                        ->label('Total Pembayaran Diterima / Dibayar')
+                        ->label('Total Tagihan')
                         ->content(function (Forms\Get $get): string {
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['total']);
                         }),

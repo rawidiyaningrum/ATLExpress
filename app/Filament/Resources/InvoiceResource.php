@@ -228,7 +228,7 @@ class InvoiceResource extends Resource
                             return 'Rp -'.number_format($discount, 0, ',', '.');
                         }),
                     Forms\Components\Placeholder::make('summary_total')
-                        ->label('Total Pembayaran Diterima / Dibayar')
+                        ->label('Total Tagihan')
                         ->content(function (Forms\Get $get): string {
                             $total = app(InvoiceService::class)->calculate(
                                 (float) $get('shipping_cost'),
@@ -323,7 +323,7 @@ class InvoiceResource extends Resource
                     ->money('IDR')
                     ->placeholder('-'),
                 Infolists\Components\TextEntry::make('total')
-                    ->label('Total Pembayaran Diterima / Dibayar')
+                    ->label('Total Tagihan')
                     ->money('IDR')
                     ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
             ])->columns(2),
