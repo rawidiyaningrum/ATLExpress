@@ -225,7 +225,7 @@ class ShipmentInvoiceFlowTest extends TestCase
             === round($tariff * InvoiceService::PPH_RATE, 2));
     }
 
-    public function test_invoice_calculation_keeps_discount_and_tax_out_of_the_subtotal(): void
+    public function test_invoice_subtotal_is_the_dpp_net_of_diskon(): void
     {
         $totals = app(InvoiceService::class)->calculate(100000, [
             ['description' => 'Packing kayu', 'type' => 'additional', 'quantity' => 1, 'unit_price' => 50000],
@@ -235,10 +235,104 @@ class ShipmentInvoiceFlowTest extends TestCase
             ['description' => '', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 99999],
         ]);
 
-        $this->assertSame(150000.0, $totals['subtotal'], 'hanya ongkir dan additional');
+        $this->assertSame(130000.0, $totals['subtotal'], 'ongkir + additional - diskon; PPh & PPN tidak masuk DPP');
         $this->assertSame(5000.0, $totals['discount']);
         $this->assertSame(20000.0, $totals['diskon']);
         $this->assertSame(11000.0, $totals['tax'], 'baris tanpa deskripsi diabaikan');
-        $this->assertSame(136000.0, $totals['total'], '150000 - 5000 - 20000 + 11000');
+        $this->assertSame(136000.0, $totals['total'], '130000 - 5000 + 11000');
+    }
+
+    public function test_invoice_shipping_cost_follows_the_adjusted_final_tariff(): void
+    {
+        $this->seed(PricelistSeeder::class);
+
+        $wizard = Livewire::actingAs(User::factory()->create())
+            ->test(CreateShipment::class)
+            ->fillForm([
+                'sender_name' => 'PT Kirim Sejahtera',
+                'receiver_name' => 'Budi Santoso',
+                'receiver_address' => 'Jl. Tujuan 9, Surabaya',
+                'origin' => 'Jakarta',
+                'kabupaten_tujuan' => 'Kota Surabaya',
+                'destination' => 'Surabaya',
+            ])
+            ->mountFormComponentAction('pilih_daratAction', 'pilih_darat')
+            ->goToWizardStep(2)
+            ->fillForm([
+                'weight' => 5,
+                'dimension_length' => 30,
+                'dimension_width' => 20,
+                'dimension_height' => 15,
+            ]);
+
+        // Operator menyesuaikan tarif final, sehingga beda dari berat x tarif/kg.
+        $adjusted = 987654.0;
+        $wizard->fillForm(['final_tariff' => $adjusted])
+            ->goToWizardStep(3)
+            ->goToWizardStep(4)
+            ->goToWizardStep(5);
+
+        $shipment = Shipment::firstOrFail();
+        $calculated = round((float) $shipment->weight * (float) $shipment->price_per_kg, 2);
+
+        $this->assertSame($adjusted, (float) $shipment->final_tariff);
+        $this->assertNotSame($adjusted, $calculated, 'tarif final sengaja dibedakan dari berat x tarif/kg');
+
+        $invoice = Invoice::sole();
+
+        $this->assertSame($adjusted, (float) $invoice->shipping_cost, 'ongkos kirim pakai tarif final');
+        $this->assertSame($adjusted, (float) $invoice->subtotal, 'DPP mengikuti tarif final');
+    }
+
+    public function test_legacy_discount_items_are_reclassified_and_reduce_dpp(): void
+    {
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV_ATL_LEGACY001',
+            'shipping_cost' => 40000,
+            'subtotal' => 90000,
+            'discount' => 5000,
+            'diskon' => 0,
+            'tax' => 0,
+            'total' => 85000,
+            'status' => Invoice::STATUS_DRAFT,
+        ]);
+
+        $invoice->items()->createMany([
+            ['description' => 'Packing Kayu', 'type' => 'additional', 'basis' => 'final_tariff', 'quantity' => 1, 'unit_price' => 50000, 'line_total' => 50000],
+            ['description' => 'Disc 5%', 'type' => 'discount', 'basis' => 'final_tariff', 'quantity' => 1, 'unit_price' => 5000, 'line_total' => 5000],
+            ['description' => 'PPh 2%', 'type' => 'discount', 'basis' => 'final_tariff', 'quantity' => 1, 'unit_price' => 1000, 'line_total' => 1000],
+        ]);
+
+        $migration = require database_path('migrations/2026_10_12_000000_reclassify_legacy_diskon_invoice_items.php');
+        $migration->up();
+
+        $this->assertSame('diskon', $invoice->items()->where('description', 'Disc 5%')->sole()->type);
+        $this->assertSame('discount', $invoice->items()->where('description', 'PPh 2%')->sole()->type, 'baris PPh tidak boleh ikut dipindah');
+
+        $invoice->refresh();
+
+        // DPP = 40000 + 50000 - 5000 = 85000; PPh 1000 tetap terpisah.
+        $this->assertSame(85000.0, (float) $invoice->subtotal);
+        $this->assertSame(5000.0, (float) $invoice->diskon);
+        $this->assertSame(1000.0, (float) $invoice->discount);
+        $this->assertSame(84000.0, (float) $invoice->total, '85000 - 1000');
+    }
+
+    public function test_shipping_change_recalculates_derived_ppn_and_pph_from_the_new_dpp(): void
+    {
+        $service = app(InvoiceService::class);
+
+        $items = [
+            ['description' => 'Diskon kerjasama', 'type' => 'diskon', 'quantity' => 1, 'unit_price' => 20000],
+            ['description' => 'PPN 11%', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 11000],
+            ['description' => 'Potongan PPh', 'type' => 'discount', 'quantity' => 1, 'unit_price' => 2000],
+        ];
+
+        // DPP = ongkir - diskon = 200000 - 20000.
+        $prices = $service->derivedUnitPrices(200000, $items);
+
+        $this->assertSame(round(180000 * InvoiceService::PPN_RATE, 2), $prices[1]);
+        $this->assertSame(round(180000 * InvoiceService::PPH_RATE, 2), $prices[2]);
+        $this->assertArrayNotHasKey(0, $prices, 'baris diskon tidak dihitung otomatis');
     }
 }

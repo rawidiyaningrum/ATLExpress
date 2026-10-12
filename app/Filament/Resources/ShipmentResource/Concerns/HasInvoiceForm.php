@@ -70,7 +70,10 @@ trait HasInvoiceForm
                         ->minValue(0)
                         ->prefix('Rp')
                         ->helperText('Kosongkan untuk memakai tarif final pengiriman.')
-                        ->live(onBlur: true),
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                            $this->syncDerivedInvoiceItems($get, $set);
+                        }),
                 ])
                 ->columns(2),
             Forms\Components\Section::make('Item Tambahan')
@@ -163,10 +166,24 @@ trait HasInvoiceForm
                         ->columnSpanFull(),
                 ]),
             Forms\Components\Section::make('Ringkasan')
-                ->description('PPN dan PPh dihitung dari subtotal sebelum pajak (DPP).')
+                ->description('PPN dan PPh dihitung dari Dasar Pengenaan Pajak (DPP) = ongkos kirim + biaya lain - diskon.')
                 ->schema([
+                    Forms\Components\Placeholder::make('invoice_gross_total')
+                        ->label('Ongkos Kirim + Biaya Lain')
+                        ->content(function (Forms\Get $get): string {
+                            $totals = $this->invoiceTotals($get);
+
+                            return 'Rp '.$this->rupiah($totals['subtotal'] + $totals['diskon']);
+                        }),
+                    Forms\Components\Placeholder::make('invoice_diskon_total')
+                        ->label('Potongan Diskon')
+                        ->content(function (Forms\Get $get): string {
+                            $diskon = $this->invoiceTotals($get)['diskon'];
+
+                            return $diskon > 0 ? 'Rp -'.$this->rupiah($diskon) : 'Rp 0';
+                        }),
                     Forms\Components\Placeholder::make('invoice_subtotal')
-                        ->label('Subtotal Sebelum Pajak (DPP)')
+                        ->label('Dasar Pengenaan Pajak (DPP)')
                         ->content(function (Forms\Get $get): string {
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['subtotal']);
                         }),
@@ -188,13 +205,6 @@ trait HasInvoiceForm
                             $discount = $this->invoiceTotals($get)['discount'];
 
                             return $discount > 0 ? 'Rp -'.$this->rupiah($discount) : 'Rp 0';
-                        }),
-                    Forms\Components\Placeholder::make('invoice_diskon_total')
-                        ->label('Potongan Diskon')
-                        ->content(function (Forms\Get $get): string {
-                            $diskon = $this->invoiceTotals($get)['diskon'];
-
-                            return $diskon > 0 ? 'Rp -'.$this->rupiah($diskon) : 'Rp 0';
                         }),
                     Forms\Components\Placeholder::make('invoice_grand_total')
                         ->label('Total Pembayaran Diterima / Dibayar')
@@ -246,10 +256,11 @@ trait HasInvoiceForm
     }
 
     /**
-     * Ongkos kirim bawaan invoice: berat (kg) x tarif per kilo.
+     * Ongkos kirim bawaan invoice: tarif final pengiriman.
      *
-     * Bila berat atau tarif per kilo belum ada (misal shipment lama), memakai
-     * tarif final sebagai cadangan.
+     * Tarif final adalah angka yang dipakai untuk menagih, karena operator bisa
+     * menyesuaikannya dari hasil berat x tarif per kilo. Bila tarif final belum
+     * ada (misal shipment lama), baru dihitung dari berat x tarif per kilo.
      */
     protected function defaultShippingCost(?Shipment $shipment): float
     {
@@ -257,23 +268,33 @@ trait HasInvoiceForm
             return 0.0;
         }
 
-        $weight = (float) $shipment->weight;
-        $unit = (float) $shipment->price_per_kg;
+        $finalTariff = (float) ($shipment->final_tariff ?? 0);
 
-        if ($weight > 0 && $unit > 0) {
-            return round($weight * $unit, 2);
+        if ($finalTariff > 0) {
+            return round($finalTariff, 2);
         }
 
-        return (float) ($shipment->final_tariff ?? 0);
+        return round((float) $shipment->weight * (float) $shipment->price_per_kg, 2);
     }
 
     /**
-     * Rincian ongkos kirim untuk placeholder form: "5 kg x Rp 20.000/kg".
+     * Rincian ongkos kirim untuk placeholder form.
+     *
+     * Menampilkan "Tarif final Rp ..." saat tarif final yang dipakai, atau
+     * "5 kg x Rp 20.000/kg" bila ongkos dihitung dari berat x tarif per kilo.
      */
     protected function shippingBreakdownLabel(?Shipment $shipment): string
     {
-        $weight = (float) ($shipment?->weight ?? 0);
-        $unit = (float) ($shipment?->price_per_kg ?? 0);
+        if ($shipment === null) {
+            return '-';
+        }
+
+        if ((float) ($shipment->final_tariff ?? 0) > 0) {
+            return 'Tarif final Rp '.$this->rupiah((float) $shipment->final_tariff);
+        }
+
+        $weight = (float) $shipment->weight;
+        $unit = (float) $shipment->price_per_kg;
 
         if ($weight <= 0 || $unit <= 0) {
             return '-';
@@ -319,6 +340,24 @@ trait HasInvoiceForm
         ];
 
         $set('invoice_items', array_values($items));
+    }
+
+    /**
+     * Menghitung ulang nominal PPN (11%) dan PPh (2%) saat ongkos kirim
+     * berubah, memakai DPP terbaru. Baris biaya tambahan dan diskon manual
+     * tidak ikut ditimpa.
+     */
+    protected function syncDerivedInvoiceItems(Forms\Get $get, Forms\Set $set): void
+    {
+        $shipping = (float) $get('invoice_shipping_cost');
+
+        if ($shipping <= 0) {
+            $shipping = $this->defaultShippingCost($this->invoiceShipment());
+        }
+
+        foreach (app(InvoiceService::class)->derivedUnitPrices($shipping, (array) $get('invoice_items')) as $index => $price) {
+            $set("invoice_items.{$index}.unit_price", $price);
+        }
     }
 
     /**

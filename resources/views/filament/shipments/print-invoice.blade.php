@@ -103,6 +103,18 @@
             <div class="mt-6 flex justify-end">
                 <dl class="w-full max-w-sm space-y-1 text-sm">
                     <div class="flex justify-between gap-4">
+                        <dt class="text-gray-500 dark:text-gray-400">Ongkos Kirim + Biaya Lain</dt>
+                        <dd class="font-medium">{{ $money((float) $invoice->subtotal + (float) $invoice->diskon) }}</dd>
+                    </div>
+
+                    @if ((float) $invoice->diskon > 0)
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-gray-500 dark:text-gray-400">Potongan Diskon</dt>
+                            <dd class="font-medium">- {{ $money($invoice->diskon) }}</dd>
+                        </div>
+                    @endif
+
+                    <div class="flex justify-between gap-4">
                         <dt class="text-gray-500 dark:text-gray-400">Dasar Pengenaan Pajak (DPP)</dt>
                         <dd class="font-medium">{{ $money($invoice->subtotal) }}</dd>
                     </div>
@@ -121,13 +133,6 @@
                         <div class="flex justify-between gap-4">
                             <dt class="text-gray-500 dark:text-gray-400">Potongan PPh 23 (2%)</dt>
                             <dd class="font-medium">- {{ $money($invoice->discount) }}</dd>
-                        </div>
-                    @endif
-
-                    @if ((float) $invoice->diskon > 0)
-                        <div class="flex justify-between gap-4">
-                            <dt class="text-gray-500 dark:text-gray-400">Potongan Diskon</dt>
-                            <dd class="font-medium">- {{ $money($invoice->diskon) }}</dd>
                         </div>
                     @endif
 

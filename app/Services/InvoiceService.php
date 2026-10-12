@@ -81,8 +81,10 @@ class InvoiceService
      * Menghitung seluruh total dari ongkir dan item tambahan.
      *
      * Diskon dan pajak diperlakukan sebagai item bertipe, lalu digabung ke
-     * kolom discount dan tax. Subtotal selalu ongkir + biaya tambahan, sehingga
-     * pajak dihitung atas dasar yang tidak ikut terpengaruh diskon.
+     * kolom discount dan tax. Subtotal adalah Dasar Pengenaan Pajak (DPP):
+     * ongkos kirim ditambah biaya tambahan dikurangi diskon. PPh (type discount)
+     * tidak mengurangi DPP karena PPh adalah potongan saat pembayaran, bukan
+     * pengurang dasar pajak.
      *
      * @param  array<int, array<string, mixed>>  $items
      * @return array{shipping: float, additional: float, discount: float, diskon: float, tax: float, subtotal: float, total: float}
@@ -103,7 +105,7 @@ class InvoiceService
             };
         }
 
-        $subtotal = $shippingCost + $additional;
+        $subtotal = $shippingCost + $additional - $diskon;
 
         return [
             'shipping' => round($shippingCost, 2),
@@ -112,31 +114,60 @@ class InvoiceService
             'diskon' => round($diskon, 2),
             'tax' => round($tax, 2),
             'subtotal' => round($subtotal, 2),
-            'total' => round($subtotal - $discount - $diskon + $tax, 2),
+            'total' => round($subtotal - $discount + $tax, 2),
         ];
     }
 
     /**
-     * Dasar Pengenaan Pajak (DPP): ongkos kirim ditambah biaya tambahan,
-     * tanpa PPN maupun PPh. Dipakai untuk mengisi nominal PPN/PPh secara
-     * otomatis.
+     * Dasar Pengenaan Pajak (DPP): ongkos kirim ditambah biaya tambahan
+     * dikurangi diskon, tanpa PPN maupun PPh. Dipakai untuk mengisi nominal
+     * PPN/PPh secara otomatis.
      *
      * @param  array<int, array<string, mixed>>  $items
      */
     public function dpp(float $shippingCost, array $items): float
     {
         $additional = 0.0;
+        $diskon = 0.0;
 
         foreach ($items as $item) {
-            if (($item['type'] ?? null) !== self::TYPE_ADDITIONAL) {
-                continue;
-            }
-
-            $additional += max(1, (int) ($item['quantity'] ?? 1))
+            $lineTotal = max(1, (int) ($item['quantity'] ?? 1))
                 * max(0, (float) ($item['unit_price'] ?? 0));
+
+            match ($item['type'] ?? self::TYPE_ADDITIONAL) {
+                self::TYPE_DISKON => $diskon += $lineTotal,
+                self::TYPE_DISCOUNT, self::TYPE_TAX => null,
+                default => $additional += $lineTotal,
+            };
         }
 
-        return round($shippingCost + $additional, 2);
+        return round($shippingCost + $additional - $diskon, 2);
+    }
+
+    /**
+     * Nominal PPN/PPh yang dihitung ulang dari DPP terbaru.
+     *
+     * Dipakai saat ongkos kirim berubah supaya baris PPN (11%) dan PPh (2%)
+     * ikut menyesuaikan. Hanya indeks baris yang punya saran nominal yang
+     * dikembalikan; baris biaya tambahan dibiarkan manual.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, float>
+     */
+    public function derivedUnitPrices(float $shippingCost, array $items): array
+    {
+        $dpp = $this->dpp($shippingCost, $items);
+        $prices = [];
+
+        foreach (array_values($items) as $index => $item) {
+            $suggestion = $this->unitPriceSuggestionForType((string) ($item['type'] ?? ''), $dpp);
+
+            if ($suggestion !== null) {
+                $prices[$index] = $suggestion;
+            }
+        }
+
+        return $prices;
     }
 
     /**

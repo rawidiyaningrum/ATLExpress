@@ -11,11 +11,17 @@
     $shipment = $invoice->shipment;
     $weight = (float) ($shipment?->weight ?? 0);
     $unit = (float) ($shipment?->price_per_kg ?? 0);
-    $hasShippingBreakdown = $weight > 0 && $unit > 0;
+    $shippingCost = (float) $invoice->shipping_cost;
+    // Rincian berat x tarif/kg hanya ditampilkan bila hasilnya sama dengan
+    // ongkos kirim tersimpan (tarif final tidak berbeda). Bila tarif final
+    // disesuaikan, tampilkan satu baris dengan nominal ongkos kirim itu.
+    $hasShippingBreakdown = $weight > 0
+        && $unit > 0
+        && abs(round($weight * $unit, 2) - $shippingCost) < 0.01;
     $shippingQuantity = $hasShippingBreakdown
         ? trim(rtrim(rtrim(number_format($weight, 2, ',', '.'), '0'), '.')) . ' kg'
         : '1';
-    $shippingUnitPrice = $hasShippingBreakdown ? $unit : (float) $invoice->shipping_cost;
+    $shippingUnitPrice = $hasShippingBreakdown ? $unit : $shippingCost;
 @endphp
 
 <table class="w-full border-collapse text-sm">

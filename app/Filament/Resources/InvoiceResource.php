@@ -75,7 +75,16 @@ class InvoiceResource extends Resource
                         ->numeric()
                         ->minValue(0)
                         ->prefix('Rp')
-                        ->required(),
+                        ->required()
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set): void {
+                            foreach (app(InvoiceService::class)->derivedUnitPrices(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            ) as $index => $price) {
+                                $set("invoice_items.{$index}.unit_price", $price);
+                            }
+                        }),
                 ])->columns(2),
             Forms\Components\Section::make('Item')
                 ->description('Baris tanpa keterangan diabaikan. Nominal dan total dihitung ulang saat disimpan.')
@@ -137,6 +146,81 @@ class InvoiceResource extends Resource
                         ->defaultItems(0)
                         ->addActionLabel('Tambah item'),
                 ]),
+            Forms\Components\Section::make('Ringkasan')
+                ->description('PPN (11%) dan PPh (2%) dihitung dari Dasar Pengenaan Pajak (DPP) = ongkos kirim + biaya lain - diskon.')
+                ->schema([
+                    Forms\Components\Placeholder::make('summary_gross')
+                        ->label('Ongkos Kirim + Biaya Lain')
+                        ->content(function (Forms\Get $get): string {
+                            $totals = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            );
+
+                            return 'Rp '.number_format($totals['subtotal'] + $totals['diskon'], 0, ',', '.');
+                        }),
+                    Forms\Components\Placeholder::make('summary_diskon')
+                        ->label('Potongan Diskon')
+                        ->content(function (Forms\Get $get): string {
+                            $diskon = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            )['diskon'];
+
+                            return 'Rp -'.number_format($diskon, 0, ',', '.');
+                        }),
+                    Forms\Components\Placeholder::make('summary_subtotal')
+                        ->label('Dasar Pengenaan Pajak (DPP)')
+                        ->content(function (Forms\Get $get): string {
+                            $totals = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            );
+
+                            return 'Rp '.number_format($totals['subtotal'], 0, ',', '.');
+                        }),
+                    Forms\Components\Placeholder::make('summary_tax')
+                        ->label('PPN (11%)')
+                        ->content(function (Forms\Get $get): string {
+                            $tax = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            )['tax'];
+
+                            return 'Rp '.number_format($tax, 0, ',', '.');
+                        }),
+                    Forms\Components\Placeholder::make('summary_taxed')
+                        ->label('Jumlah Tagihan Termasuk PPN')
+                        ->content(function (Forms\Get $get): string {
+                            $totals = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            );
+
+                            return 'Rp '.number_format($totals['subtotal'] + $totals['tax'], 0, ',', '.');
+                        }),
+                    Forms\Components\Placeholder::make('summary_discount')
+                        ->label('Potongan PPh (2%)')
+                        ->content(function (Forms\Get $get): string {
+                            $discount = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            )['discount'];
+
+                            return 'Rp -'.number_format($discount, 0, ',', '.');
+                        }),
+                    Forms\Components\Placeholder::make('summary_total')
+                        ->label('Total Pembayaran Diterima / Dibayar')
+                        ->content(function (Forms\Get $get): string {
+                            $total = app(InvoiceService::class)->calculate(
+                                (float) $get('shipping_cost'),
+                                (array) $get('invoice_items'),
+                            )['total'];
+
+                            return 'Rp '.number_format($total, 0, ',', '.');
+                        }),
+                ])
+                ->columns(3),
         ]);
     }
 
@@ -181,8 +265,16 @@ class InvoiceResource extends Resource
                     ->columnSpanFull(),
             ]),
             Infolists\Components\Section::make('Total')->schema([
+                Infolists\Components\TextEntry::make('gross')
+                    ->label('Ongkos Kirim + Biaya Lain')
+                    ->state(fn (Invoice $record): float => (float) $record->subtotal + (float) $record->diskon)
+                    ->money('IDR'),
+                Infolists\Components\TextEntry::make('diskon')
+                    ->label('Potongan Diskon')
+                    ->money('IDR')
+                    ->placeholder('-'),
                 Infolists\Components\TextEntry::make('subtotal')
-                    ->label('Subtotal Sebelum Pajak (DPP)')
+                    ->label('Dasar Pengenaan Pajak (DPP)')
                     ->money('IDR'),
                 Infolists\Components\TextEntry::make('tax')
                     ->label('PPN (11%)')
@@ -194,10 +286,6 @@ class InvoiceResource extends Resource
                     ->money('IDR'),
                 Infolists\Components\TextEntry::make('discount')
                     ->label('Potongan PPh (2%)')
-                    ->money('IDR')
-                    ->placeholder('-'),
-                Infolists\Components\TextEntry::make('diskon')
-                    ->label('Potongan Diskon')
                     ->money('IDR')
                     ->placeholder('-'),
                 Infolists\Components\TextEntry::make('total')
