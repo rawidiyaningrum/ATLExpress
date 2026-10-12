@@ -93,6 +93,11 @@ class Invoice extends Model
         'shipment_id',
         'billed_to_name',
         'billed_to_address',
+        'due_date',
+        'sppb_number',
+        'packing_list_number',
+        'period',
+        'account_number',
         'shipping_cost',
         'shipping_real_expense',
         'subtotal',
@@ -104,6 +109,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
+        'due_date' => 'date',
         'shipping_cost' => 'decimal:2',
         'shipping_real_expense' => 'decimal:2',
         'subtotal' => 'decimal:2',

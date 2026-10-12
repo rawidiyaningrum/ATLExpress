@@ -76,8 +76,27 @@ trait HasInvoiceForm
                         }),
                 ])
                 ->columns(2),
+            Forms\Components\Section::make('Informasi Administrasi')
+                ->description('Dokumen pendukung yang tampil di bawah nomor invoice. Boleh dikosongkan.')
+                ->schema([
+                    Forms\Components\DatePicker::make('invoice_due_date')
+                        ->label('Due Date'),
+                    Forms\Components\TextInput::make('invoice_sppb_number')
+                        ->label('SPPB No')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('invoice_packing_list_number')
+                        ->label('Packing List No')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('invoice_period')
+                        ->label('Periode')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('invoice_account_number')
+                        ->label('No Account')
+                        ->maxLength(255),
+                ])
+                ->columns(2),
             Forms\Components\Section::make('Item Tambahan')
-                ->description('Pilih Jenis PPN (11%) atau PPh (2%), nominal terisi otomatis dari subtotal sebelum pajak (DPP). Baris kosong diabaikan.')
+                ->description('Pilih Jenis PPN (1,1%) atau PPh (2%), nominal terisi otomatis dari subtotal sebelum pajak (DPP). Baris kosong diabaikan.')
                 ->schema([
                     Forms\Components\Repeater::make('invoice_items')
                         ->hiddenLabel()
@@ -123,12 +142,12 @@ trait HasInvoiceForm
                         ->addActionLabel('Tambah item'),
                     Forms\Components\Actions::make([
                         Forms\Components\Actions\Action::make('quickPpn')
-                            ->label('PPN 11%')
+                            ->label('PPN 1,1%')
                             ->icon('heroicon-o-plus')
                             ->action(fn (Forms\Get $get, Forms\Set $set) => $this->appendInvoiceItem(
                                 $get,
                                 $set,
-                                'PPN 11%',
+                                'PPN 1,1%',
                                 InvoiceService::TYPE_TAX,
                                 $this->percentageOfBasis($get, InvoiceService::PPN_RATE),
                             )),
@@ -188,7 +207,7 @@ trait HasInvoiceForm
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['subtotal']);
                         }),
                     Forms\Components\Placeholder::make('invoice_tax_total')
-                        ->label('PPN (11%)')
+                        ->label('PPN (1,1%)')
                         ->content(function (Forms\Get $get): string {
                             return 'Rp '.$this->rupiah($this->invoiceTotals($get)['tax']);
                         }),
@@ -224,7 +243,7 @@ trait HasInvoiceForm
      * tetap berasal dari data pengiriman, jadi logikanya sama.
      *
      * @param  array<string, mixed>  $state
-     * @return array{billed_to_name: ?string, billed_to_address: ?string, shipping_cost: float}
+     * @return array{billed_to_name: ?string, billed_to_address: ?string, shipping_cost: float, due_date: ?string, sppb_number: ?string, packing_list_number: ?string, period: ?string, account_number: ?string}
      */
     protected function invoiceDefaultsFromShipment(array $state): array
     {
@@ -241,6 +260,21 @@ trait HasInvoiceForm
             'shipping_cost' => $shippingCost > 0
                 ? $shippingCost
                 : $this->defaultShippingCost($shipment),
+            'due_date' => filled($state['invoice_due_date'] ?? null)
+                ? $state['invoice_due_date']
+                : null,
+            'sppb_number' => filled($state['invoice_sppb_number'] ?? null)
+                ? $state['invoice_sppb_number']
+                : null,
+            'packing_list_number' => filled($state['invoice_packing_list_number'] ?? null)
+                ? $state['invoice_packing_list_number']
+                : null,
+            'period' => filled($state['invoice_period'] ?? null)
+                ? $state['invoice_period']
+                : null,
+            'account_number' => filled($state['invoice_account_number'] ?? null)
+                ? $state['invoice_account_number']
+                : null,
         ];
     }
 
@@ -343,7 +377,7 @@ trait HasInvoiceForm
     }
 
     /**
-     * Menghitung ulang nominal PPN (11%) dan PPh (2%) saat ongkos kirim
+     * Menghitung ulang nominal PPN (1,1%) dan PPh (2%) saat ongkos kirim
      * berubah, memakai DPP terbaru. Baris biaya tambahan dan diskon manual
      * tidak ikut ditimpa.
      */
@@ -361,7 +395,7 @@ trait HasInvoiceForm
     }
 
     /**
-     * Mengisi harga satuan baris item otomatis saat jenis PPN (11%) atau PPh
+     * Mengisi harga satuan baris item otomatis saat jenis PPN (1,1%) atau PPh
      * (2%) dipilih, dihitung dari subtotal sebelum pajak (DPP).
      *
      * Panggilan berasal dari dalam baris repeater, jadi field form diakses

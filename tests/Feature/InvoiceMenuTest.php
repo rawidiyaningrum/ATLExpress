@@ -94,7 +94,10 @@ class InvoiceMenuTest extends TestCase
                 'record' => $invoice->shipment_id,
             ]))
             ->assertOk()
-            ->assertSee($invoice->invoice_number);
+            ->assertSee($invoice->invoice_number)
+            ->assertSee('Bank BCA')
+            ->assertSee('604.3792.330')
+            ->assertSee('PT ANGKASA TRANS LOGISTIK');
     }
 
     public function test_editing_a_draft_invoice_recalculates_totals(): void
@@ -121,7 +124,7 @@ class InvoiceMenuTest extends TestCase
                         'unit_price' => 30000,
                     ],
                     [
-                        'description' => 'PPN 11%',
+                        'description' => 'PPN 1,1%',
                         'type' => 'tax',
                         'quantity' => 1,
                         'unit_price' => 22000,
@@ -140,6 +143,31 @@ class InvoiceMenuTest extends TestCase
         $this->assertSame(292000.0, (float) $invoice->total, '300000 - 30000 + 22000');
         $this->assertSame(3, $invoice->items()->count());
         $this->assertSame('Packing kayu', $invoice->items()->first()->description);
+    }
+
+    public function test_admin_document_fields_can_be_edited_from_the_invoice_menu(): void
+    {
+        $invoice = $this->draftInvoice();
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(EditInvoice::class, ['record' => $invoice->getKey()])
+            ->fillForm([
+                'due_date' => '2026-11-30',
+                'sppb_number' => 'SPPB-EDIT',
+                'packing_list_number' => 'PL-EDIT',
+                'period' => 'November 2026',
+                'account_number' => 'ACC-EDIT',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $invoice->refresh();
+
+        $this->assertSame('2026-11-30', $invoice->due_date->toDateString());
+        $this->assertSame('SPPB-EDIT', $invoice->sppb_number);
+        $this->assertSame('PL-EDIT', $invoice->packing_list_number);
+        $this->assertSame('November 2026', $invoice->period);
+        $this->assertSame('ACC-EDIT', $invoice->account_number);
     }
 
     public function test_billed_invoice_is_locked_against_editing(): void

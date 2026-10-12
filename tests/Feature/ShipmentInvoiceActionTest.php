@@ -59,10 +59,45 @@ class ShipmentInvoiceActionTest extends TestCase
         $this->assertSame('PT Kirim Sejahtera', $invoice->billed_to_name, 'default dari data pengirim');
         $this->assertSame(150000.0, (float) $invoice->shipping_cost, 'default dari berat x ongkir per kilo');
         $this->assertSame(1, $invoice->items()->count(), 'baris PPN dari tombol cepat');
-        $this->assertSame(16500.0, (float) $invoice->tax, 'PPN 11% dari tarif final');
-        $this->assertSame(166500.0, (float) $invoice->total);
+        $this->assertSame(1650.0, (float) $invoice->tax, 'PPN 1,1% dari tarif final');
+        $this->assertSame(151650.0, (float) $invoice->total);
 
         $page->assertRedirect(InvoiceResource::getUrl('view', ['record' => $invoice]));
+    }
+
+    public function test_admin_document_fields_are_saved_on_create_and_printed(): void
+    {
+        $shipment = $this->shipment();
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(CreateShipmentInvoice::class, ['record' => $shipment->getKey()])
+            ->fillForm([
+                'invoice_billed_to_name' => 'PT Dokumen',
+                'invoice_shipping_cost' => 150000,
+                'invoice_due_date' => '2026-12-31',
+                'invoice_sppb_number' => 'SPPB-001',
+                'invoice_packing_list_number' => 'PL-002',
+                'invoice_period' => 'Desember 2026',
+                'invoice_account_number' => 'ACC-003',
+            ])
+            ->call('mountAction', 'saveDraft');
+
+        $invoice = Invoice::sole();
+
+        $this->assertSame('2026-12-31', $invoice->due_date->toDateString());
+        $this->assertSame('SPPB-001', $invoice->sppb_number);
+        $this->assertSame('PL-002', $invoice->packing_list_number);
+        $this->assertSame('Desember 2026', $invoice->period);
+        $this->assertSame('ACC-003', $invoice->account_number);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('filament.atlexpress-admin.resources.shipments.print-invoice', ['record' => $shipment]))
+            ->assertOk()
+            ->assertSee('Due Date')
+            ->assertSee('SPPB-001')
+            ->assertSee('PL-002')
+            ->assertSee('Desember 2026')
+            ->assertSee('ACC-003');
     }
 
     public function test_billing_from_the_create_page_redirects_to_print(): void

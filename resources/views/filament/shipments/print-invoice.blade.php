@@ -58,6 +58,28 @@
                         <span class="text-gray-500 dark:text-gray-400">Status :</span>
                         <span class="font-semibold">{{ ucfirst($invoice->status) }}</span>
                     </p>
+                    <div class="mt-3 space-y-0.5 text-xs">
+                        <p>
+                            <span class="text-gray-500 dark:text-gray-400">Due Date :</span>
+                            <span class="font-semibold">{{ $invoice->due_date?->translatedFormat('d M Y') ?: '-' }}</span>
+                        </p>
+                        <p>
+                            <span class="text-gray-500 dark:text-gray-400">SPPB No :</span>
+                            <span class="font-semibold">{{ $invoice->sppb_number ?: '-' }}</span>
+                        </p>
+                        <p>
+                            <span class="text-gray-500 dark:text-gray-400">Packing List No :</span>
+                            <span class="font-semibold">{{ $invoice->packing_list_number ?: '-' }}</span>
+                        </p>
+                        <p>
+                            <span class="text-gray-500 dark:text-gray-400">Periode :</span>
+                            <span class="font-semibold">{{ $invoice->period ?: '-' }}</span>
+                        </p>
+                        <p>
+                            <span class="text-gray-500 dark:text-gray-400">No Account :</span>
+                            <span class="font-semibold">{{ $invoice->account_number ?: '-' }}</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -120,7 +142,7 @@
                     </div>
 
                     <div class="flex justify-between gap-4">
-                        <dt class="text-gray-500 dark:text-gray-400">PPN (11%)</dt>
+                        <dt class="text-gray-500 dark:text-gray-400">PPN (1,1%)</dt>
                         <dd class="font-medium">{{ $money($invoice->tax) }}</dd>
                     </div>
 
@@ -149,6 +171,26 @@
                     memberikan bukti potong PPh kepada pihak penagih.
                 </p>
             @endif
+
+            <div class="mt-6 rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800">
+                <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                    Account Bank
+                </p>
+                <div class="grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
+                    <p>
+                        <span class="text-gray-500 dark:text-gray-400">Bank :</span>
+                        <span class="font-semibold">Bank BCA</span>
+                    </p>
+                    <p>
+                        <span class="text-gray-500 dark:text-gray-400">No. Rek :</span>
+                        <span class="font-semibold">604.3792.330</span>
+                    </p>
+                    <p>
+                        <span class="text-gray-500 dark:text-gray-400">A/N :</span>
+                        <span class="font-semibold">PT ANGKASA TRANS LOGISTIK</span>
+                    </p>
+                </div>
+            </div>
 
             <div class="mt-10 grid grid-cols-2 gap-8 text-sm">
                 <div>

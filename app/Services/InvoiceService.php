@@ -28,7 +28,7 @@ class InvoiceService
     /**
      * PPN dikenakan dari Dasar Pengenaan Pajak (DPP), yaitu subtotal sebelum pajak.
      */
-    public const PPN_RATE = 0.11;
+    public const PPN_RATE = 0.011;
 
     /**
      * PPh (biasanya PPh 23) dipotong pemberi kerja atas DPP yang sama.
@@ -43,7 +43,7 @@ class InvoiceService
         return [
             self::TYPE_ADDITIONAL => 'Biaya Tambahan',
             self::TYPE_DISCOUNT => 'PPh (2%)',
-            self::TYPE_TAX => 'PPN (11%)',
+            self::TYPE_TAX => 'PPN (1,1%)',
             self::TYPE_DISKON => 'Diskon',
         ];
     }
@@ -147,7 +147,7 @@ class InvoiceService
     /**
      * Nominal PPN/PPh yang dihitung ulang dari DPP terbaru.
      *
-     * Dipakai saat ongkos kirim berubah supaya baris PPN (11%) dan PPh (2%)
+     * Dipakai saat ongkos kirim berubah supaya baris PPN (1,1%) dan PPh (2%)
      * ikut menyesuaikan. Hanya indeks baris yang punya saran nominal yang
      * dikembalikan; baris biaya tambahan dibiarkan manual.
      *
@@ -173,7 +173,7 @@ class InvoiceService
     /**
      * Nominal yang disarankan untuk sebuah jenis item, dihitung dari DPP.
      *
-     * PPN 11% dan PPh 2% sama-sama berbasis DPP. Selain keduanya tidak ada
+     * PPN 1,1% dan PPh 2% sama-sama berbasis DPP. Selain keduanya tidak ada
      * saran, supaya baris biaya tambahan tetap diisi manual.
      */
     public function unitPriceSuggestionForType(string $type, float $dpp): ?float
@@ -265,6 +265,11 @@ class InvoiceService
         $attributes = [
             'billed_to_name' => $state['billed_to_name'] ?? null,
             'billed_to_address' => $state['billed_to_address'] ?? null,
+            'due_date' => $state['due_date'] ?? null,
+            'sppb_number' => $state['sppb_number'] ?? null,
+            'packing_list_number' => $state['packing_list_number'] ?? null,
+            'period' => $state['period'] ?? null,
+            'account_number' => $state['account_number'] ?? null,
             'shipping_cost' => $totals['shipping'],
             'subtotal' => $totals['subtotal'],
             'discount' => $totals['discount'],

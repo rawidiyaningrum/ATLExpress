@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\FinanceJournalResource\Concerns;
 
+use App\Models\FinanceJournal;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use Filament\Forms;
@@ -104,11 +105,29 @@ trait HasRealExpenseItems
                             ->required()
                             ->live(onBlur: true),
                     ]),
-                Forms\Components\Placeholder::make('real_expense_total_preview')
-                    ->label('Total Pengeluaran Real')
-                    ->content(fn (Forms\Get $get): string => static::rupiah(
-                        static::sumEditableRows($get(static::expenseItemsStatePath())),
-                    )),
+                Forms\Components\Grid::make(4)
+                    ->schema([
+                        Forms\Components\Placeholder::make('real_expense_total_preview')
+                            ->label('Total Pengeluaran Real')
+                            ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::rupiah(
+                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['real_expense'],
+                            )),
+                        Forms\Components\Placeholder::make('profit_percentage_preview')
+                            ->label('Margin / Profit')
+                            ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::percent(
+                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['profit_percentage'],
+                            )),
+                        Forms\Components\Placeholder::make('real_expense_percentage_preview')
+                            ->label('Porsi Pengeluaran Real')
+                            ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::percent(
+                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['real_expense_percentage'],
+                            )),
+                        Forms\Components\Placeholder::make('efficiency_percentage_preview')
+                            ->label('Efisiensi Biaya')
+                            ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::percent(
+                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['efficiency_percentage'],
+                            )),
+                    ]),
             ]);
     }
 
@@ -291,6 +310,51 @@ trait HasRealExpenseItems
         }
 
         $invoice->update(['shipping_real_expense' => round($shippingRealExpense, 2)]);
+    }
+
+    /**
+     * Angka turunan preview pengeluaran real di form jurnal.
+     *
+     * Modal diambil dari baris yang boleh diedit, sedangkan pendapatan, biaya
+     * operasional, dan pajak diambil dari jurnal yang sedang diedit. Dengan
+     * begitu previewnya memakai rumus yang sama dengan perhitungan model saat
+     * jurnal disimpan, jadi tidak ada dua sumber kebenaran.
+     *
+     * @return array{real_expense: float, total_expense: float, profit_percentage: float, real_expense_percentage: float, efficiency_percentage: float}
+     */
+    public static function realExpensePreview(mixed $rows, ?FinanceJournal $record): array
+    {
+        $realExpense = static::sumEditableRows($rows);
+        $income = (float) ($record?->income ?? 0);
+
+        $totalExpense = FinanceJournal::totalExpense(
+            $realExpense,
+            (float) ($record?->operational_cost ?? 0),
+            (float) ($record?->tax ?? 0),
+        );
+
+        $profit = FinanceJournal::profit($income, $totalExpense);
+
+        return [
+            'real_expense' => $realExpense,
+            'total_expense' => $totalExpense,
+            'profit_percentage' => FinanceJournal::percentage($profit, $income),
+            'real_expense_percentage' => static::portion($realExpense, $income),
+            'efficiency_percentage' => static::portion($totalExpense, $income),
+        ];
+    }
+
+    /**
+     * Porsi sebuah nominal terhadap pendapatan, dalam persen.
+     */
+    protected static function portion(float $amount, float $income): float
+    {
+        return $income > 0 ? round(($amount / $income) * 100, 2) : 0.0;
+    }
+
+    protected static function percent(float $value): string
+    {
+        return number_format($value, 2, ',', '.').'%';
     }
 
     protected static function rupiah(float $amount): string

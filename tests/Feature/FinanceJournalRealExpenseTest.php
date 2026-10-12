@@ -71,7 +71,7 @@ class FinanceJournalRealExpenseTest extends TestCase
         ]);
 
         $tax = $invoice->items()->create([
-            'description' => 'PPN 11%',
+            'description' => 'PPN 1,1%',
             'type' => 'tax',
             'basis' => 'final_tariff',
             'quantity' => 1,
@@ -155,7 +155,7 @@ class FinanceJournalRealExpenseTest extends TestCase
         $journal->refresh();
 
         $this->assertSame(0.0, (float) $invoice->items()->where('description', 'Diskon pelanggan')->sole()->real_expense);
-        $this->assertSame(0.0, (float) $invoice->items()->where('description', 'PPN 11%')->sole()->real_expense);
+        $this->assertSame(0.0, (float) $invoice->items()->where('description', 'PPN 1,1%')->sole()->real_expense);
         $this->assertSame(185000.0, (float) $journal->cost_of_goods, 'diskon dan pajak tidak masuk modal');
     }
 
@@ -419,6 +419,35 @@ class FinanceJournalRealExpenseTest extends TestCase
             ->get(InvoiceResource::getUrl('view', ['record' => $invoice]))
             ->assertSuccessful()
             ->assertSee('Catat Pengeluaran Real');
+    }
+
+    public function test_editing_real_expense_updates_the_live_preview(): void
+    {
+        [, , $journal] = $this->billedInvoice();
+
+        $component = $this->withRealExpenses($this->journalForm($journal), 140000, 45000);
+
+        $preview = FinanceJournalResource::realExpensePreview(
+            $component->get('data')['expense_items'],
+            $journal,
+        );
+
+        // 199800 - (185000 modal + 0 opex + 19800 pajak) = -5000
+        $this->assertSame(185000.0, $preview['real_expense']);
+        $this->assertSame(204800.0, $preview['total_expense']);
+        $this->assertSame(-2.5, $preview['profit_percentage']);
+        $this->assertSame(92.59, $preview['real_expense_percentage']);
+        $this->assertSame(102.5, $preview['efficiency_percentage']);
+
+        $component
+            ->assertSee('Total Pengeluaran Real')
+            ->assertSee('Rp 185.000')
+            ->assertSee('Margin / Profit')
+            ->assertSee('-2,50%')
+            ->assertSee('Porsi Pengeluaran Real')
+            ->assertSee('92,59%')
+            ->assertSee('Efisiensi Biaya')
+            ->assertSee('102,50%');
     }
 
     /**

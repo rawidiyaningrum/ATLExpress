@@ -86,6 +86,24 @@ class InvoiceResource extends Resource
                             }
                         }),
                 ])->columns(2),
+            Forms\Components\Section::make('Informasi Administrasi')
+                ->description('Dokumen pendukung yang tampil di bawah nomor invoice. Boleh dikosongkan.')
+                ->schema([
+                    Forms\Components\DatePicker::make('due_date')
+                        ->label('Due Date'),
+                    Forms\Components\TextInput::make('sppb_number')
+                        ->label('SPPB No')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('packing_list_number')
+                        ->label('Packing List No')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('period')
+                        ->label('Periode')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('account_number')
+                        ->label('No Account')
+                        ->maxLength(255),
+                ])->columns(2),
             Forms\Components\Section::make('Item')
                 ->description('Baris tanpa keterangan diabaikan. Nominal dan total dihitung ulang saat disimpan.')
                 ->schema([
@@ -147,7 +165,7 @@ class InvoiceResource extends Resource
                         ->addActionLabel('Tambah item'),
                 ]),
             Forms\Components\Section::make('Ringkasan')
-                ->description('PPN (11%) dan PPh (2%) dihitung dari Dasar Pengenaan Pajak (DPP) = ongkos kirim + biaya lain - diskon.')
+                ->description('PPN (1,1%) dan PPh (2%) dihitung dari Dasar Pengenaan Pajak (DPP) = ongkos kirim + biaya lain - diskon.')
                 ->schema([
                     Forms\Components\Placeholder::make('summary_gross')
                         ->label('Ongkos Kirim + Biaya Lain')
@@ -180,7 +198,7 @@ class InvoiceResource extends Resource
                             return 'Rp '.number_format($totals['subtotal'], 0, ',', '.');
                         }),
                     Forms\Components\Placeholder::make('summary_tax')
-                        ->label('PPN (11%)')
+                        ->label('PPN (1,1%)')
                         ->content(function (Forms\Get $get): string {
                             $tax = app(InvoiceService::class)->calculate(
                                 (float) $get('shipping_cost'),
@@ -248,6 +266,22 @@ class InvoiceResource extends Resource
                 Infolists\Components\TextEntry::make('created_at')
                     ->label('Dibuat')
                     ->dateTime(),
+                Infolists\Components\TextEntry::make('due_date')
+                    ->label('Due Date')
+                    ->date('d M Y')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('sppb_number')
+                    ->label('SPPB No')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('packing_list_number')
+                    ->label('Packing List No')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('period')
+                    ->label('Periode')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('account_number')
+                    ->label('No Account')
+                    ->placeholder('-'),
             ])->columns(2),
             Infolists\Components\Section::make('Penagihan')->schema([
                 Infolists\Components\TextEntry::make('billed_to_name')
@@ -277,7 +311,7 @@ class InvoiceResource extends Resource
                     ->label('Dasar Pengenaan Pajak (DPP)')
                     ->money('IDR'),
                 Infolists\Components\TextEntry::make('tax')
-                    ->label('PPN (11%)')
+                    ->label('PPN (1,1%)')
                     ->money('IDR')
                     ->placeholder('-'),
                 Infolists\Components\TextEntry::make('with_tax')

@@ -57,7 +57,7 @@ class ShipmentInvoiceFlowTest extends TestCase
         $wizard->mountFormComponentAction('quickPpnAction', 'quickPpn')
             ->goToWizardStep(5);
 
-        $ppn = round($tariff * 0.11, 2);
+        $ppn = round($tariff * InvoiceService::PPN_RATE, 2);
 
         $invoice = Invoice::sole();
 
@@ -104,7 +104,7 @@ class ShipmentInvoiceFlowTest extends TestCase
 
         $this->assertSame(2, $invoice->items()->count());
         $this->assertSame($tariff + 50000, (float) $invoice->subtotal, 'ongkos + packing kayu');
-        $this->assertSame($ppn, (float) $invoice->tax, 'PPN tetap 11% dari ongkos awal');
+        $this->assertSame($ppn, (float) $invoice->tax, 'PPN tetap 1,1% dari ongkos awal');
         $this->assertSame($tariff + 50000 + $ppn, (float) $invoice->total);
 
         $this->actingAs(User::factory()->create())
@@ -141,10 +141,10 @@ class ShipmentInvoiceFlowTest extends TestCase
 
         $tariff = (float) Shipment::firstOrFail()->final_tariff;
 
-        // PPN 11% dihitung dari ongkos kirim (berat x ongkir per kilo).
+        // PPN 1,1% dihitung dari ongkos kirim (berat x ongkir per kilo).
         $wizard->mountFormComponentAction('quickPpnAction', 'quickPpn');
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
-            === round($tariff * 0.11, 2));
+            === round($tariff * InvoiceService::PPN_RATE, 2));
 
         // Tambah packing, subtotal berjalan naik; PPh 2% ikut subtotal itu.
         $wizard->mountFormComponentAction('quickPackingAction', 'quickPacking');
@@ -204,7 +204,7 @@ class ShipmentInvoiceFlowTest extends TestCase
 
         $tariff = (float) Shipment::firstOrFail()->final_tariff;
 
-        // PPN 11% dari DPP (ongkos kirim, belum ada biaya tambahan lain).
+        // PPN 1,1% dari DPP (ongkos kirim, belum ada biaya tambahan lain).
         $wizard->set('data.invoice_items.0.type', InvoiceService::TYPE_TAX);
         $wizard->assertFormSet(fn (array $state): bool => (float) $state['invoice_items'][0]['unit_price']
             === round($tariff * InvoiceService::PPN_RATE, 2));
@@ -231,7 +231,7 @@ class ShipmentInvoiceFlowTest extends TestCase
             ['description' => 'Packing kayu', 'type' => 'additional', 'quantity' => 1, 'unit_price' => 50000],
             ['description' => 'Potongan PPh', 'type' => 'discount', 'quantity' => 1, 'unit_price' => 5000],
             ['description' => 'Diskon kerjasama', 'type' => 'diskon', 'quantity' => 1, 'unit_price' => 20000],
-            ['description' => 'PPN 11%', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 11000],
+            ['description' => 'PPN 1,1%', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 11000],
             ['description' => '', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 99999],
         ]);
 
@@ -324,7 +324,7 @@ class ShipmentInvoiceFlowTest extends TestCase
 
         $items = [
             ['description' => 'Diskon kerjasama', 'type' => 'diskon', 'quantity' => 1, 'unit_price' => 20000],
-            ['description' => 'PPN 11%', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 11000],
+            ['description' => 'PPN 1,1%', 'type' => 'tax', 'quantity' => 1, 'unit_price' => 11000],
             ['description' => 'Potongan PPh', 'type' => 'discount', 'quantity' => 1, 'unit_price' => 2000],
         ];
 
