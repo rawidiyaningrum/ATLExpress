@@ -8,6 +8,16 @@ use Illuminate\Support\Collection;
 
 class TariffCalculatorService
 {
+    /**
+     * Layanan turunan yang tidak punya baris tarif sendiri, melainkan memakai
+     * tarif layanan lain agar harganya selalu sama tanpa duplikasi data.
+     *
+     * @var array<string, string>
+     */
+    protected const SERVICE_ALIASES = [
+        'carter' => 'darat',
+    ];
+
     public function calculate(string $origin, string $kabupaten, string $destination, float $weight, ?string $serviceType = null): array
     {
         $query = $this->routeQuery($origin, $kabupaten, $destination);
@@ -54,7 +64,7 @@ class TariffCalculatorService
 
         return [
             'rate_id' => $rate->id,
-            'service_type' => $rate->service_type,
+            'service_type' => $serviceType,
             'price_per_kg' => (float) $rate->price_per_kg,
             'min_weight' => (float) $rate->min_weight,
             'estimated_days' => $rate->estimated_days,
@@ -78,7 +88,7 @@ class TariffCalculatorService
             return [];
         }
 
-        $rows = $this->routeQuery($origin, $kabupaten, $destination)
+        $groups = $this->routeQuery($origin, $kabupaten, $destination)
             ->orderByDesc('min_weight')
             ->orderBy('id')
             ->get()
@@ -86,20 +96,37 @@ class TariffCalculatorService
 
         $labels = $this->serviceTypes();
 
-        return $rows
-            ->map(function ($rates) use ($labels): array {
-                $rate = $this->tierFor($rates, null);
+        // Layanan dikenal tampil lebih dulu sesuai urutan label, lalu tipe asing
+        // (mis. data lama) menyusul agar tetap terlihat.
+        $serviceTypes = array_keys($labels);
+        foreach ($groups->keys() as $dbType) {
+            if (! in_array((string) $dbType, $serviceTypes, true)) {
+                $serviceTypes[] = (string) $dbType;
+            }
+        }
 
-                return [
-                    'service_type' => (string) $rate->service_type,
-                    'service_label' => $labels[(string) $rate->service_type] ?? ucfirst((string) $rate->service_type),
-                    'price_per_kg' => (float) $rate->price_per_kg,
-                    'min_weight' => (float) $rate->min_weight,
-                    'estimated_days' => $rate->estimated_days,
-                    'rate_id' => $rate->id,
-                ];
-            })
-            ->all();
+        $rows = [];
+
+        foreach ($serviceTypes as $serviceType) {
+            $rates = $groups->get($serviceType) ?? $groups->get($this->resolveServiceType($serviceType));
+
+            if ($rates === null) {
+                continue;
+            }
+
+            $rate = $this->tierFor($rates, null);
+
+            $rows[$serviceType] = [
+                'service_type' => $serviceType,
+                'service_label' => $labels[$serviceType] ?? ucfirst($serviceType),
+                'price_per_kg' => (float) $rate->price_per_kg,
+                'min_weight' => (float) $rate->min_weight,
+                'estimated_days' => $rate->estimated_days,
+                'rate_id' => $rate->id,
+            ];
+        }
+
+        return $rows;
     }
 
     /**
@@ -129,10 +156,19 @@ class TariffCalculatorService
     protected function ratesFor(string $origin, string $kabupaten, string $destination, string $serviceType): Collection
     {
         return $this->routeQuery($origin, $kabupaten, $destination)
-            ->where('service_type', $serviceType)
+            ->where('service_type', $this->resolveServiceType($serviceType))
             ->orderByDesc('min_weight')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Jenis layanan yang tarifnya benar-benar disimpan di tabel. Layanan turunan
+     * (mis. carter) dipetakan ke layanan sumbernya; sisanya dikembalikan apa adanya.
+     */
+    protected function resolveServiceType(string $serviceType): string
+    {
+        return self::SERVICE_ALIASES[$serviceType] ?? $serviceType;
     }
 
     /**
@@ -191,6 +227,7 @@ class TariffCalculatorService
     {
         return [
             'darat' => 'Darat',
+            'carter' => 'Carter',
             'laut' => 'Laut',
             'udara' => 'Udara',
         ];
