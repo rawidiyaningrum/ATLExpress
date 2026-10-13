@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\OnlyAdmins;
+use App\Filament\Concerns\OnlyFullAdmins;
 use App\Filament\Infolists\Components\InvoiceItemsTable;
 use App\Filament\Resources\InvoiceResource\Concerns\AppliesInvoiceStatus;
 use App\Filament\Resources\InvoiceResource\Pages;
@@ -22,7 +22,7 @@ use Illuminate\Support\HtmlString;
 class InvoiceResource extends Resource
 {
     use AppliesInvoiceStatus;
-    use OnlyAdmins;
+    use OnlyFullAdmins;
 
     protected static ?string $model = Invoice::class;
 

@@ -17,7 +17,7 @@ class EditShipment extends EditRecord
                 ->label(fn (): string => ShipmentResource::invoiceActionLabel($this->record))
                 ->icon('heroicon-o-receipt-percent')
                 ->color('gray')
-                ->visible(fn (): bool => $this->record !== null && ShipmentResource::canShowInvoiceAction($this->record))
+                ->visible(fn (): bool => $this->record !== null && ShipmentResource::canManageInvoices() && ShipmentResource::canShowInvoiceAction($this->record))
                 ->url(fn (): string => ShipmentResource::invoiceActionUrl($this->record)),
             Actions\Action::make('printAwb')
                 ->label('Cetak Airway Bill')

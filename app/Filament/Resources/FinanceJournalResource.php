@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\OnlyAdmins;
+use App\Filament\Concerns\OnlyFullAdmins;
 use App\Filament\Resources\FinanceJournalResource\Concerns\HasRealExpenseItems;
 use App\Filament\Resources\FinanceJournalResource\Pages;
 use App\Models\FinanceJournal;
@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 class FinanceJournalResource extends Resource
 {
     use HasRealExpenseItems;
-    use OnlyAdmins;
+    use OnlyFullAdmins;
 
     protected static ?string $model = FinanceJournal::class;
 

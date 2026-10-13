@@ -24,17 +24,25 @@ class CreateShipment extends CreateRecord
     protected static string $resource = ShipmentResource::class;
 
     /**
+     * Admin ATL tidak punya akses invoice, jadi langkah invoice dan cetak
+     * invoice hanya ditampilkan untuk admin penuh.
+     *
      * @return array<Step>
      */
     public function getSteps(): array
     {
-        return [
+        $steps = [
             $this->detailStep(),
             $this->weightAndTariffStep(),
             $this->airwayBillStep(),
-            $this->invoiceStep(),
-            $this->printInvoiceStep(),
         ];
+
+        if (auth()->user()?->isAdmin()) {
+            $steps[] = $this->invoiceStep();
+            $steps[] = $this->printInvoiceStep();
+        }
+
+        return $steps;
     }
 
     /**

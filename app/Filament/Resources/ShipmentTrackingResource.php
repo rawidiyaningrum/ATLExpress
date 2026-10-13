@@ -51,12 +51,12 @@ class ShipmentTrackingResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        return auth()->user()?->isAdminRole() ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        return auth()->user()?->isAdminRole() ?? false;
     }
 
     public static function form(Form $form): Form

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\OnlyAdmins;
+use App\Filament\Concerns\OnlyFullAdmins;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Forms;
@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
 {
-    use OnlyAdmins;
+    use OnlyFullAdmins;
 
     protected static ?string $model = User::class;
 
@@ -51,6 +51,14 @@ class UserResource extends Resource
                     ->helperText('Kosongkan untuk password acak otomatis.')
                     ->dehydrated(fn ($state) => filled($state)),
             ])->columns(3),
+            Forms\Components\Section::make('Hak Akses')->schema([
+                Forms\Components\Select::make('role')
+                    ->label('Role')
+                    ->options(User::ROLE_LABELS)
+                    ->helperText('Admin ATL mendapat seluruh menu kecuali Invoice, Jurnal Keuangan, dan Dashboard Finance. Tracker hanya bisa melihat pengiriman.')
+                    ->default(User::ROLE_ADMIN)
+                    ->required(),
+            ]),
             Forms\Components\Section::make('Mode Pendaftaran')->schema([
                 Forms\Components\Toggle::make('as_invitation')
                     ->label('Buat sebagai undangan')
@@ -72,6 +80,10 @@ class UserResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('role')
+                    ->label('Role')
+                    ->badge()
+                    ->formatStateUsing(fn (User $record): string => $record->roleLabel()),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->state(fn (User $record) => filled($record->invited_at) ? 'Undangan' : 'Aktif')

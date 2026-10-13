@@ -45,6 +45,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user is an ATL admin.
+     */
+    public function adminAtl(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_ADMIN_ATL,
+        ]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static

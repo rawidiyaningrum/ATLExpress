@@ -15,7 +15,15 @@ class User extends Authenticatable implements FilamentUser
 
     public const ROLE_ADMIN = 'admin';
 
+    public const ROLE_ADMIN_ATL = 'admin_atl';
+
     public const ROLE_TRACKER = 'tracker';
+
+    public const ROLE_LABELS = [
+        self::ROLE_ADMIN => 'Admin',
+        self::ROLE_ADMIN_ATL => 'Admin ATL',
+        self::ROLE_TRACKER => 'Tracker',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -64,9 +72,29 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === self::ROLE_ADMIN;
     }
 
+    public function isAdminAtl(): bool
+    {
+        return $this->role === self::ROLE_ADMIN_ATL;
+    }
+
+    /**
+     * Admin penuh maupun admin ATL. Dipakai untuk hak akses umum, sedangkan
+     * area khusus (invoice, jurnal keuangan, dashboard finance, manajemen admin)
+     * tetap memakai isAdmin().
+     */
+    public function isAdminRole(): bool
+    {
+        return $this->role === self::ROLE_ADMIN || $this->role === self::ROLE_ADMIN_ATL;
+    }
+
     public function isTracker(): bool
     {
         return $this->role === self::ROLE_TRACKER;
+    }
+
+    public function roleLabel(): string
+    {
+        return self::ROLE_LABELS[$this->role] ?? ucfirst((string) $this->role);
     }
 
     public function scopeTrackers($query)
