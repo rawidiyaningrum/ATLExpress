@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ArticleRuteSeeder::class,
             ArticleTipsSeeder::class,
             ArticleUsahaSeeder::class,
+            ArticleKargoIndustriSeeder::class,
             ShipmentSeeder::class,
             PricelistSeeder::class,
             InquirySeeder::class,
