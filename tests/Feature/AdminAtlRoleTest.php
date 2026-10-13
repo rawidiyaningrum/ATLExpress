@@ -14,6 +14,8 @@ use App\Filament\Resources\ShippingRateResource;
 use App\Filament\Resources\ShippingRequestResource;
 use App\Filament\Resources\TrackerResource;
 use App\Filament\Resources\UserResource;
+use App\Filament\Resources\UserResource\Pages\CreateUser;
+use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -51,6 +53,31 @@ class AdminAtlRoleTest extends TestCase
         $adminAtl = User::factory()->adminAtl()->create();
 
         $this->actingAs($adminAtl)->get(UserResource::getUrl('index'))->assertForbidden();
+    }
+
+    public function test_full_admin_can_create_an_admin_account_from_the_user_menu(): void
+    {
+        $admin = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->assertActionVisible('create');
+
+        Livewire::actingAs($admin)
+            ->test(CreateUser::class)
+            ->fillForm([
+                'name' => 'Admin ATL Baru',
+                'email' => 'atl-baru@example.com',
+                'password' => 'secret-password',
+                'role' => User::ROLE_ADMIN_ATL,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'atl-baru@example.com',
+            'role' => User::ROLE_ADMIN_ATL,
+        ]);
     }
 
     public function test_shipment_wizard_hides_invoice_steps_for_admin_atl(): void
