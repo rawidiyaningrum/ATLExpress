@@ -334,51 +334,49 @@ class InvoiceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('invoice_number')
-                    ->label('Invoice')
-                    ->searchable(query: fn (Builder $query, string $search): Builder => $query
-                        ->where('invoices.invoice_number', 'like', "%{$search}%")
-                        ->orWhere('invoices.billed_to_name', 'like', "%{$search}%")
-                        ->orWhereHas('shipment', fn (Builder $shipment): Builder => $shipment
-                            ->where('awb_number', 'like', "%{$search}%")
-                            ->orWhere('origin', 'like', "%{$search}%")
-                            ->orWhere('destination', 'like', "%{$search}%"),
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('invoice_line1')
+                        ->state(function (Invoice $record): string {
+                            $invoice = $record->invoice_number ?: '-';
+                            $awb = $record->shipment?->awb_number ?: '-';
+                            $rute = $record->shipment ? "{$record->shipment->origin} → {$record->shipment->destination}" : '-';
+
+                            return "Invoice: {$invoice} | AWB: {$awb} | Rute: {$rute}";
+                        })
+                        ->size('sm')
+                        ->weight('medium')
+                        ->searchable(query: fn (Builder $query, string $search): Builder => $query
+                            ->where('invoices.invoice_number', 'like', "%{$search}%")
+                            ->orWhereHas('shipment', fn (Builder $shipment): Builder => $shipment
+                                ->where('awb_number', 'like', "%{$search}%")
+                                ->orWhere('origin', 'like', "%{$search}%")
+                                ->orWhere('destination', 'like', "%{$search}%"),
+                            ),
                         ),
-                    )
-                    ->sortable()
-                    ->copyable()
-                    ->formatStateUsing(fn (Invoice $record): HtmlString => new HtmlString(
-                        '<span class="flex flex-wrap items-center gap-1.5">'
-                        .'<span>'.e($record->invoice_number).'</span>'
-                        .static::rowLink(static::getUrl('view', ['record' => $record]), 'lihat')
-                        .($record->shipment_id !== null
-                            ? static::rowLink(PrintShipmentInvoice::getUrl(['record' => $record->shipment_id]), 'cetak')
-                            : '')
-                        .'</span>',
-                    ))
-                    ->description(fn (Invoice $record): string => collect([
-                        $record->shipment?->awb_number,
-                        $record->shipment ? "{$record->shipment->origin} → {$record->shipment->destination}" : null,
-                        $record->billed_to_name,
-                    ])->filter()->implode(' · ') ?: '-'),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->sortable()
-                    ->formatStateUsing(fn (Invoice $record): string => $record->statusLabel())
-                    ->color(fn (string $state): string => Invoice::STATUS_COLORS[$state] ?? 'gray'),
-                Tables\Columns\TextColumn::make('items_count')
-                    ->label('Item')
-                    ->counts('items')
-                    ->placeholder('0'),
-                Tables\Columns\TextColumn::make('total')
-                    ->label('Total')
-                    ->money('IDR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
+                    Tables\Columns\TextColumn::make('invoice_line2')
+                        ->state(function (Invoice $record): string {
+                            $billed = $record->billed_to_name ? \Illuminate\Support\Str::limit($record->billed_to_name, 40) : '-';
+                            $status = $record->statusLabel();
+                            $items = $record->items_count ?? $record->items()->count();
+
+                            return "Tagihan ke: {$billed} | Status: {$status} | Item: {$items}";
+                        })
+                        ->size('xs')
+                        ->color('gray')
+                        ->searchable(['billed_to_name']),
+
+                    Tables\Columns\TextColumn::make('invoice_line3')
+                        ->state(function (Invoice $record): string {
+                            $total = $record->total !== null ? 'Rp ' . number_format((float) $record->total, 0, ',', '.') : '-';
+                            $created = $record->created_at ? $record->created_at->format('d M Y') : '-';
+
+                            return "Total: {$total} | Dibuat: {$created}";
+                        })
+                        ->size('xs')
+                        ->color('gray'),
+                ])
+                    ->space(1),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('shipment'))
             ->recordUrl(null)
@@ -387,11 +385,28 @@ class InvoiceResource extends Resource
                 Tables\Filters\SelectFilter::make('status')->options(Invoice::STATUS_LABELS),
             ])
             ->actions([
-                ...static::statusTransitionActions(),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (Invoice $record): bool => $record->isDraft()),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (Invoice $record): bool => $record->isDraft()),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('view')
+                        ->label('Lihat')
+                        ->icon('heroicon-o-eye')
+                        ->url(fn (Invoice $record): string => static::getUrl('view', ['record' => $record])),
+                    Tables\Actions\Action::make('cetak')
+                        ->label('Cetak')
+                        ->icon('heroicon-o-printer')
+                        ->color('gray')
+                        ->visible(fn (Invoice $record): bool => $record->shipment_id !== null)
+                        ->url(fn (Invoice $record): string => PrintShipmentInvoice::getUrl(['record' => $record->shipment_id])),
+                    ...static::statusTransitionActions(),
+                    Tables\Actions\EditAction::make()
+                        ->visible(fn (Invoice $record): bool => $record->isDraft()),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn (Invoice $record): bool => $record->isDraft()),
+                ])
+                    ->label('Aksi')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->size('sm')
+                    ->button()
+                    ->color('gray'),
             ])
             // Penghapusan massal sengaja tidak disediakan: penghapusan invoice
             // yang sudah ditagihkan bisa meninggalkan jurnal yatim, sedangkan
