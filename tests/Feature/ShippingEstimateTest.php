@@ -9,6 +9,7 @@ use App\Models\ShippingEstimate;
 use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\ShippingEstimateService;
+use App\Support\Code128;
 use Database\Seeders\PricelistSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -244,7 +245,21 @@ class ShippingEstimateTest extends TestCase
             ->assertSee('Udara')
             ->assertSee('Perbandingan Tarif per Jenis Armada')
             ->assertSee('diskusi dengan tim ATL Express')
-            ->assertSee('ESTIMASI');
+            ->assertSee('ESTIMASI')
+            ->assertSee('Total Biaya Lainnya')
+            ->assertSee('100 kg')
+            ->assertDontSee('Tanda tangan')
+            ->assertDontSee('Kota Surabaya')
+            ->assertSee('shape-rendering="crispEdges"', false);
+    }
+
+    public function test_barcode_svg_is_generated_for_a_code(): void
+    {
+        $svg = Code128::svg('EST_ATL_20261014001');
+
+        $this->assertStringContainsString('<svg', $svg);
+        $this->assertStringContainsString('<rect', $svg);
+        $this->assertSame('', Code128::svg(''));
     }
 
     public function test_tracker_cannot_access_estimates(): void

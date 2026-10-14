@@ -23,7 +23,9 @@
             <thead>
                 <tr class="bg-gray-100 text-left text-xs uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                     <th class="{{ $base }}">Jenis Armada</th>
-                    <th class="{{ $base }} text-right">Tarif</th>
+                    @unless ($compact)
+                        <th class="{{ $base }} text-right">Tarif</th>
+                    @endunless
                     <th class="{{ $base }} text-right">Ongkos Kirim</th>
                     <th class="{{ $base }} text-right">Biaya Lain</th>
                     <th class="{{ $base }} text-right">DPP</th>
@@ -43,13 +45,15 @@
                         <td class="{{ $base }} font-medium">
                             {{ $row['service_label'] }}
                         </td>
-                        <td class="{{ $base }} text-right">
-                            @if ($row['is_final'])
-                                -
-                            @else
-                                {{ $price($row['price_per_kg']) }} /kg
-                            @endif
-                        </td>
+                        @unless ($compact)
+                            <td class="{{ $base }} text-right">
+                                @if ($row['is_final'])
+                                    -
+                                @else
+                                    {{ $price($row['price_per_kg']) }} /kg
+                                @endif
+                            </td>
+                        @endunless
                         <td class="{{ $base }} text-right">
                             {{ $money($row['shipping_cost']) }}
                         </td>

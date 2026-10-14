@@ -264,7 +264,7 @@ class ShippingEstimateResource extends Resource
                 ])
                 ->columns(2),
             Forms\Components\Section::make('Ringkasan Perbandingan')
-                ->description('Perkiraan total per jenis armada, termasuk biaya lain dan pajak. Untuk adjustment estimasi, silakan diskusi dengan tim ATL.')
+                ->description('Perkiraan total per jenis armada, termasuk biaya lain dan pajak. Untuk adjustment estimasi, silakan diskusi dengan tim ATL Express.')
                 ->schema([
                     Forms\Components\Placeholder::make('comparison_preview')
                         ->hiddenLabel()
@@ -333,7 +333,7 @@ class ShippingEstimateResource extends Resource
                     ->columnSpanFull(),
             ])->columns(3),
             Infolists\Components\Section::make('Perbandingan Armada')
-                ->description('Total tiap armada sudah termasuk biaya lain dan pajak. Untuk adjustment estimasi, silakan diskusi dengan tim ATL.')
+                ->description('Total tiap armada sudah termasuk biaya lain dan pajak. Untuk adjustment estimasi, silakan diskusi dengan tim ATL Express.')
                 ->schema([
                     EstimateComparisonTable::make('comparison')
                         ->getStateUsing(fn (): array => []),

@@ -1,8 +1,22 @@
 @php
     $money = fn ($amount): string => 'Rp ' . number_format((float) $amount, 0, ',', '.');
-    $weight = $estimate->weight !== null
-        ? rtrim(rtrim(number_format((float) $estimate->weight, 2, ',', '.'), '0'), '.')
-        : null;
+    $weightValue = $estimate->weight !== null ? (float) $estimate->weight : null;
+    $weight = $weightValue === null
+        ? null
+        : (fmod($weightValue, 1.0) === 0.0
+            ? number_format($weightValue, 0, ',', '.')
+            : rtrim(rtrim(number_format($weightValue, 2, ',', '.'), '0'), ','));
+    $additionalTotal = $estimate->charges->sum(fn ($charge) => $charge->type === \App\Services\InvoiceService::TYPE_DISKON
+        ? -(float) $charge->line_total
+        : (float) $charge->line_total);
+    $integrity = strtoupper(substr(hash('sha256', implode('|', [
+        $estimate->estimate_number,
+        $estimate->created_at?->timestamp,
+        (string) $estimate->weight,
+        (string) $estimate->origin,
+        (string) $estimate->destination,
+    ])), 0, 10));
+    $barcode = \App\Support\Code128::svg($estimate->estimate_number . ' ' . $integrity, 42, 1.0, 8);
 @endphp
 
 <x-filament-panels::page>
@@ -102,11 +116,7 @@
                     <p>
                         <span class="text-gray-500 dark:text-gray-400">Rute :</span>
                         <span class="font-semibold">
-                            {{ $estimate->origin ?: '-' }}
-                            @if ($estimate->kabupaten_tujuan)
-                                , {{ $estimate->kabupaten_tujuan }}
-                            @endif
-                            &rarr; {{ $estimate->destination ?: '-' }}
+                            {{ $estimate->origin ?: '-' }} &rarr; {{ $estimate->destination ?: '-' }}
                         </span>
                     </p>
                     <p>
@@ -137,11 +147,11 @@
             </div>
 
             @if ($estimate->charges->isNotEmpty())
-                <div class="mt-6">
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                <div class="mt-4 max-w-md">
+                    <p class="mb-1 font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400" style="font-size: 9px;">
                         Biaya Lainnya
                     </p>
-                    <ul class="space-y-1 text-sm">
+                    <ul class="text-gray-700 dark:text-gray-300" style="font-size: 10px; line-height: 1.5;">
                         @foreach ($estimate->charges as $charge)
                             <li class="flex justify-between gap-4">
                                 <span>
@@ -156,6 +166,10 @@
                             </li>
                         @endforeach
                     </ul>
+                    <div class="mt-1 flex justify-between gap-4 border-t border-gray-300 pt-1 font-semibold text-gray-900 dark:border-gray-600 dark:text-gray-100" style="font-size: 10px;">
+                        <span>Total Biaya Lainnya</span>
+                        <span>{{ $money($additionalTotal) }}</span>
+                    </div>
                 </div>
             @endif
 
@@ -167,26 +181,21 @@
                 </p>
 
                 <p class="mt-1 font-medium leading-snug tracking-wide text-gray-500 dark:text-gray-400" style="font-size: 9px;">
-                    Untuk adjustment (penyesuaian) estimasi, silakan diskusi dengan tim ATL.
+                    Untuk adjustment (penyesuaian) estimasi, silakan diskusi dengan tim ATL Express.
                 </p>
             </div>
 
-            <div class="mt-8 grid grid-cols-2 gap-8 text-sm">
-                <div>
-                    <p class="border-t border-gray-400 pt-2 text-xs uppercase tracking-widest text-gray-500 dark:border-gray-500 dark:text-gray-400">
-                        Tanda tangan petugas
-                    </p>
-                </div>
-                <div>
-                    <p class="border-t border-gray-400 pt-2 text-xs uppercase tracking-widest text-gray-500 dark:border-gray-500 dark:text-gray-400">
-                        Tanda tangan penerima
-                    </p>
-                </div>
+            <div class="mt-8 flex flex-col items-center border-t border-gray-200 pt-4 dark:border-gray-700">
+                @if ($barcode !== '')
+                    <div>{!! $barcode !!}</div>
+                @endif
+                <p class="mt-1 text-center font-mono uppercase tracking-widest text-gray-500 dark:text-gray-400" style="font-size: 9px;">
+                    {{ $estimate->estimate_number }} &middot; {{ $integrity }}
+                </p>
+                <p class="mt-1 text-center text-gray-500 dark:text-gray-400" style="font-size: 9px;">
+                    Dokumen ini dicetak dari sistem ATL Express dan sah tanpa tanda tangan basah. Barcode di atas menjamin integritas dokumen.
+                </p>
             </div>
-
-            <p class="mt-6 text-center text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
-                Dokumen ini dicetak dari sistem ATL Express dan sah tanpa tanda tangan basah.
-            </p>
         </div>
     </div>
 </x-filament-panels::page>
