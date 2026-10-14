@@ -201,44 +201,42 @@ class ShipmentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('awb_number')
-                    ->label('No. AWB')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('-')
-                    ->copyable(),
-                Tables\Columns\TextColumn::make('shippingRequest.name')
-                    ->label('Dari Pemesanan')
-                    ->placeholder('-')
-                    ->searchable()
-                    ->description(fn (Shipment $record): string => $record->shipping_request_id ? "#{$record->shipping_request_id}" : ''),
-                Tables\Columns\TextColumn::make('sender_name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('receiver_name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('origin')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('destination')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('service_type')
-                    ->label('Layanan')
-                    ->badge()
-                    ->placeholder('-')
-                    ->formatStateUsing(fn (?string $state): string => $state !== null ? ucfirst($state) : '-'),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state): string => Shipment::STATUS_COLORS[$state] ?? 'gray'),
-                Tables\Columns\TextColumn::make('final_tariff')
-                    ->label('Tarif Final')
-                    ->money('IDR')
-                    ->placeholder('-')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('dimensions')
-                    ->label('Dimensi')
-                    ->placeholder('-'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable(),
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('compact_line1')
+                        ->state(function (Shipment $record): string {
+                            $awb = $record->awb_number ?: '-';
+                            $sender = $record->sender_name ? \Illuminate\Support\Str::limit($record->sender_name, 30) : '-';
+                            $receiver = $record->receiver_name ? \Illuminate\Support\Str::limit($record->receiver_name, 30) : '-';
+
+                            return "AWB: {$awb} | Pengirim: {$sender} | Penerima: {$receiver}";
+                        })
+                        ->size('sm')
+                        ->weight('medium')
+                        ->searchable(['awb_number', 'sender_name', 'receiver_name']),
+
+                    Tables\Columns\TextColumn::make('compact_line2')
+                        ->state(function (Shipment $record): string {
+                            $rute = trim(($record->origin ?: '-') . ' → ' . ($record->destination ?: '-'));
+                            $layanan = $record->service_type ? ucfirst($record->service_type) : '-';
+
+                            return "Rute: {$rute} | Layanan: {$layanan}";
+                        })
+                        ->size('xs')
+                        ->color('gray')
+                        ->searchable(['origin', 'destination', 'service_type']),
+
+                    Tables\Columns\TextColumn::make('compact_line3')
+                        ->state(function (Shipment $record): string {
+                            $dimensi = $record->dimensions ?: '-';
+                            $berat = $record->weight !== null ? $record->weight . ' kg' : '-';
+                            $tarif = $record->final_tariff !== null ? 'Rp ' . number_format((float) $record->final_tariff, 0, ',', '.') : '-';
+
+                            return "Dimensi: {$dimensi} | Berat: {$berat} | Tarif Final: {$tarif}";
+                        })
+                        ->size('xs')
+                        ->color('gray'),
+                ])
+                    ->space(1),
             ])
             ->actions([
                 Tables\Actions\Action::make('invoice')
