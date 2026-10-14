@@ -1,0 +1,192 @@
+@php
+    $money = fn ($amount): string => 'Rp ' . number_format((float) $amount, 0, ',', '.');
+    $weight = $estimate->weight !== null
+        ? rtrim(rtrim(number_format((float) $estimate->weight, 2, ',', '.'), '0'), '.')
+        : null;
+@endphp
+
+<x-filament-panels::page>
+    <style>
+        @media print {
+            .fi-sidebar,
+            .fi-topbar,
+            .fi-header,
+            .no-print {
+                display: none !important;
+            }
+
+            .fi-main {
+                padding: 0 !important;
+            }
+
+            body {
+                background: #fff !important;
+            }
+        }
+    </style>
+
+    <div class="space-y-4">
+        <div class="no-print flex items-center justify-between gap-4">
+            <h2 class="text-xl font-semibold tracking-tight text-gray-950 dark:text-white">
+                Estimasi {{ $estimate->estimate_number }}
+            </h2>
+
+            <x-filament::button
+                icon="heroicon-o-printer"
+                x-on:click="window.print()"
+            >
+                Cetak
+            </x-filament::button>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-6 text-gray-900 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" style="position: relative; isolation: isolate; overflow: hidden;">
+            <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: -1; pointer-events: none; overflow: hidden;">
+                <span style="transform: rotate(-45deg); font-size: 7rem; line-height: 1; font-weight: 900; letter-spacing: 0.25em; text-transform: uppercase; white-space: nowrap; color: rgba(107, 114, 128, 0.14); user-select: none;">
+                    ESTIMASI
+                </span>
+            </div>
+
+            <div class="flex items-start justify-between border-b-2 border-gray-900 pb-4 dark:border-gray-100">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo.png') }}" alt="ATL Express" style="width: 100px; height: auto" class="rounded-lg object-contain">
+                    <div>
+                        <p class="text-2xl font-bold uppercase tracking-wide">ATL Express</p>
+                        <p class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                            Estimasi Pengiriman
+                        </p>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <p class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">Nomor Estimasi</p>
+                    <p class="text-xl font-bold tracking-wide">{{ $estimate->estimate_number }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ $estimate->created_at?->translatedFormat('d M Y H:i') }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Estimasi ini bukan tagihan dan berlaku sebagai penawaran tarif.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 py-4">
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                        Pengirim
+                    </p>
+                    <p class="font-semibold">{{ $estimate->sender_name ?: '-' }}</p>
+                    <p class="text-sm leading-relaxed">
+                        {{ $estimate->sender_address ?: '-' }}
+                    </p>
+                    @if ($estimate->sender_phone)
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Telp: {{ $estimate->sender_phone }}</p>
+                    @endif
+                </div>
+
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                        Penerima
+                    </p>
+                    <p class="font-semibold">{{ $estimate->receiver_name ?: '-' }}</p>
+                    <p class="text-sm leading-relaxed">
+                        {{ $estimate->receiver_address ?: '-' }}
+                    </p>
+                    @if ($estimate->receiver_phone)
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Telp: {{ $estimate->receiver_phone }}</p>
+                    @endif
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 border-y border-gray-200 py-4 text-sm dark:border-gray-700">
+                <div>
+                    <p>
+                        <span class="text-gray-500 dark:text-gray-400">Rute :</span>
+                        <span class="font-semibold">
+                            {{ $estimate->origin ?: '-' }}
+                            @if ($estimate->kabupaten_tujuan)
+                                , {{ $estimate->kabupaten_tujuan }}
+                            @endif
+                            &rarr; {{ $estimate->destination ?: '-' }}
+                        </span>
+                    </p>
+                    <p>
+                        <span class="text-gray-500 dark:text-gray-400">Berat :</span>
+                        <span class="font-semibold">{{ $weight ? $weight . ' kg' : '-' }}</span>
+                    </p>
+                </div>
+                <div>
+                    <p>
+                        <span class="text-gray-500 dark:text-gray-400">Jenis/Isi Barang :</span>
+                        <span class="font-semibold">{{ $estimate->item_type ?: '-' }}</span>
+                    </p>
+                    @if ($estimate->notes)
+                        <p>
+                            <span class="text-gray-500 dark:text-gray-400">Catatan :</span>
+                            <span>{{ $estimate->notes }}</span>
+                        </p>
+                    @endif
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                    Perbandingan Tarif per Jenis Armada
+                </p>
+
+                @include('filament.shipping-estimates.comparison', ['rows' => $rows, 'compact' => true])
+            </div>
+
+            @if ($estimate->charges->isNotEmpty())
+                <div class="mt-6">
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                        Biaya Lainnya
+                    </p>
+                    <ul class="space-y-1 text-sm">
+                        @foreach ($estimate->charges as $charge)
+                            <li class="flex justify-between gap-4">
+                                <span>
+                                    {{ $charge->description }}
+                                    @if ((int) $charge->quantity > 1)
+                                        <span class="text-gray-500 dark:text-gray-400">({{ (int) $charge->quantity }} x)</span>
+                                    @endif
+                                </span>
+                                <span class="font-medium {{ $charge->type === \App\Services\InvoiceService::TYPE_DISKON ? 'text-danger-600 dark:text-danger-400' : '' }}">
+                                    {{ $charge->type === \App\Services\InvoiceService::TYPE_DISKON ? '-' : '' }}{{ $money($charge->line_total) }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="mt-10 max-w-3xl border-t border-gray-200 pt-3 dark:border-gray-700">
+                <p class="leading-snug tracking-wide text-gray-400 dark:text-gray-500" style="font-size: 9px;">
+                    Catatan: Dasar Pengenaan Pajak (DPP) = ongkos kirim + biaya lain. PPN dihitung 1,1% dari DPP;
+                    PPh dipotong 2% dari DPP oleh pihak pembeli saat pembayaran. Nominal dapat berubah mengikuti
+                    berat aktual barang dan tarif yang berlaku.
+                </p>
+
+                <p class="mt-1 font-medium leading-snug tracking-wide text-gray-500 dark:text-gray-400" style="font-size: 9px;">
+                    Untuk adjustment (penyesuaian) estimasi, silakan diskusi dengan tim ATL.
+                </p>
+            </div>
+
+            <div class="mt-8 grid grid-cols-2 gap-8 text-sm">
+                <div>
+                    <p class="border-t border-gray-400 pt-2 text-xs uppercase tracking-widest text-gray-500 dark:border-gray-500 dark:text-gray-400">
+                        Tanda tangan petugas
+                    </p>
+                </div>
+                <div>
+                    <p class="border-t border-gray-400 pt-2 text-xs uppercase tracking-widest text-gray-500 dark:border-gray-500 dark:text-gray-400">
+                        Tanda tangan penerima
+                    </p>
+                </div>
+            </div>
+
+            <p class="mt-6 text-center text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                Dokumen ini dicetak dari sistem ATL Express dan sah tanpa tanda tangan basah.
+            </p>
+        </div>
+    </div>
+</x-filament-panels::page>

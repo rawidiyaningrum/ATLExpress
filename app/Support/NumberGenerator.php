@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Exceptions\DailySequenceExhaustedException;
 use App\Models\Invoice;
 use App\Models\Shipment;
+use App\Models\ShippingEstimate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
@@ -32,6 +33,14 @@ class NumberGenerator
     public function invoiceNumber(?string $onDate = null): string
     {
         return $this->daily('invoice_number', 'INV_ATL_', Invoice::query(), $onDate);
+    }
+
+    /**
+     * Nomor estimasi pengiriman, bersemang pada shipping_estimates.estimate_number.
+     */
+    public function estimateNumber(?string $onDate = null): string
+    {
+        return $this->daily('estimate_number', 'EST_ATL_', ShippingEstimate::query(), $onDate);
     }
 
     /**
