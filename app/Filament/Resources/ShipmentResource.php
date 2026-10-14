@@ -239,22 +239,29 @@ class ShipmentResource extends Resource
                     ->space(1),
             ])
             ->actions([
-                Tables\Actions\Action::make('invoice')
-                    ->label(fn (Shipment $record): string => static::invoiceActionLabel($record))
-                    ->icon('heroicon-o-receipt-percent')
-                    ->color('gray')
-                    ->visible(fn (Shipment $record): bool => static::canManageInvoices() && static::canShowInvoiceAction($record))
-                    ->url(fn (Shipment $record): string => static::invoiceActionUrl($record)),
-                Tables\Actions\Action::make('printAwb')
-                    ->label('Cetak AWB')
-                    ->icon('heroicon-o-printer')
-                    ->color('gray')
-                    ->visible(fn (Shipment $record): bool => filled($record->awb_number))
-                    ->url(fn (Shipment $record): string => Pages\PrintAirwayBill::getUrl(['record' => $record])),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (Shipment $record): bool => static::canManage($record)),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (Shipment $record): bool => static::canManage($record)),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('invoice')
+                        ->label(fn (Shipment $record): string => static::invoiceActionLabel($record))
+                        ->icon('heroicon-o-receipt-percent')
+                        ->color('gray')
+                        ->visible(fn (Shipment $record): bool => static::canManageInvoices() && static::canShowInvoiceAction($record))
+                        ->url(fn (Shipment $record): string => static::invoiceActionUrl($record)),
+                    Tables\Actions\Action::make('printAwb')
+                        ->label('Cetak AWB')
+                        ->icon('heroicon-o-printer')
+                        ->color('gray')
+                        ->visible(fn (Shipment $record): bool => filled($record->awb_number))
+                        ->url(fn (Shipment $record): string => Pages\PrintAirwayBill::getUrl(['record' => $record])),
+                    Tables\Actions\EditAction::make()
+                        ->visible(fn (Shipment $record): bool => static::canManage($record)),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn (Shipment $record): bool => static::canManage($record)),
+                ])
+                    ->label('Aksi')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->size('sm')
+                    ->button()
+                    ->color('gray'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
