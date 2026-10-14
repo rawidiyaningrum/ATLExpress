@@ -116,62 +116,42 @@ class FinanceJournalResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('entry_date')
-                    ->label('Tanggal')
-                    ->date('d M Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('reference_label')
-                    ->label('Referensi')
-                    ->searchable()
-                    ->copyable()
-                    ->placeholder('-')
-                    ->description(fn (FinanceJournal $record): ?string => $record->shipment
-                        ? "{$record->shipment->awb_number} · {$record->shipment->origin} → {$record->shipment->destination}"
-                        : null),
-                Tables\Columns\TextColumn::make('journal_type')
-                    ->label('Tipe')
-                    ->badge()
-                    ->formatStateUsing(fn (FinanceJournal $record): string => $record->typeLabel())
-                    ->color(fn (string $state): string => FinanceJournal::TYPE_COLORS[$state] ?? 'gray')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('income')
-                    ->label('Pendapatan')
-                    ->money('IDR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('real_income')
-                    ->label('Kas Masuk Real')
-                    ->money('IDR')
-                    ->sortable()
-                    ->placeholder('Belum dicatat')
-                    ->description(fn (FinanceJournal $record): ?string => static::realIncomeDescription($record)),
-                Tables\Columns\TextColumn::make('total_expense')
-                    ->label('Total Biaya')
-                    ->money('IDR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('profit')
-                    ->label('Profit')
-                    ->money('IDR')
-                    ->sortable()
-                    ->color(fn (string $state): string => (float) $state >= 0 ? 'success' : 'danger'),
-                Tables\Columns\TextColumn::make('profit_percentage')
-                    ->label('Profit %')
-                    ->suffix('%')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('cost_of_goods')
-                    ->label('Modal / Pengeluaran Real')
-                    ->money('IDR')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('operational_cost')
-                    ->label('Biaya Operasional')
-                    ->money('IDR')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('tax')
-                    ->label('Pajak')
-                    ->money('IDR')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('journal_line1')
+                        ->state(function (FinanceJournal $record): string {
+                            $tgl = $record->entry_date ? $record->entry_date->format('d M Y') : '-';
+                            $ref = $record->reference_label ?: '-';
+                            $tipe = $record->typeLabel();
+
+                            return "Tanggal: {$tgl} | Ref: {$ref} | Tipe: {$tipe}";
+                        })
+                        ->size('sm')
+                        ->weight('medium')
+                        ->searchable(['reference_label']),
+
+                    Tables\Columns\TextColumn::make('journal_line2')
+                        ->state(function (FinanceJournal $record): string {
+                            $awb = $record->shipment?->awb_number ?: '-';
+                            $rute = $record->shipment ? "{$record->shipment->origin} → {$record->shipment->destination}" : '-';
+
+                            return "AWB: {$awb} | Rute: {$rute}";
+                        })
+                        ->size('xs')
+                        ->color('gray'),
+
+                    Tables\Columns\TextColumn::make('journal_line3')
+                        ->state(function (FinanceJournal $record): string {
+                            $pend = $record->income !== null ? 'Rp ' . number_format((float) $record->income, 0, ',', '.') : '-';
+                            $kas = $record->real_income !== null ? 'Rp ' . number_format((float) $record->real_income, 0, ',', '.') : '-';
+                            $biaya = $record->total_expense !== null ? 'Rp ' . number_format((float) $record->total_expense, 0, ',', '.') : '-';
+                            $profit = $record->profit !== null ? 'Rp ' . number_format((float) $record->profit, 0, ',', '.') : '-';
+
+                            return "Pendapatan: {$pend} | Kas Real: {$kas} | Biaya: {$biaya} | Profit: {$profit}";
+                        })
+                        ->size('xs')
+                        ->color('gray'),
+                ])
+                    ->space(1),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('shipment'))
             ->defaultSort('entry_date', 'desc')
@@ -200,10 +180,17 @@ class FinanceJournalResource extends Resource
                 ->icon('heroicon-m-funnel'),
             )
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (FinanceJournal $record): bool => ! $record->isLinkedToBilledInvoice())
-                    ->tooltip('Jurnal dari invoice yang sudah ditagihkan tidak dapat dihapus karena akan menghilangkan modal dan biaya operasionalnya.'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn (FinanceJournal $record): bool => ! $record->isLinkedToBilledInvoice())
+                        ->tooltip('Jurnal dari invoice yang sudah ditagihkan tidak dapat dihapus karena akan menghilangkan modal dan biaya operasionalnya.'),
+                ])
+                    ->label('Aksi')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->size('sm')
+                    ->button()
+                    ->color('gray'),
             ])
             // Penghapusan massal sengaja tidak disediakan: kuncian "terkunci dari
             // invoice yang ditagihkan" hanya dijaga di action baris, jadi aksi
