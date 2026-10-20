@@ -16,12 +16,12 @@
 
 ## Checklist
 
-- [ ] Riset struktur existing (Shipment, ShipmentLog, ShippingRate, model & migrasi terkait, pola Filament Resource)
-- [ ] Step 1 Wizard — form data pengirim, alamat, tujuan & simpan draft shipment
-- [ ] Step 2 — input berat & tarif per kg (final), auto-hitung total, hint/validasi dari ShippingRate
-- [ ] Step 3 — generate nomor AWB (unik), cetak airway bill otomatis, transisi status draft -> aktif + ShipmentLog
-- [ ] Step 4 — proses invoice: perhitungan awal, item tambahan + jumlah, auto-total, hint item umum (PPN, PPh, diskon, packing kayu)
-- [ ] Step 5 — cetak invoice (layout printable, format nomor invoice)
+- [x] Riset struktur existing (Shipment, ShipmentLog, ShippingRate, model & migrasi terkait, pola Filament Resource)
+- [x] Step 1 Wizard — form data pengirim, alamat, tujuan & simpan draft shipment
+- [x] Step 2 — input berat & tarif per kg (final), auto-hitung total, hint/validasi dari ShippingRate
+- [x] Step 3 — generate nomor AWB (unik), cetak airway bill otomatis, transisi status draft -> aktif + ShipmentLog
+- [x] Step 4 — proses invoice: perhitungan awal, item tambahan + jumlah, auto-total, hint item umum (PPN, PPh, diskon, packing kayu)
+- [x] Step 5 — cetak invoice (layout printable, format nomor invoice)
 - [x] Migrasi & model: invoice, invoice_items, finance journal/catatan keuangan per shipment (modal, opex, pajak, profit nominal & %)
 - [x] Summary keuangan per pengiriman/project masuk ke jurnal
 - [x] Dashboard finance keseluruhan dengan filter tanggal + agregasi

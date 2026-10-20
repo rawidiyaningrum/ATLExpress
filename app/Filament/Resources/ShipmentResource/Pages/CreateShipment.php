@@ -6,9 +6,9 @@ use App\Filament\Resources\ShipmentResource;
 use App\Filament\Resources\ShipmentResource\Concerns\HasInvoiceForm;
 use App\Models\Invoice;
 use App\Models\Shipment;
+use App\Services\AirwayBillService;
 use App\Services\InvoiceService;
 use App\Services\TariffCalculatorService;
-use App\Support\NumberGenerator;
 use Filament\Forms;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Notifications\Notification;
@@ -82,6 +82,15 @@ class CreateShipment extends CreateRecord
 
         $this->getCreatedNotification()?->send();
 
+        // Penerbitan AWB sengaja dipanggil di sini juga, bukan hanya dari hook
+        // afterValidation langkah AWB: Filament menjalankan hook itu hanya saat
+        // tombol "Lanjut" ditekan, sehingga langkah AWB yang menjadi langkah
+        // terakhir (Admin ATL, tanpa langkah invoice) tidak pernah memicunya.
+        // Idempoten, jadi aman untuk full admin yang AWB-nya sudah terbit di
+        // langkah wizard. Di luar transaksi supaya retry unique-violation
+        // tidak merusak transaksi utama.
+        $this->issueAirwayBill();
+
         if ($another) {
             $this->redirect(ShipmentResource::getUrl('index'));
 
@@ -90,6 +99,12 @@ class CreateShipment extends CreateRecord
 
         if ($this->currentInvoice() !== null) {
             $this->redirect(PrintInvoice::getUrl(['record' => $this->record]));
+
+            return;
+        }
+
+        if ($this->record->awb_number !== null) {
+            $this->redirect(PrintAirwayBill::getUrl(['record' => $this->record]));
 
             return;
         }
@@ -535,25 +550,7 @@ class CreateShipment extends CreateRecord
             return;
         }
 
-        $this->record = app(NumberGenerator::class)->persistWithRetry(
-            'awbNumber',
-            function (string $awbNumber): Shipment {
-                $shipment = $this->record;
-
-                $shipment->forceFill([
-                    'awb_number' => $awbNumber,
-                    'status' => 'in_transit',
-                ])->save();
-
-                $shipment->logs()->create([
-                    'status_description' => 'Nomor AWB diterbitkan, pengiriman aktif',
-                    'location' => $shipment->origin,
-                    'timestamp' => now(),
-                ]);
-
-                return $shipment;
-            },
-        );
+        $this->record = app(AirwayBillService::class)->issue($this->record);
 
         Notification::make()
             ->title('Airway bill dibuat')

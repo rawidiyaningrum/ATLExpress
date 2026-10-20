@@ -29,6 +29,15 @@ class PrintAirwayBill extends Page
     }
 
     /**
+     * Judul dokumen mengikuti nomor AWB supaya nama file hasil "Save as PDF"
+     * dari dialog cetak browser otomatis sama dengan nomor AWB.
+     */
+    public function getTitle(): string
+    {
+        return (string) $this->record->awb_number;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     protected function getViewData(): array

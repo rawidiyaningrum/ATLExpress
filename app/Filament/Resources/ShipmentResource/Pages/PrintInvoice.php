@@ -35,6 +35,15 @@ class PrintInvoice extends Page
     }
 
     /**
+     * Judul dokumen mengikuti nomor invoice supaya nama file hasil "Save as PDF"
+     * dari dialog cetak browser otomatis sama dengan nomor invoice.
+     */
+    public function getTitle(): string
+    {
+        return (string) $this->record->latestInvoice->invoice_number;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     protected function getViewData(): array
