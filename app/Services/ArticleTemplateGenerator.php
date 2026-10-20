@@ -59,7 +59,9 @@ class ArticleTemplateGenerator extends BaseArticleSeeder
             } elseif (is_string($publishedAt) && $publishedAt !== '') {
                 $article['published_at'] = Carbon::parse($publishedAt);
             } else {
-                $article['published_at'] = now();
+                $article['published_at'] = Carbon::now()
+                    ->subDays(random_int(0, 4))
+                    ->setTime(random_int(8, 21), random_int(0, 59), random_int(0, 59));
             }
 
             $article['category'] = $category?->slug ?? ($article['category'] ?? 'berita');
