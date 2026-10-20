@@ -17,40 +17,47 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-echo "==> [1/12] git pull"
+echo "==> [1/13] git pull"
 git pull origin main
 
 # Backup DB sebelum migrate, dan sedekat mungkin dengan git pull supaya
 # tidak ada langkah panjang di mana kode sudah berubah tapi backup belum ada.
-echo "==> [2/12] backup DB (sebelum migrate)"
+echo "==> [2/13] backup DB (sebelum migrate)"
 BACKUP_DIR="${BACKUP_DIR:-backups}"
 mkdir -p "$BACKUP_DIR"
 BACKUP_FILE="$BACKUP_DIR/atlexpress_$(date +%F_%H%M).sql"
 docker compose exec -T db pg_dump -U "${DB_USERNAME:-atlexpress}" -d "${DB_DATABASE:-atlexpress}" > "$BACKUP_FILE"
 echo "backup disimpan di $BACKUP_FILE"
 
-echo "==> [3/12] build frontend assets (npm)"
+echo "==> [3/13] build frontend assets (npm)"
 docker compose --profile tools run --rm assets sh -c "npm ci --no-audit --no-fund && npm run build"
 
-echo "==> [4/12] composer install (--no-dev)"
+echo "==> [4/13] composer install (--no-dev)"
 docker compose run --rm app composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-echo "==> [5/12] permissions (www-data)"
+echo "==> [5/13] permissions (www-data)"
 docker compose run --rm app sh -c "chown -R www-data:www-data storage bootstrap/cache"
 
-echo "==> [6/12] build image"
+echo "==> [6/13] build image"
 docker compose build app worker scheduler
 
 # Migrate sebelum container di-restart. Kode di-bind mount ke host, jadi begitu
 # git pull selesai kodenya sudah live, dan container lama masih melayani
 # permintaan dengan skema lama. Migrate di sini menutup jendela itu.
-echo "==> [7/12] migrate"
+echo "==> [7/13] migrate"
 docker compose run --rm app php artisan migrate --force
 
-echo "==> [8/12] start/update containers"
+# Seed artikel idempoten (updateOrCreate per slug) dijalankan tiap deploy supaya
+# artikel SEO baru ikut masuk tanpa langkah manual. Hanya kelas ini — bukan
+# db:seed penuh — karena PricelistSeeder menghapus seluruh tarif (merusak edit
+# manual admin) dan InquirySeeder masih memakai create() polos.
+echo "==> [8/13] seed artikel project cargo"
+docker compose run --rm app php artisan db:seed --class=ArticleProjectCargoSeeder --force
+
+echo "==> [9/13] start/update containers"
 docker compose up -d --remove-orphans
 
-echo "==> [9/12] rebuild caches"
+echo "==> [10/13] rebuild caches"
 docker compose run --rm app php artisan optimize:clear
 docker compose run --rm app php artisan filament:clear-cached-components
 docker compose run --rm app php artisan filament:cache-components
@@ -58,7 +65,7 @@ docker compose run --rm app php artisan optimize
 docker compose run --rm app php artisan view:cache
 docker compose restart worker scheduler
 
-echo "==> [10/12] verify schema"
+echo "==> [11/13] verify schema"
 # Migrasi hanya diuji di SQLite, sedangkan produksi memakai PostgreSQL. Kolom
 # yang diharapkan didaftarkan di sini supaya kegagalan khusus pgsql tertangkap
 # eksplisit, bukan muncul sebagai 500 di halaman yang tidak dicek health check.
@@ -94,14 +101,14 @@ if [ -n "$MISSING" ] || [ "$DROPPED" != "0" ]; then
 fi
 echo "schema OK"
 
-echo "==> [11/12] warm SEO endpoints"
+echo "==> [12/13] warm SEO endpoints"
 # Uji lewat loopback (--resolve ke 127.0.0.1) agar tidak bergantung hairpin NAT:
 # banyak VPS tidak bisa mengakses IP publiknya sendiri dari dalam.
 APP_HOST="${APP_URL#*://}"; APP_HOST="${APP_HOST%%/*}"
 curl -fsS --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL/sitemap.xml" -o /dev/null && echo "sitemap OK"
 curl -fsS --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL/robots.txt" -o /dev/null && echo "robots OK"
 
-echo "==> [12/12] health check"
+echo "==> [13/13] health check"
 curl -fsSI --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL" >/dev/null && echo "OK (loopback): $APP_URL"
 # Probe eksternal non-fatal: gagal di sini normal bila hairpin tidak didukung.
 curl -fsSI "$APP_URL" >/dev/null 2>&1 && echo "OK (external): $APP_URL" \

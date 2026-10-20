@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ArticleTipsSeeder::class,
             ArticleUsahaSeeder::class,
             ArticleKargoIndustriSeeder::class,
+            ArticleProjectCargoSeeder::class,
             ShipmentSeeder::class,
             PricelistSeeder::class,
             InquirySeeder::class,

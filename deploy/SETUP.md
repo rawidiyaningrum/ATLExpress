@@ -71,7 +71,7 @@ cd /home/ubuntu/atlexpress
 bash deploy/deploy.sh
 ```
 
-Script menangani: `git pull` → **backup DB ke `backups/`** → build asset → `composer install --no-dev` → build image → `migrate --force` → start/update container → cache (termasuk refresh cache komponen Filament agar resource baru muncul) → restart worker/scheduler → verifikasi skema → warm SEO → health-check. Seed **tidak** diulang.
+Script menangani: `git pull` → **backup DB ke `backups/`** → build asset → `composer install --no-dev` → build image → `migrate --force` → **seed artikel project cargo (idempoten)** → start/update container → cache (termasuk refresh cache komponen Filament agar resource baru muncul) → restart worker/scheduler → verifikasi skema → warm SEO → health-check. Seed data umum (tarif, settings, dsb.) **tidak** diulang — hanya artikel project cargo yang di-seed otomatis tiap deploy karena seeder-nya idempoten.
 
 Backup dan `migrate` sengaja dijalankan **sebelum** container di-restart. Kode di-bind mount ke host, jadi begitu `git pull` selesai kodenya sudah live sementara container lama masih melayani permintaan dengan skema lama. Kalau `migrate` gagal, script berhenti sebelum `up -d` dan tidak ada jendela kode-baru-skema-lama sama sekali.
 
