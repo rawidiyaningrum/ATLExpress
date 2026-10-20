@@ -22,7 +22,7 @@ class RecentFinanceJournalsTable extends TableWidget
     {
         return $table
             ->heading('Jurnal Terbaru')
-            ->description('Entri pendapatan dan kas masuk pada periode berjalan, diklik untuk mencatat pengeluaran real per item invoice.')
+            ->description('Entri pendapatan dan kas masuk pada periode berjalan. Satu invoice menghasilkan dua baris yang saling menunjuk: pendapatan diakui saat ditagih, kas tercatat saat dilunasi.')
             ->query($this->financeQuery()->with('shipment'))
             ->columns([
                 Tables\Columns\TextColumn::make('entry_date')
@@ -38,36 +38,59 @@ class RecentFinanceJournalsTable extends TableWidget
                 Tables\Columns\TextColumn::make('reference_label')
                     ->label('Referensi')
                     ->placeholder('-')
-                    ->description(fn (FinanceJournal $record): ?string => $record->shipment
-                        ? Shipment::statusLabel($record->shipment->status).' · '.$record->shipment->origin.' → '.$record->shipment->destination
-                        : null),
+                    ->url(fn (FinanceJournal $record): ?string => $record->partnerJournal() !== null
+                        ? FinanceJournalResource::getUrl('edit', ['record' => $record->partnerJournal()])
+                        : null)
+                    ->description(fn (FinanceJournal $record): ?string => implode(' · ', array_filter([
+                        $record->shipment
+                            ? Shipment::statusLabel($record->shipment->status).' · '.$record->shipment->origin.' → '.$record->shipment->destination
+                            : null,
+                        $record->relatedReferenceDescription(),
+                    ]))),
                 Tables\Columns\TextColumn::make('income')
                     ->label('Pendapatan')
                     ->money('IDR')
-                    ->sortable(),
+                    ->sortable()
+                    // State sengaja bukan null supaya deskripsi "Nominal
+                    // tagihan" tetap dirender; formatter money mengembalikan
+                    // teks non-angka apa adanya.
+                    ->state(fn (FinanceJournal $record) => $record->isReceipt() ? '—' : $record->income)
+                    ->placeholder('—')
+                    ->description(fn (FinanceJournal $record): ?string => $record->isReceipt() && $record->invoiceTotal() !== null
+                        ? 'Nominal tagihan: Rp '.number_format($record->invoiceTotal(), 0, ',', '.')
+                        : null),
                 Tables\Columns\TextColumn::make('real_income')
                     ->label('Kas Masuk Real')
                     ->money('IDR')
                     ->sortable()
-                    ->placeholder('Belum dicatat')
+                    ->state(fn (FinanceJournal $record) => $record->isRevenue() ? null : $record->real_income)
+                    ->placeholder(fn (FinanceJournal $record): string => $record->kasRealPlaceholder())
                     ->description(fn (FinanceJournal $record): ?string => FinanceJournalResource::realIncomeDescription($record)),
                 Tables\Columns\TextColumn::make('cost_of_goods')
                     ->label('Pengeluaran Real')
                     ->money('IDR')
-                    ->sortable(),
+                    ->sortable()
+                    ->state(fn (FinanceJournal $record) => $record->isRevenue() ? $record->cost_of_goods : null)
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('total_expense')
                     ->label('Total Biaya')
                     ->money('IDR')
-                    ->sortable(),
+                    ->sortable()
+                    ->state(fn (FinanceJournal $record) => $record->isRevenue() ? $record->total_expense : null)
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('profit')
                     ->label('Profit')
                     ->money('IDR')
                     ->sortable()
-                    ->color(fn (string $state): string => (float) $state >= 0 ? 'success' : 'danger'),
+                    ->state(fn (FinanceJournal $record) => $record->isRevenue() ? $record->profit : null)
+                    ->placeholder('—')
+                    ->color(fn (?string $state): ?string => $state === null ? null : ((float) $state >= 0 ? 'success' : 'danger')),
                 Tables\Columns\TextColumn::make('profit_percentage')
                     ->label('Profit %')
                     ->suffix('%')
-                    ->sortable(),
+                    ->sortable()
+                    ->state(fn (FinanceJournal $record) => $record->isRevenue() ? $record->profit_percentage : null)
+                    ->placeholder('—'),
             ])
             ->defaultSort('entry_date', 'desc')
             ->paginated([5, 10, 25]);

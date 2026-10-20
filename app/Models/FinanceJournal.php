@@ -135,6 +135,95 @@ class FinanceJournal extends Model
             ->first();
     }
 
+    /**
+     * @var FinanceJournal|null
+     */
+    private $resolvedPartnerJournal;
+
+    private bool $partnerJournalResolved = false;
+
+    /**
+     * Jurnal pasangan: jurnal dengan tipe berbeda milik invoice yang sama.
+     *
+     * Jurnal pendapatan dan jurnal kas masuk dari satu invoice ditautkan lewat
+     * shipment_id dan reference_label yang sama, sehingga tabel bisa menunjuk
+     * pasangannya dan operator tidak mengira ada dua pembayaran berbeda.
+     */
+    public function partnerJournal(): ?self
+    {
+        if ($this->partnerJournalResolved) {
+            return $this->resolvedPartnerJournal;
+        }
+
+        $this->partnerJournalResolved = true;
+
+        if ($this->shipment_id === null || $this->reference_label === null) {
+            return $this->resolvedPartnerJournal = null;
+        }
+
+        return $this->resolvedPartnerJournal = static::query()
+            ->where('shipment_id', $this->shipment_id)
+            ->where('reference_label', $this->reference_label)
+            ->where('journal_type', $this->isRevenue() ? self::TYPE_RECEIPT : self::TYPE_REVENUE)
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Placeholder kolom kas masuk real pada baris jurnal pendapatan.
+     *
+     * "Belum dicatat" hanya untuk jurnal tanpa invoice; jurnal dari invoice
+     * yang sudah lunas kasnya tercatat di jurnal kas masuk pasangannya, jadi
+     * placeholder "Belum dicatat" di baris pendapatan menyesatkan.
+     */
+    public function kasRealPlaceholder(): string
+    {
+        if ($this->isReceipt()) {
+            return 'Belum dicatat';
+        }
+
+        $invoice = $this->linkedInvoice();
+
+        if ($invoice === null) {
+            return 'Belum dicatat';
+        }
+
+        return match ($invoice->status) {
+            Invoice::STATUS_LUNAS => 'Sudah lunas',
+            Invoice::STATUS_TERTAGIH => 'Belum dibayar',
+            default => 'Belum dicatat',
+        };
+    }
+
+    /**
+     * Keterangan silang referensi antar jurnal pasangan di kolom referensi.
+     *
+     * Baris pendapatan menunjuk ke jurnal kas masuknya; baris kas masuk
+     * menunjuk ke jurnal pendapatan tempat nominal tagihan dan biaya hidup.
+     */
+    public function relatedReferenceDescription(): ?string
+    {
+        $partner = $this->partnerJournal();
+
+        if ($this->isRevenue()) {
+            $invoice = $this->linkedInvoice();
+
+            if ($invoice === null || $invoice->status !== Invoice::STATUS_LUNAS || $partner === null) {
+                return null;
+            }
+
+            return 'Lunas — kas tercatat di jurnal kas masuk '
+                .($partner->entry_date?->format('d M Y') ?? '').'.';
+        }
+
+        if ($partner !== null) {
+            return 'Pasangan jurnal pendapatan · diakui '
+                .($partner->entry_date?->format('d M Y') ?? '-').'.';
+        }
+
+        return null;
+    }
+
     public function isReceipt(): bool
     {
         return $this->journal_type === self::TYPE_RECEIPT;

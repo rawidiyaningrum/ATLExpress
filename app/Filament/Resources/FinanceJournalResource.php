@@ -141,10 +141,30 @@ class FinanceJournalResource extends Resource
 
                     Tables\Columns\TextColumn::make('journal_line3')
                         ->state(function (FinanceJournal $record): string {
-                            $pend = $record->income !== null ? 'Rp ' . number_format((float) $record->income, 0, ',', '.') : '-';
-                            $kas = $record->real_income !== null ? 'Rp ' . number_format((float) $record->real_income, 0, ',', '.') : '-';
-                            $biaya = $record->total_expense !== null ? 'Rp ' . number_format((float) $record->total_expense, 0, ',', '.') : '-';
-                            $profit = $record->profit !== null ? 'Rp ' . number_format((float) $record->profit, 0, ',', '.') : '-';
+                            $format = fn ($amount): string => $amount !== null
+                                ? 'Rp '.number_format((float) $amount, 0, ',', '.')
+                                : '-';
+
+                            if ($record->isReceipt()) {
+                                $pend = '—';
+                                $kas = $format($record->real_income);
+                                $biaya = '—';
+                                $profit = '—';
+
+                                $pasangan = $record->partnerJournal();
+                                $tambahan = $pasangan !== null && $pasangan->entry_date !== null
+                                    ? " | Pendapatan diakui {$pasangan->entry_date->format('d M Y')}"
+                                    : ' | Kas masuk manual';
+
+                                return "Pendapatan: {$pend} | Kas Real: {$kas} | Biaya: {$biaya} | Profit: {$profit}{$tambahan}";
+                            }
+
+                            $pend = $format($record->income);
+                            $kas = $record->real_income !== null
+                                ? $format($record->real_income)
+                                : $record->kasRealPlaceholder();
+                            $biaya = $format($record->total_expense);
+                            $profit = $format($record->profit);
 
                             return "Pendapatan: {$pend} | Kas Real: {$kas} | Biaya: {$biaya} | Profit: {$profit}";
                         })
