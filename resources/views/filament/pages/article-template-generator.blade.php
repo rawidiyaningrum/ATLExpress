@@ -2,8 +2,9 @@
     <form wire:submit="generateArticles">
         {{ $this->form }}
 
-        <div class="mt-6 flex justify-end">
-            {{ $this->getFormActions() }}
-        </div>
+        <x-filament-actions::actions
+            :actions="$this->getFormActions()"
+            class="mt-6 flex justify-end"
+        />
     </form>
 </x-filament-panels::page>
