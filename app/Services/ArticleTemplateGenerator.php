@@ -24,7 +24,7 @@ class ArticleTemplateGenerator extends BaseArticleSeeder
             return ['generated' => 0, 'skipped' => 0, 'slugs' => []];
         }
 
-        $count = max(1, min(10, $count));
+        $count = max(1, min(50, $count));
 
         $category = Category::query()->where('slug', $categorySlug)->first() ?? Category::query()->where('slug', 'berita')->first();
 

@@ -37,7 +37,6 @@ class ArticleTemplateGenerator extends Page
         $this->form->fill([
             'category_slug' => 'berita',
             'count' => 1,
-            'published_at' => now(),
         ]);
     }
 
@@ -63,10 +62,10 @@ class ArticleTemplateGenerator extends Page
                             ->label('Jumlah Artikel')
                             ->numeric()
                             ->minValue(1)
-                            ->maxValue(10)
+                            ->maxValue(50)
                             ->default(1)
                             ->required()
-                            ->helperText('Maksimal 10 artikel per generate. Slug duplikat akan dilewati.'),
+                            ->helperText('Maksimal 50 artikel per generate. Slug duplikat akan dilewati.'),
                         Forms\Components\DateTimePicker::make('published_at')
                             ->label('Waktu Terbit')
                             ->seconds(false)
