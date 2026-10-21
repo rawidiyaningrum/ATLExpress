@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources\InvoiceResource\Pages;
 
 use App\Filament\Resources\InvoiceResource;
@@ -14,13 +15,13 @@ class PrintReceipt extends Page
 
     protected static string $resource = InvoiceResource::class;
 
-    protected static ?string $title = "Kwitansi";
+    protected static ?string $title = 'Kwitansi';
 
-    protected static ?string $breadcrumb = "Kwitansi";
+    protected static ?string $breadcrumb = 'Kwitansi';
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected static string $view = "filament.shipments.print-receipt";
+    protected static string $view = 'filament.shipments.print-receipt';
 
     public function mount($record): void
     {
@@ -28,12 +29,12 @@ class PrintReceipt extends Page
 
         $this->record = $this->resolveRecord($record);
 
-        $this->record->loadMissing(array("shipment", "items"));
+        $this->record->loadMissing(['shipment', 'items']);
     }
 
     public function getTitle(): string
     {
-        return "KWITANSI - " . ($this->record->invoice_number !== null && $this->record->invoice_number !== "" ? str_replace("INV", "KWI", $this->record->invoice_number) : "");
+        return 'KWITANSI - '.($this->record->invoice_number !== null && $this->record->invoice_number !== '' ? str_replace('INV', 'KWI', $this->record->invoice_number) : '');
     }
 
     protected function getViewData(): array
@@ -42,39 +43,39 @@ class PrintReceipt extends Page
         $shipment = $invoice->shipment;
 
         $amount = (float) ($invoice->total ?? 0);
-        $amountFormatted = number_format($amount, 0, ",", ".");
+        $amountFormatted = number_format($amount, 0, ',', '.');
 
-        $terbilang = trim((new NumberToWordsId())->convert($amount));
+        $terbilang = trim((new NumberToWordsId)->convert($amount));
 
-        $paymentFor = "" . ($invoice->invoice_number ? "Invoice " . $invoice->invoice_number : "");
+        $paymentFor = ''.($invoice->invoice_number ? 'Invoice '.$invoice->invoice_number : '');
         if ($shipment) {
-            $paymentFor .= " | Pengiriman " . ($shipment->awb_number ?: "") . " | Rute: " . ($shipment->origin ?: "-") . " -> " . ($shipment->destination ?: "-");
+            $paymentFor .= ' | Pengiriman '.($shipment->awb_number ?: '').' | Rute: '.($shipment->origin ?: '-').' -> '.($shipment->destination ?: '-');
             if ($shipment->item_type) {
-                $paymentFor .= " | " . $shipment->item_type;
+                $paymentFor .= ' | '.$shipment->item_type;
             }
         }
 
-        return array(
-            "invoice" => $invoice,
-            "shipment" => $shipment,
-            "kwitansi_no" => $invoice->invoice_number !== null && $invoice->invoice_number !== "" ? str_replace("INV", "KWI", $invoice->invoice_number) : "",
-            "client_name" => $invoice->billed_to_name ?: ($shipment->sender_name ?? "-"),
-            "amount_words" => "# " . $terbilang . " rupiah #",
-            "payment_for" => trim($paymentFor),
-            "receiver_name" => $shipment->receiver_name ?? "-",
-            "amount_formatted" => $amountFormatted,
-            "city_date" => "Jakarta, " . now()->translatedFormat("d F Y"),
-            "signer_name" => Setting::getValue("receipt_signer_name") ?: "Harimsa S.H",
-        );
+        return [
+            'invoice' => $invoice,
+            'shipment' => $shipment,
+            'kwitansi_no' => $invoice->invoice_number !== null && $invoice->invoice_number !== '' ? str_replace('INV', 'KWI', $invoice->invoice_number) : '',
+            'client_name' => $invoice->billed_to_name ?: ($shipment->sender_name ?? '-'),
+            'amount_words' => '# '.$terbilang.' rupiah #',
+            'payment_for' => trim($paymentFor),
+            'receiver_name' => $shipment->receiver_name ?? '-',
+            'amount_formatted' => $amountFormatted,
+            'city_date' => 'Jakarta, '.now()->translatedFormat('d F Y'),
+            'signer_name' => Setting::getValue('receipt_signer_name') ?: 'Harimsa S.H',
+        ];
     }
 
     protected function getHeaderActions(): array
     {
-        return array(
-            Action::make("print")
-                ->label("Cetak")
-                ->icon("heroicon-o-printer")
-                ->alpineClickHandler("window.print()"),
-        );
+        return [
+            Action::make('print')
+                ->label('Cetak')
+                ->icon('heroicon-o-printer')
+                ->alpineClickHandler('window.print()'),
+        ];
     }
 }

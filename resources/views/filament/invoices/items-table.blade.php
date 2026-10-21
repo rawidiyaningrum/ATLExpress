@@ -4,7 +4,7 @@
 
      Parameter:
      - $invoice App\Models\Invoice
-     - $money   opsional, closure format nominal. --}}
+     - $money opsional, closure format nominal. --}}
 @php
     $money ??= fn ($amount): string => 'Rp ' . number_format((float) $amount, 0, ',', '.');
     $typeLabels = app(\App\Services\InvoiceService::class)->itemTypeLabels();
@@ -26,7 +26,7 @@
 
 <table class="w-full border-collapse text-sm">
     <thead>
-        <tr class="border-y border-gray-300 text-left dark:border-gray-600">
+        <tr class="border-y border-gray-300 text-left">
             <th class="py-2 pe-3 font-semibold text-xs">Keterangan</th>
             <th class="py-2 pe-3 font-semibold text-xs">Jenis</th>
             <th class="py-2 pe-3 text-right font-semibold text-xs">Jumlah</th>
@@ -35,7 +35,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr class="border-b border-gray-200 dark:border-gray-700">
+        <tr class="border-b border-gray-200">
             <td class="py-2 pe-3">Ongkos kirim</td>
             <td class="py-2 pe-3">Pengiriman</td>
             <td class="py-2 pe-3 text-right">{{ $shippingQuantity }}</td>
@@ -44,7 +44,7 @@
         </tr>
 
         @forelse ($invoice->items as $item)
-            <tr class="border-b border-gray-200 dark:border-gray-700">
+            <tr class="border-b border-gray-200">
                 <td class="py-2 pe-3">{{ $item->description }}</td>
                 <td class="py-2 pe-3">{{ $typeLabels[$item->type] ?? ucfirst($item->type) }}</td>
                 <td class="py-2 pe-3 text-right">{{ $item->quantity }}</td>
@@ -53,7 +53,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="py-3 text-center text-gray-500 dark:text-gray-400">
+                <td colspan="5" class="py-3 text-center text-gray-500">
                     Tidak ada biaya tambahan.
                 </td>
             </tr>

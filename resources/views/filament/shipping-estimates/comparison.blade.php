@@ -8,20 +8,20 @@
     $showPph = collect($rows)->contains(fn (array $row): bool => (float) $row['pph'] > 0);
     $pad = $compact ? 'px-2 py-1' : 'px-3 py-2';
     $table = $compact
-        ? 'w-auto border-collapse text-xs text-gray-900 dark:text-gray-100'
-        : 'w-full border-collapse text-sm text-gray-900 dark:text-gray-100';
-    $base = "border border-gray-200 {$pad} dark:border-gray-700";
+        ? 'w-auto border-collapse text-xs text-gray-900 '
+        : 'w-full border-collapse text-sm text-gray-900 ';
+    $base = "border border-gray-200 {$pad} ";
 @endphp
 
 @if (empty($rows))
-    <p class="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+    <p class="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
         Belum ada armada untuk dibandingkan. Pilih kota asal, kabupaten, dan kota tujuan terlebih dahulu.
     </p>
 @else
     <div class="w-full overflow-x-auto">
         <table class="{{ $table }}">
             <thead>
-                <tr class="bg-gray-100 text-left text-xs uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                <tr class="bg-gray-100 text-left text-xs uppercase tracking-wide text-gray-600">
                     <th class="{{ $base }}">Jenis Armada</th>
                     @unless ($compact)
                         <th class="{{ $base }} text-right">Tarif</th>
@@ -41,7 +41,7 @@
             </thead>
             <tbody>
                 @foreach ($rows as $row)
-                    <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800/50">
+                    <tr class="odd:bg-white even:bg-gray-50">
                         <td class="{{ $base }} font-medium">
                             {{ $row['service_label'] }}
                         </td>
@@ -60,7 +60,7 @@
                         <td class="{{ $base }} text-right">
                             {{ $money($row['additional']) }}
                             @if ((float) $row['diskon'] > 0)
-                                <span class="block text-xs text-danger-600 dark:text-danger-400">
+                                <span class="block text-xs text-danger-600">
                                     diskon -{{ $money($row['diskon']) }}
                                 </span>
                             @endif
