@@ -30,6 +30,7 @@ class SettingSeeder extends Seeder
             'seo_description' => 'ATL Express melayani jasa pengiriman cargo darat, laut, dan udara ke seluruh Indonesia. Cek tarif dan lacak pengiriman secara online, aman dan transparan.',
             'seo_keywords' => 'cargo jakarta, jasa ekspedisi, pengiriman barang, cargo laut, cargo udara, ekspedisi murah, logistik indonesia, atl express',
             'og_image' => '',
+            'receipt_signer_name' => 'Harimsa S.H',
         ];
 
         foreach ($settings as $key => $value) {

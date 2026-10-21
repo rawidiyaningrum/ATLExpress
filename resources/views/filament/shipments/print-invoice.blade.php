@@ -38,12 +38,15 @@
 
         <div class="rounded-xl border border-gray-200 bg-white p-8 text-gray-900 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
             <div class="flex items-start justify-between border-b-2 border-gray-900 pb-4 dark:border-gray-100">
-                <div class="flex items-center gap-3">
+                <div class="flex items-start gap-3">
                     <img src="{{ asset('images/logo.png') }}" alt="ATL Express" style="width: 100px; height: auto" class="rounded-lg object-contain">
                     <div>
                         <p class="text-2xl font-bold uppercase tracking-wide">ATL Express</p>
                         <p class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
                             Invoice / Tagihan Pengiriman
+                        </p>
+                        <p class="mt-1 text-xs leading-tight text-gray-600 dark:text-gray-400">
+                            Graha Buana , Jl. Dr. Saharjo No.210A, RT.1/RW.4, Menteng Dalam, Kec. Tebet, </br>Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12870
                         </p>
                     </div>
                 </div>
@@ -52,7 +55,7 @@
                     <p class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">Nomor Invoice</p>
                     <p class="text-xl font-bold tracking-wide">{{ $invoice->invoice_number }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ $invoice->created_at?->translatedFormat('d M Y H:i') }}
+                        {{ $invoice->created_at?->translatedFormat('d M Y') }}
                     </p>
                     <p class="mt-1 text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Status :</span>

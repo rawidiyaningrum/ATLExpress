@@ -6,6 +6,7 @@ use App\Filament\Concerns\OnlyFullAdmins;
 use App\Filament\Infolists\Components\InvoiceItemsTable;
 use App\Filament\Resources\InvoiceResource\Concerns\AppliesInvoiceStatus;
 use App\Filament\Resources\InvoiceResource\Pages;
+use App\Filament\Resources\InvoiceResource\Pages\PrintReceipt;
 use App\Filament\Resources\ShipmentResource\Pages\PrintInvoice as PrintShipmentInvoice;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
@@ -396,6 +397,12 @@ class InvoiceResource extends Resource
                         ->color('gray')
                         ->visible(fn (Invoice $record): bool => $record->shipment_id !== null)
                         ->url(fn (Invoice $record): string => PrintShipmentInvoice::getUrl(['record' => $record->shipment_id])),
+                    Tables\Actions\Action::make('kwitansi')
+                        ->label('Cetak Kwitansi')
+                        ->icon('heroicon-o-document-text')
+                        ->color('gray')
+                        ->visible(fn (Invoice $record): bool => filled($record->total))
+                        ->url(fn (Invoice $record): string => PrintReceipt::getUrl(['record' => $record])),
                     ...static::statusTransitionActions(),
                     Tables\Actions\EditAction::make()
                         ->visible(fn (Invoice $record): bool => $record->isDraft()),
@@ -477,6 +484,7 @@ class InvoiceResource extends Resource
             'index' => Pages\ListInvoices::route('/'),
             'view' => Pages\ViewInvoice::route('/{record}'),
             'edit' => Pages\EditInvoice::route('/{record}/edit'),
+            'kwitansi' => Pages\PrintReceipt::route('/{record}/kwitansi'),
         ];
     }
 }

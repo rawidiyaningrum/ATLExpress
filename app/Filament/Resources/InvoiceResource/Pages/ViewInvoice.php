@@ -5,6 +5,7 @@ namespace App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\FinanceJournalResource;
 use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\InvoiceResource\Concerns\AppliesInvoiceStatus;
+use App\Filament\Resources\InvoiceResource\Pages\PrintReceipt;
 use App\Filament\Resources\ShipmentResource\Pages\PrintInvoice as PrintShipmentInvoice;
 use App\Models\FinanceJournal;
 use App\Models\Invoice;
@@ -27,6 +28,12 @@ class ViewInvoice extends ViewRecord
                 ->url(fn (): string => PrintShipmentInvoice::getUrl([
                     'record' => $this->record->shipment_id,
                 ])),
+            Actions\Action::make('kwitansi')
+                ->label('Cetak Kwitansi')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn (): bool => filled($this->record->total))
+                ->url(fn (): string => PrintReceipt::getUrl(['record' => $this->record])),
             ...$this->statusHeaderActions(),
             Actions\Action::make('recordRealExpense')
                 ->label('Catat Pengeluaran Real')
