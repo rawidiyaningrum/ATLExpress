@@ -13,10 +13,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Str;
 
 class ShipmentTrackingResource extends Resource
 {
-    protected static ?string $model = ShipmentLog::class;
+    protected static ?string $model = Shipment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-map';
 
@@ -32,7 +34,7 @@ class ShipmentTrackingResource extends Resource
 
     /**
      * Admin dan tracker sama-sama boleh mencatat posisi, tetapi log bersifat
-     * riwayat sehingga tidak bisa diubah. Penghapusan khusus admin.
+     * riwayat sehingga tidak bisa diubah. Penghapusan log khusus admin.
      */
     public static function canViewAny(): bool
     {
@@ -68,7 +70,6 @@ class ShipmentTrackingResource extends Resource
                     name: 'shipment',
                     titleAttribute: 'awb_number',
                     modifyQueryUsing: fn (Builder $query): Builder => $query
-                        ->whereIn('status', Shipment::ACTIVE_STATUSES)
                         ->orderByDesc('created_at')
                         ->orderByDesc('id'),
                 )
@@ -76,7 +77,7 @@ class ShipmentTrackingResource extends Resource
                 ->searchable()
                 ->preload()
                 ->required()
-                ->helperText('Hanya pengiriman berstatus in transit yang bisa dipilih, diurutkan dari yang terbaru.'),
+                ->helperText('Diurutkan dari yang terbaru.'),
             Forms\Components\Select::make('location')
                 ->label('Lokasi (Kabupaten)')
                 ->options(fn (): array => app(TariffCalculatorService::class)->getAllKabupatenOptions())
@@ -94,37 +95,22 @@ class ShipmentTrackingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('shipment.awb_number')
+                Tables\Columns\TextColumn::make('awb_number')
                     ->label('No. AWB')
-                    ->placeholder('-')
                     ->searchable()
                     ->copyable()
-                    ->description(fn (ShipmentLog $record): ?string => static::shipmentSummary($record->shipment) ?: null),
-                Tables\Columns\TextColumn::make('location')
-                    ->label('Lokasi')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => Shipment::statusLabel($state))
-                    ->color(fn (?string $state): string => Shipment::STATUS_COLORS[$state] ?? 'gray'),
-                Tables\Columns\TextColumn::make('timestamp')
-                    ->label('Tanggal')
-                    ->dateTime('d M Y, H:i')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tracker.name')
-                    ->label('Diinput Oleh')
-                    ->placeholder('-'),
+                    ->width('20%')
+                    ->description(fn (Shipment $record): ?string => static::shipmentSummary($record) ?: null),
+                Tables\Columns\TextColumn::make('tracking')
+                    ->label('Tracking')
+                    ->html()
+                    ->getStateUsing(fn (Shipment $record): string => static::renderTracking($record))
+                    ->wrap(false)
+                    ->extraHeaderAttributes(['class' => 'w-full']),
             ])
-            ->defaultSort('timestamp', 'desc')
-            ->actions([
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->defaultSort('awb_number')
+            ->actions([])
+            ->bulkActions([]);
     }
 
     /**
@@ -141,6 +127,44 @@ class ShipmentTrackingResource extends Resource
         $sender = filled($shipment->sender_name) ? " · {$shipment->sender_name}" : '';
 
         return $route.$sender;
+    }
+
+    public static function renderTracking(Shipment $record): string
+    {
+        $logs = $record->logs()
+            ->with('tracker')
+            ->orderBy('timestamp')
+            ->get();
+
+        if ($logs->isEmpty()) {
+            return '-';
+        }
+
+        $lines = $logs->map(function (ShipmentLog $log) {
+            $timestamp = $log->timestamp?->format('d M Y') ?? '-';
+            $status = $log->status_label ?? Shipment::statusLabel($log->status);
+            $location = $log->location ?? '-';
+            $tracker = $log->tracker?->name ?? '-';
+
+            $badge = Blade::render(
+                '<x-filament::badge :color="$color" size="xs" class="inline-flex align-middle whitespace-nowrap">'.e($status).'</x-filament::badge>',
+                ['color' => Shipment::STATUS_COLORS[$log->status] ?? 'gray']
+            );
+
+            try {
+                $deleteUrl = route('filament.atlexpress-admin.resources.shipment-tracking.log.delete', ['log' => $log->id]);
+            } catch (\Throwable $e) {
+                $deleteUrl = '#';
+            }
+
+            $deleteLink = auth()->user()?->isAdminRole()
+                ? ' <a href="'.$deleteUrl.'" class="text-danger-600 hover:text-danger-700 text-xs whitespace-nowrap" onclick="return confirm(\'Hapus log tracking ini?\')">hapus</a>'
+                : '';
+
+            return '<div class="whitespace-nowrap">'.$timestamp.' · '.$badge.' · '.e($location).' · ('.e($tracker).')'.$deleteLink.'</div>';
+        });
+
+        return '<div class="flex flex-col">'.$lines->implode('').'</div>';
     }
 
     public static function getRelations(): array

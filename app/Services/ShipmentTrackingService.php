@@ -41,10 +41,6 @@ class ShipmentTrackingService
      */
     public function recordStatus(Shipment $shipment, string $status, ?string $location = null, ?int $trackerUserId = null): ShipmentLog
     {
-        if (! $shipment->isActive()) {
-            throw new HttpException(403, 'Pengiriman tidak aktif, posisi tidak bisa diinput.');
-        }
-
         $label = Shipment::statusLabel($status);
 
         $log = $shipment->logs()->create([

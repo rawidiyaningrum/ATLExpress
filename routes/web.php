@@ -21,3 +21,31 @@ Route::get('/berita', [PostController::class, 'index'])->name('posts.index');
 Route::get('/berita/{slug}', [PostController::class, 'show'])->name('posts.show');
 Route::get('/kontak', [PageController::class, 'contact'])->name('contact');
 Route::post('/kontak', [InquiryController::class, 'store'])->name('inquiry.store');
+
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/admin/shipment-tracking/log/{log}/delete', function (\App\Models\ShipmentLog $log) {
+        if (! auth()->user()?->isAdminRole()) {
+            abort(403);
+        }
+
+        $shipment = $log->shipment;
+
+        $log->delete();
+
+        if ($shipment) {
+            $latest = $shipment->logs()->latest('timestamp')->first();
+
+            if ($latest && $latest->status) {
+                $shipment->update(['status' => $latest->status]);
+            } elseif (! $shipment->isActive() && $shipment->logs()->exists()) {
+                $latest = $shipment->logs()->latest('timestamp')->first();
+
+                if ($latest && $latest->status) {
+                    $shipment->update(['status' => $latest->status]);
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', 'Log tracking berhasil dihapus.');
+    })->name('filament.atlexpress-admin.resources.shipment-tracking.log.delete');
+});

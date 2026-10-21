@@ -21,11 +21,16 @@ class ListShipmentTracking extends ListRecords
     }
 
     /**
-     * Shipment dan tracker di-eager load supaya kolom nomor AWB dan penginput
-     * tidak memicu query per baris.
+     * Eager load logs dan tracker supaya render tracking efisien.
+     * Urut berdasarkan tracking terakhir yang diinput.
      */
     protected function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['shipment', 'tracker']);
+        return parent::getEloquentQuery()
+            ->with(['logs.tracker'])
+            ->whereHas('logs')
+            ->withMax('logs as last_tracking_at', 'timestamp')
+            ->orderByDesc('last_tracking_at')
+            ->orderByDesc('awb_number');
     }
 }
