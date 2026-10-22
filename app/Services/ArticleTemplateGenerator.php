@@ -10,6 +10,10 @@ use Illuminate\Support\Str;
 
 class ArticleTemplateGenerator extends BaseArticleSeeder
 {
+    public function __construct(private readonly ArticleSeoGenerator $seo)
+    {
+    }
+
     /**
      * Generate dan simpan artikel berbasis keyword langsung ter-publish.
      *
@@ -26,11 +30,7 @@ class ArticleTemplateGenerator extends BaseArticleSeeder
 
         $count = max(1, min(50, $count));
 
-        $category = Category::query()->where('slug', $categorySlug)->first() ?? Category::query()->where('slug', 'berita')->first();
-
-        if (! $category) {
-            $category = Category::query()->first();
-        }
+        $category = $this->resolveCategory($categorySlug);
 
         $articles = [];
         $slugs = [];
@@ -42,6 +42,8 @@ class ArticleTemplateGenerator extends BaseArticleSeeder
             if (Post::query()->where('slug', $slug)->exists()) {
                 continue;
             }
+
+            $article = $this->applySeo($article, $keyword, (string) ($category?->name ?? ''), $index, $options);
 
             $articles[] = $article;
             $slugs[] = $slug;
@@ -77,6 +79,113 @@ class ArticleTemplateGenerator extends BaseArticleSeeder
             'skipped' => $count - count($articles),
             'slugs' => $slugs,
         ];
+    }
+
+    /**
+     * Susun pratinjau artikel pertama tanpa menyimpan ke database, dipakai
+     * untuk preview SEO di halaman generator.
+     *
+     * @return array<string, mixed>
+     */
+    public function preview(string $keyword, string $categorySlug = 'berita'): array
+    {
+        $keyword = trim($keyword);
+
+        if ($keyword === '') {
+            return [
+                'title' => '',
+                'meta_title' => '',
+                'meta_description' => '',
+                'meta_keywords' => '',
+            ];
+        }
+
+        $category = $this->resolveCategory($categorySlug);
+        $article = $this->buildArticle($keyword, $category?->slug ?? 'berita', 1);
+
+        $article = $this->applySeo($article, $keyword, (string) ($category?->name ?? ''), 1, []);
+
+        return [
+            'title' => (string) $article['title'],
+            'meta_title' => (string) $article['meta_title'],
+            'meta_description' => (string) $article['meta_description'],
+            'meta_keywords' => (string) $article['meta_keywords'],
+        ];
+    }
+
+    /**
+     * Isi metadata SEO artikel. Nilai manual dari form(admin) menang, sisanya
+     * digenerate otomatis mengikuti isi artikel.
+     *
+     * @param  array<string, mixed>  $article
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    private function applySeo(array $article, string $keyword, string $categoryName, int $index, array $options): array
+    {
+        $seo = $this->seo->generate($keyword, $article, $categoryName, $index);
+
+        return SeoOverrides::apply(array_merge($article, $seo), $options, $keyword, $index);
+    }
+
+    /**
+     * Susun artikel versi template (tanpa AI) untuk satu index.
+     *
+     * Dipakai sebagai fallback ketika pemanggilan AI gagal.
+     *
+     * @return array<string, mixed>
+     */
+    public function fallbackArticle(string $keyword, string $categorySlug, int $index): array
+    {
+        $category = $this->resolveCategory($categorySlug);
+
+        $article = $this->buildArticle($keyword, $category?->slug ?? 'berita', $index);
+
+        return $this->applySeo($article, $keyword, (string) ($category?->name ?? ''), $index, []);
+    }
+
+    /**
+     * Slug unik dari sebuah judul.
+     */
+    public function uniqueSlugFor(string $title): string
+    {
+        return $this->uniqueSlug(Str::slug($title));
+    }
+
+    /**
+     * Simpan satu artikel sebagai published.
+     */
+    public function publishArticle(array $article, ?Carbon $publishedAt = null): Post
+    {
+        $article['category'] = $article['category'] ?? 'berita';
+        $article['status'] = 'published';
+
+        if ($publishedAt instanceof Carbon) {
+            $article['published_at'] = $publishedAt;
+        } else {
+            $article['published_at'] = Carbon::now()
+                ->subDays(random_int(0, 4))
+                ->setTime(random_int(8, 21), random_int(0, 59));
+        }
+
+        $this->store([$article]);
+
+        return Post::query()->where('slug', $article['slug'])->firstOrFail();
+    }
+
+    /**
+     * Nama kategori untuk slug yang diberikan.
+     */
+    public function categoryName(string $categorySlug): string
+    {
+        return (string) ($this->resolveCategory($categorySlug)?->name ?? '');
+    }
+
+    private function resolveCategory(string $categorySlug): ?Category
+    {
+        return Category::query()->where('slug', $categorySlug)->first()
+            ?? Category::query()->where('slug', 'berita')->first()
+            ?? Category::query()->first();
     }
 
     /**
@@ -187,8 +296,6 @@ class ArticleTemplateGenerator extends BaseArticleSeeder
             'title' => $title,
             'slug' => $slug,
             'category' => $categorySlug,
-            'meta_title' => Str::limit($title, 60, ''),
-            'meta_description' => Str::limit(strip_tags($lead), 158, ''),
             'lead' => $lead,
             'sections' => $sections,
             'tips_title' => 'Tips Praktis '.$keywordUc,

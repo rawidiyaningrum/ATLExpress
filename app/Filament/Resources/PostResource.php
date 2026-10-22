@@ -50,12 +50,16 @@ class PostResource extends Resource
             Forms\Components\Section::make('SEO')->schema([
                 Forms\Components\TextInput::make('meta_title')
                     ->label('Meta Title')
-                    ->helperText('Kosongkan untuk default: judul artikel')
+                    ->helperText('Kosongkan untuk auto-generate dari konten')
                     ->maxLength(255),
                 Forms\Components\Textarea::make('meta_description')
                     ->label('Meta Description')
                     ->helperText('Kosongkan untuk auto-generate dari konten')
                     ->rows(3),
+                Forms\Components\Textarea::make('meta_keywords')
+                    ->label('Meta Keywords')
+                    ->helperText('Pisahkan dengan koma. Kosongkan untuk auto-generate dari judul & konten.')
+                    ->rows(2),
             ])->columns(1),
         ]);
     }

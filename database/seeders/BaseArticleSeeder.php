@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Post;
+use App\Services\ArticleSeoGenerator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -32,12 +33,31 @@ abstract class BaseArticleSeeder extends Seeder
                 'content' => $this->render($article),
                 'meta_title' => $article['meta_title'] ?? Str::limit($article['title'], 60, ''),
                 'meta_description' => $article['meta_description'] ?? Str::limit(strip_tags($article['lead']), 158, ''),
+                'meta_keywords' => $article['meta_keywords'] ?? $this->deriveKeywords($article),
                 'status' => $article['status'] ?? 'published',
-                'published_at' => $this->publishedAt($article['days_ago'] ?? 0, $article['hour'] ?? 9),
+                'published_at' => $article['published_at'] ?? $this->publishedAt($article['days_ago'] ?? 0, $article['hour'] ?? 9),
             ];
 
             Post::updateOrCreate(['slug' => $data['slug']], $data);
         }
+    }
+
+    /**
+     * Susun meta keywords dari isi artikel untuk artikel yang SEO-nya belum
+     * disiapkan manual.
+     *
+     * @param  array<string, mixed>  $article
+     */
+    private function deriveKeywords(array $article): string
+    {
+        $generator = app(ArticleSeoGenerator::class);
+        $keyphrase = $generator->deriveKeyphrase((string) ($article['title'] ?? ''));
+
+        if ($keyphrase === '') {
+            return '';
+        }
+
+        return $generator->generate($keyphrase, $article)['meta_keywords'];
     }
 
     /**

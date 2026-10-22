@@ -17,8 +17,7 @@ class PostController extends Controller
             ? url()->current() . '?page=' . $posts->currentPage()
             : route('posts.index');
 
-        $seo = $this->baseSeo($settings);
-        $seo += [
+        $seo = array_merge($this->baseSeo($settings), [
             'title' => 'Berita & Artikel',
             'description' => 'Berita terbaru dan artikel seputar industry logistik, tips pengiriman, dan informasi ATL Express.',
             'canonical' => $canonical,
@@ -28,7 +27,7 @@ class PostController extends Controller
                     [route('posts.index'), 'Berita'],
                 ]),
             ],
-        ];
+        ]);
 
         return view('posts.index', compact('posts', 'settings', 'seo'));
     }
@@ -42,13 +41,16 @@ class PostController extends Controller
         $description = $post->meta_description ?: SeoService::description($post->content);
         $published = $post->published_at ? $post->published_at->toIso8601String() : now()->toIso8601String();
 
-        $seo = $this->baseSeo($settings);
-        $seo += [
+        $seo = array_merge($this->baseSeo($settings), [
             'title' => $title,
             'description' => $description,
+            'keywords' => $post->meta_keywords ?: ($settings['seo_keywords'] ?? ''),
             'canonical' => route('posts.show', $post->slug),
             'type' => 'article',
             'image' => $post->image_url ?: ($settings['og_image'] ?: asset('images/logo.png')),
+            // Meta title artikel sudah lengkap dengan nama brand, jangan
+            // ditambahkan lagi supaya judul di browser tidak melebihi 60 karakter.
+            'append_name' => ! $post->meta_title,
             'json_ld' => [
                 [
                     '@context' => 'https://schema.org',
@@ -78,7 +80,7 @@ class PostController extends Controller
                     [route('posts.show', $post->slug), $post->title],
                 ]),
             ],
-        ];
+        ]);
 
         return view('posts.show', compact('post', 'settings', 'seo'));
     }
