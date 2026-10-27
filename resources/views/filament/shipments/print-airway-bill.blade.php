@@ -50,7 +50,7 @@
                             Airway Bill / Nota Pengiriman
                         </p>
                         <p class="mt-1 text-xs leading-tight text-gray-600">
-                            Graha Buana , Jl. Dr. Saharjo No.210A, RT.1/RW.4, Menteng Dalam, Kec. Tebet, <br>Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12870
+                            Graha Buana , Jl. Dr. Saharjo No.210A, RT.5/RW.9, Menteng Dalam, Kec. Tebet, <br>Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12870
                         </p>
                     </div>
                 </div>
