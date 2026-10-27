@@ -53,7 +53,7 @@
                         <p class="text-xs uppercase tracking-widest text-gray-500">Nomor Kwitansi</p>
                         <p class="text-xl font-bold tracking-wide">{{ $kwitansi_no }}</p>
                         <p class="text-xs text-gray-500">
-                            {{ now()->translatedFormat('d F Y') }}
+                            {{ $receipt_date->translatedFormat('d F Y') }}
                         </p>
                     </div>
                 </div>

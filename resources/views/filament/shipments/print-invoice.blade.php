@@ -59,7 +59,7 @@
                     <p class="text-xs uppercase tracking-widest text-gray-500">Nomor Invoice</p>
                     <p class="text-xl font-bold tracking-wide">{{ $invoice->invoice_number }}</p>
                     <p class="text-xs text-gray-500">
-                        {{ $invoice->created_at?->translatedFormat('d M Y') }}
+                        {{ ($invoice->invoice_date ?? $invoice->created_at)?->translatedFormat('d M Y') }}
                     </p>
                     <p class="mt-1 text-sm">
                         <span class="text-gray-500">Status :</span>

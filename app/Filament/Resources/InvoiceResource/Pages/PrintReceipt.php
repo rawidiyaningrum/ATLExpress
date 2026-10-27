@@ -42,6 +42,8 @@ class PrintReceipt extends Page
         $invoice = $this->record;
         $shipment = $invoice->shipment;
 
+        $receiptDate = $invoice->receipt_date ?? now();
+
         $amount = (float) ($invoice->total ?? 0);
         $amountFormatted = number_format($amount, 0, ',', '.');
 
@@ -64,7 +66,8 @@ class PrintReceipt extends Page
             'payment_for' => trim($paymentFor),
             'receiver_name' => $shipment->receiver_name ?? '-',
             'amount_formatted' => $amountFormatted,
-            'city_date' => 'Jakarta, '.now()->translatedFormat('d F Y'),
+            'receipt_date' => $receiptDate,
+            'city_date' => 'Jakarta, '.$receiptDate->translatedFormat('d F Y'),
             'signer_name' => Setting::getValue('receipt_signer_name') ?: 'Harimsa S.H',
         ];
     }

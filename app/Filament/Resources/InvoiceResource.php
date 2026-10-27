@@ -19,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class InvoiceResource extends Resource
 {
@@ -90,6 +91,7 @@ class InvoiceResource extends Resource
             Forms\Components\Section::make('Informasi Administrasi')
                 ->description('Dokumen pendukung yang tampil di bawah nomor invoice. Boleh dikosongkan.')
                 ->schema([
+                    ...static::documentDateFields(),
                     Forms\Components\DatePicker::make('due_date')
                         ->label('Due Date'),
                     Forms\Components\TextInput::make('sppb_number')
@@ -243,6 +245,48 @@ class InvoiceResource extends Resource
         ]);
     }
 
+    /**
+     * Field tanggal dokumen, dipakai bersama oleh form invoice dan aksi
+     * "Atur Tanggal" yang tetap tersedia setelah invoice terkunci.
+     *
+     * @return array<int, Forms\Components\DatePicker>
+     */
+    public static function documentDateFields(): array
+    {
+        return [
+            Forms\Components\DatePicker::make('invoice_date')
+                ->label('Tanggal Invoice')
+                ->helperText('Tercetak di invoice. Kosongkan untuk memakai tanggal dibuat.'),
+            Forms\Components\DatePicker::make('receipt_date')
+                ->label('Tanggal Kwitansi')
+                ->helperText('Tercetak di kwitansi. Kosongkan untuk memakai tanggal cetak.'),
+        ];
+    }
+
+    /**
+     * Aksi untuk mengubah tanggal dokumen tanpa membuka form invoice, supaya
+     * invoice yang sudah tertagih atau lunas tetap bisa disesuaikan tanggalnya.
+     */
+    public static function documentDatesAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('documentDates')
+            ->label('Atur Tanggal')
+            ->icon('heroicon-o-calendar-days')
+            ->color('gray')
+            ->form(static::documentDateFields())
+            ->fillForm(fn (Invoice $record): array => [
+                'invoice_date' => ($record->invoice_date ?? $record->created_at)?->toDateString(),
+                'receipt_date' => $record->receipt_date?->toDateString(),
+            ])
+            ->action(function (Invoice $record, array $data): void {
+                $record->update([
+                    'invoice_date' => $data['invoice_date'] ?? null,
+                    'receipt_date' => $data['receipt_date'] ?? null,
+                ]);
+            })
+            ->successNotificationTitle('Tanggal dokumen diperbarui');
+    }
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
@@ -269,6 +313,14 @@ class InvoiceResource extends Resource
                     ->dateTime(),
                 Infolists\Components\TextEntry::make('due_date')
                     ->label('Due Date')
+                    ->date('d M Y')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('invoice_date')
+                    ->label('Tanggal Invoice')
+                    ->date('d M Y')
+                    ->placeholder(fn (Invoice $record): string => $record->created_at?->format('d M Y') ?? '-'),
+                Infolists\Components\TextEntry::make('receipt_date')
+                    ->label('Tanggal Kwitansi')
                     ->date('d M Y')
                     ->placeholder('-'),
                 Infolists\Components\TextEntry::make('sppb_number')
@@ -357,7 +409,7 @@ class InvoiceResource extends Resource
 
                     Tables\Columns\TextColumn::make('invoice_line2')
                         ->state(function (Invoice $record): string {
-                            $billed = $record->billed_to_name ? \Illuminate\Support\Str::limit($record->billed_to_name, 40) : '-';
+                            $billed = $record->billed_to_name ? Str::limit($record->billed_to_name, 40) : '-';
                             $status = $record->statusLabel();
                             $items = $record->items_count ?? $record->items()->count();
 
@@ -369,7 +421,7 @@ class InvoiceResource extends Resource
 
                     Tables\Columns\TextColumn::make('invoice_line3')
                         ->state(function (Invoice $record): string {
-                            $total = $record->total !== null ? 'Rp ' . number_format((float) $record->total, 0, ',', '.') : '-';
+                            $total = $record->total !== null ? 'Rp '.number_format((float) $record->total, 0, ',', '.') : '-';
                             $created = $record->created_at ? $record->created_at->format('d M Y') : '-';
 
                             return "Total: {$total} | Dibuat: {$created}";
@@ -403,6 +455,7 @@ class InvoiceResource extends Resource
                         ->color('gray')
                         ->visible(fn (Invoice $record): bool => filled($record->total))
                         ->url(fn (Invoice $record): string => PrintReceipt::getUrl(['record' => $record])),
+                    static::documentDatesAction(),
                     ...static::statusTransitionActions(),
                     Tables\Actions\EditAction::make()
                         ->visible(fn (Invoice $record): bool => $record->isDraft()),
@@ -484,7 +537,7 @@ class InvoiceResource extends Resource
             'index' => Pages\ListInvoices::route('/'),
             'view' => Pages\ViewInvoice::route('/{record}'),
             'edit' => Pages\EditInvoice::route('/{record}/edit'),
-            'kwitansi' => Pages\PrintReceipt::route('/{record}/kwitansi'),
+            'kwitansi' => PrintReceipt::route('/{record}/kwitansi'),
         ];
     }
 }

@@ -266,6 +266,8 @@ class InvoiceService
             'billed_to_name' => $state['billed_to_name'] ?? null,
             'billed_to_address' => $state['billed_to_address'] ?? null,
             'due_date' => $state['due_date'] ?? null,
+            'invoice_date' => $state['invoice_date'] ?? null,
+            'receipt_date' => $state['receipt_date'] ?? null,
             'sppb_number' => $state['sppb_number'] ?? null,
             'packing_list_number' => $state['packing_list_number'] ?? null,
             'period' => $state['period'] ?? null,

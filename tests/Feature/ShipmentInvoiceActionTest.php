@@ -74,6 +74,8 @@ class ShipmentInvoiceActionTest extends TestCase
             ->fillForm([
                 'invoice_billed_to_name' => 'PT Dokumen',
                 'invoice_shipping_cost' => 150000,
+                'invoice_date' => '2026-12-01',
+                'invoice_receipt_date' => '2026-12-02',
                 'invoice_due_date' => '2026-12-31',
                 'invoice_sppb_number' => 'SPPB-001',
                 'invoice_packing_list_number' => 'PL-002',
@@ -84,6 +86,8 @@ class ShipmentInvoiceActionTest extends TestCase
 
         $invoice = Invoice::sole();
 
+        $this->assertSame('2026-12-01', $invoice->invoice_date->toDateString());
+        $this->assertSame('2026-12-02', $invoice->receipt_date->toDateString());
         $this->assertSame('2026-12-31', $invoice->due_date->toDateString());
         $this->assertSame('SPPB-001', $invoice->sppb_number);
         $this->assertSame('PL-002', $invoice->packing_list_number);

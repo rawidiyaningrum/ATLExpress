@@ -79,6 +79,12 @@ trait HasInvoiceForm
             Forms\Components\Section::make('Informasi Administrasi')
                 ->description('Dokumen pendukung yang tampil di bawah nomor invoice. Boleh dikosongkan.')
                 ->schema([
+                    Forms\Components\DatePicker::make('invoice_date')
+                        ->label('Tanggal Invoice')
+                        ->helperText('Kosongkan untuk memakai tanggal dibuat.'),
+                    Forms\Components\DatePicker::make('invoice_receipt_date')
+                        ->label('Tanggal Kwitansi')
+                        ->helperText('Kosongkan untuk memakai tanggal cetak.'),
                     Forms\Components\DatePicker::make('invoice_due_date')
                         ->label('Due Date'),
                     Forms\Components\TextInput::make('invoice_sppb_number')
@@ -243,7 +249,7 @@ trait HasInvoiceForm
      * tetap berasal dari data pengiriman, jadi logikanya sama.
      *
      * @param  array<string, mixed>  $state
-     * @return array{billed_to_name: ?string, billed_to_address: ?string, shipping_cost: float, due_date: ?string, sppb_number: ?string, packing_list_number: ?string, period: ?string, account_number: ?string}
+     * @return array{billed_to_name: ?string, billed_to_address: ?string, shipping_cost: float, invoice_date: ?string, receipt_date: ?string, due_date: ?string, sppb_number: ?string, packing_list_number: ?string, period: ?string, account_number: ?string}
      */
     protected function invoiceDefaultsFromShipment(array $state): array
     {
@@ -260,6 +266,12 @@ trait HasInvoiceForm
             'shipping_cost' => $shippingCost > 0
                 ? $shippingCost
                 : $this->defaultShippingCost($shipment),
+            'invoice_date' => filled($state['invoice_date'] ?? null)
+                ? $state['invoice_date']
+                : null,
+            'receipt_date' => filled($state['invoice_receipt_date'] ?? null)
+                ? $state['invoice_receipt_date']
+                : null,
             'due_date' => filled($state['invoice_due_date'] ?? null)
                 ? $state['invoice_due_date']
                 : null,

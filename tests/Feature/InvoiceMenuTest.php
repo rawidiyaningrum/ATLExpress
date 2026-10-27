@@ -152,6 +152,8 @@ class InvoiceMenuTest extends TestCase
         Livewire::actingAs(User::factory()->create())
             ->test(EditInvoice::class, ['record' => $invoice->getKey()])
             ->fillForm([
+                'invoice_date' => '2026-10-01',
+                'receipt_date' => '2026-10-02',
                 'due_date' => '2026-11-30',
                 'sppb_number' => 'SPPB-EDIT',
                 'packing_list_number' => 'PL-EDIT',
@@ -163,11 +165,48 @@ class InvoiceMenuTest extends TestCase
 
         $invoice->refresh();
 
+        $this->assertSame('2026-10-01', $invoice->invoice_date->toDateString());
+        $this->assertSame('2026-10-02', $invoice->receipt_date->toDateString());
         $this->assertSame('2026-11-30', $invoice->due_date->toDateString());
         $this->assertSame('SPPB-EDIT', $invoice->sppb_number);
         $this->assertSame('PL-EDIT', $invoice->packing_list_number);
         $this->assertSame('November 2026', $invoice->period);
         $this->assertSame('ACC-EDIT', $invoice->account_number);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('filament.atlexpress-admin.resources.shipments.print-invoice', [
+                'record' => $invoice->shipment_id,
+            ]))
+            ->assertOk()
+            ->assertSee($invoice->invoice_date->translatedFormat('d M Y'));
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('filament.atlexpress-admin.resources.invoices.kwitansi', [
+                'record' => $invoice,
+            ]))
+            ->assertOk()
+            ->assertSee($invoice->receipt_date->translatedFormat('d F Y'));
+    }
+
+    public function test_document_dates_can_be_changed_after_invoice_is_billed(): void
+    {
+        $invoice = $this->draftInvoice();
+        $invoice->update(['status' => Invoice::STATUS_TERTAGIH]);
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ViewInvoice::class, ['record' => $invoice->getKey()])
+            ->assertActionVisible('documentDates')
+            ->callAction('documentDates', [
+                'invoice_date' => '2026-09-01',
+                'receipt_date' => '2026-09-02',
+            ])
+            ->assertHasNoActionErrors();
+
+        $invoice->refresh();
+
+        $this->assertSame('2026-09-01', $invoice->invoice_date->toDateString());
+        $this->assertSame('2026-09-02', $invoice->receipt_date->toDateString());
+        $this->assertSame(Invoice::STATUS_TERTAGIH, $invoice->status, 'status invoice tidak berubah');
     }
 
     public function test_billed_invoice_is_locked_against_editing(): void

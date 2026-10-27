@@ -5,7 +5,6 @@ namespace App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\FinanceJournalResource;
 use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\InvoiceResource\Concerns\AppliesInvoiceStatus;
-use App\Filament\Resources\InvoiceResource\Pages\PrintReceipt;
 use App\Filament\Resources\ShipmentResource\Pages\PrintInvoice as PrintShipmentInvoice;
 use App\Models\FinanceJournal;
 use App\Models\Invoice;
@@ -34,6 +33,22 @@ class ViewInvoice extends ViewRecord
                 ->color('gray')
                 ->visible(fn (): bool => filled($this->record->total))
                 ->url(fn (): string => PrintReceipt::getUrl(['record' => $this->record])),
+            Actions\Action::make('documentDates')
+                ->label('Atur Tanggal')
+                ->icon('heroicon-o-calendar-days')
+                ->color('gray')
+                ->form(InvoiceResource::documentDateFields())
+                ->fillForm(fn (): array => [
+                    'invoice_date' => ($this->record->invoice_date ?? $this->record->created_at)?->toDateString(),
+                    'receipt_date' => $this->record->receipt_date?->toDateString(),
+                ])
+                ->action(function (array $data): void {
+                    $this->record->update([
+                        'invoice_date' => $data['invoice_date'] ?? null,
+                        'receipt_date' => $data['receipt_date'] ?? null,
+                    ]);
+                })
+                ->successNotificationTitle('Tanggal dokumen diperbarui'),
             ...$this->statusHeaderActions(),
             Actions\Action::make('recordRealExpense')
                 ->label('Catat Pengeluaran Real')
