@@ -80,10 +80,10 @@ class CreateShipmentInvoice extends Page
                 ->color('gray')
                 ->action(fn () => $this->store(Invoice::STATUS_DRAFT)),
             Action::make('saveBilled')
-                ->label('Tertagih & Cetak')
+                ->label('Final & Cetak')
                 ->icon('heroicon-o-document-check')
                 ->color('warning')
-                ->action(fn () => $this->store(Invoice::STATUS_TERTAGIH)),
+                ->action(fn () => $this->store(Invoice::STATUS_FINAL)),
         ];
     }
 

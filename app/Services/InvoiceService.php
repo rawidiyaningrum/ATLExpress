@@ -299,7 +299,7 @@ class InvoiceService
         // real_expense ikut terhapus. Ini aman karena jalur ini hanya jalan
         // untuk invoice draft, dan invoice draft belum punya jurnal keuangan
         // tempat pengeluaran real dicatat. Jangan sampaikode ini ke invoice
-        // berstatus tertagih atau lunas, karena isLocked() di atas akan
+        // berstatus final, berjalan, atau lunas, karena isLocked() di atas akan
         // menggagalkan lebih dulu.
         $this->syncFinanceJournals($invoice->refresh());
 
@@ -313,7 +313,7 @@ class InvoiceService
      * Melompat dari draft ke lunas ditolak karena pendapatan dan penerimaan kas
      * harus tercatat pada dua titik yang berbeda.
      */
-    public function transitionTo(Invoice $invoice, string $status): Invoice
+    public function transitionTo(Invoice $invoice, string $status, ?string $date = null): Invoice
     {
         abort_if(
             ! in_array($status, Invoice::STATUSES, true),
@@ -333,7 +333,10 @@ class InvoiceService
         );
 
         if ($status !== $invoice->status) {
-            $invoice->update(['status' => $status]);
+            $invoice->update([
+                'status' => $status,
+                ...$this->statusDateAttributes($invoice, $status, $date),
+            ]);
         }
 
         $this->syncFinanceJournals($invoice->refresh());
@@ -342,19 +345,67 @@ class InvoiceService
     }
 
     /**
+     * Menentukan tanggal status yang ikut berubah bersama transisi.
+     *
+     * Mundur dari lunas ke berjalan hanya menghapus tanggal lunas dan
+     * mempertahankan tanggal berjalan yang lama. Mundur dari berjalan ke final
+     * menghapus tanggal berjalan.
+     *
+     * @return array<string, string|null>
+     */
+    protected function statusDateAttributes(Invoice $invoice, string $status, ?string $date): array
+    {
+        $providedDate = $date;
+        $date = $date ?: now()->toDateString();
+
+        return match ($status) {
+            Invoice::STATUS_BERJALAN => [
+                'berjalan_date' => $invoice->status === Invoice::STATUS_LUNAS
+                    ? ($providedDate ?? $invoice->berjalan_date?->toDateString() ?? $date)
+                    : $date,
+                'lunas_date' => null,
+            ],
+            Invoice::STATUS_LUNAS => [
+                'lunas_date' => $date,
+            ],
+            Invoice::STATUS_FINAL, Invoice::STATUS_DRAFT => [
+                'berjalan_date' => null,
+                'lunas_date' => null,
+            ],
+            default => [],
+        };
+    }
+
+    /**
      * Invoice sudah ditagihkan ke pelanggan, jadi pendapatannya diakui.
      */
     public function markBilled(Invoice $invoice): Invoice
     {
-        return $this->transitionTo($invoice, Invoice::STATUS_TERTAGIH);
+        return $this->transitionTo($invoice, Invoice::STATUS_FINAL);
+    }
+
+    /**
+     * Nama eksplisit untuk status final, menggantikan istilah tertagih.
+     */
+    public function markFinal(Invoice $invoice): Invoice
+    {
+        return $this->markBilled($invoice);
+    }
+
+    /**
+     * Invoice sedang berjalan dan menunggu pencairan.
+     */
+    public function markInProgress(Invoice $invoice, ?string $date = null): Invoice
+    {
+        return $this->transitionTo($invoice, Invoice::STATUS_BERJALAN, $date);
     }
 
     /**
      * Invoice sudah dibayar, jadi kas masuknya dicatat.
      */
-    public function markPaid(Invoice $invoice): Invoice
+    public function markPaid(Invoice $invoice, ?string $date = null): Invoice
     {
-        return $this->transitionTo($invoice, Invoice::STATUS_LUNAS);
+        return $this->transitionTo($invoice, Invoice::STATUS_LUNAS, $date);
     }
 
     /**
@@ -365,7 +416,7 @@ class InvoiceService
      * - jurnal pendapatan dibuat saat invoice ditagihkan, dan hilang lagi
      *   kalau invoice dikembalikan ke draft;
      * - jurnal kas masuk dibuat saat invoice dilunasi, dan hilang lagi kalau
-     *   invoice dikembalikan ke tertagih.
+     *   invoice dikembalikan ke final atau berjalan.
      *
      * Jurnal kas hanya mencatat penerimaan kas. Pendapatan dan pajaknya sudah
      * diakui di jurnal pendapatan, jadi keduanya tidak boleh ikut diulang di sini.
@@ -410,7 +461,7 @@ class InvoiceService
                     'tax' => 0,
                 ],
                 $invoice->shipment_id,
-                now()->toDateString(),
+                $invoice->lunas_date?->toDateString() ?? now()->toDateString(),
                 FinanceJournal::TYPE_RECEIPT,
             );
 

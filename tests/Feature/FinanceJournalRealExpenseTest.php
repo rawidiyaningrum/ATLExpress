@@ -79,7 +79,7 @@ class FinanceJournalRealExpenseTest extends TestCase
             'line_total' => 19800,
         ]);
 
-        app(InvoiceService::class)->markBilled($invoice);
+        app(InvoiceService::class)->markFinal($invoice);
 
         return [
             $shipment,
@@ -329,7 +329,7 @@ class FinanceJournalRealExpenseTest extends TestCase
         );
     }
 
-    public function test_re_billing_survives_the_removed_value_panel(): void
+    public function test_re_finalizing_survives_the_removed_value_panel(): void
     {
         [, , $journal] = $this->billedInvoice();
 
@@ -347,7 +347,7 @@ class FinanceJournalRealExpenseTest extends TestCase
         $this->assertSame(25000.0, (float) $journal->operational_cost, 'opex lama tidak dikosongkan form');
     }
 
-    public function test_real_expense_survives_re_billing_the_invoice(): void
+    public function test_real_expense_survives_re_finalizing_the_invoice(): void
     {
         [, $invoice, $journal] = $this->billedInvoice();
 
@@ -357,9 +357,9 @@ class FinanceJournalRealExpenseTest extends TestCase
         $service = app(InvoiceService::class);
 
         // Kembali ke draft menghapus jurnal pendapatan beserta modalnya, lalu
-        // ditagihkan ulang harus memuat kembali pengeluaran real dari invoice.
+        // difinalkan ulang harus memuat kembali pengeluaran real dari invoice.
         $service->transitionTo($invoice->refresh(), Invoice::STATUS_DRAFT);
-        $service->transitionTo($invoice->refresh(), Invoice::STATUS_TERTAGIH);
+        $service->transitionTo($invoice->refresh(), Invoice::STATUS_FINAL);
 
         $revenue = FinanceJournal::where('journal_type', FinanceJournal::TYPE_REVENUE)->sole();
 
@@ -367,14 +367,14 @@ class FinanceJournalRealExpenseTest extends TestCase
         $this->assertSame(185000.0, (float) $revenue->cost_of_goods, 'modal terisi ulang dari pengeluaran real');
     }
 
-    public function test_re_billing_without_real_expense_keeps_the_handwritten_modal(): void
+    public function test_re_finalizing_without_real_expense_keeps_the_handwritten_modal(): void
     {
         [, $invoice] = $this->billedInvoice();
 
         $journal = FinanceJournal::where('journal_type', FinanceJournal::TYPE_REVENUE)->sole();
         $journal->update(['cost_of_goods' => 100000, 'notes' => 'Modal dari supplier X']);
 
-        app(InvoiceService::class)->transitionTo($invoice->refresh(), Invoice::STATUS_TERTAGIH);
+        app(InvoiceService::class)->transitionTo($invoice->refresh(), Invoice::STATUS_FINAL);
 
         $journal->refresh();
 
@@ -448,6 +448,118 @@ class FinanceJournalRealExpenseTest extends TestCase
             ->assertSee('92,59%')
             ->assertSee('Efisiensi Biaya')
             ->assertSee('102,50%');
+    }
+
+    public function test_other_expenses_are_counted_as_modal_without_changing_invoice_total(): void
+    {
+        [, $invoice, $journal] = $this->billedInvoice();
+
+        $component = $this->withRealExpenses($this->journalForm($journal), 140000, 45000);
+
+        $component->set('data.other_expense_items', [
+            ['description' => 'Sewa kendaraan', 'amount' => 25000],
+            ['description' => 'BBM', 'amount' => 15000],
+        ]);
+
+        $component->call('save')->assertHasNoFormErrors();
+
+        $invoice->refresh();
+        $journal->refresh();
+
+        $this->assertSame(225000.0, (float) $journal->cost_of_goods, 'pengeluaran lain ikut masuk modal');
+        $this->assertSame(199800.0, (float) $invoice->total, 'total tagihan invoice tidak berubah');
+        $this->assertSame(225000.0, $invoice->realExpenseTotal());
+        $this->assertSame(2, $invoice->otherExpenses()->count());
+
+        $this->assertDatabaseHas('invoice_other_expenses', [
+            'invoice_id' => $invoice->id,
+            'description' => 'Sewa kendaraan',
+            'amount' => 25000,
+        ]);
+    }
+
+    public function test_other_expenses_are_reloaded_without_duplicating_rows(): void
+    {
+        [, $invoice, $journal] = $this->billedInvoice();
+
+        $invoice->otherExpenses()->createMany([
+            ['description' => 'Tenaga kerja', 'amount' => 30000],
+            ['description' => 'Parkir', 'amount' => 5000],
+        ]);
+
+        $component = $this->withRealExpenses($this->journalForm($journal), 140000, 45000);
+
+        $rows = array_values($component->get('data')['other_expense_items']);
+
+        $this->assertCount(2, $rows, 'baris pengeluaran lain dimuat dari invoice');
+        $this->assertSame('Tenaga kerja', $rows[0]['description']);
+        $this->assertSame(30000.0, (float) $rows[0]['amount']);
+
+        $component->call('save')->assertHasNoFormErrors();
+
+        $this->assertSame(2, $invoice->refresh()->otherExpenses()->count(), 'menyimpan ulang tidak menggandakan baris');
+        $this->assertSame(220000.0, (float) $journal->refresh()->cost_of_goods);
+    }
+
+    public function test_removing_other_expense_rows_deletes_them_from_the_invoice(): void
+    {
+        [, $invoice, $journal] = $this->billedInvoice();
+
+        $invoice->otherExpenses()->create([
+            'description' => 'Sewa kendaraan',
+            'amount' => 25000,
+        ]);
+
+        $component = $this->withRealExpenses($this->journalForm($journal), 140000, 45000);
+        $component->set('data.other_expense_items', []);
+        $component->call('save')->assertHasNoFormErrors();
+
+        $this->assertSame(0, $invoice->refresh()->otherExpenses()->count());
+        $this->assertSame(185000.0, (float) $journal->refresh()->cost_of_goods);
+    }
+
+    public function test_other_expenses_are_included_in_the_live_preview(): void
+    {
+        [, , $journal] = $this->billedInvoice();
+
+        $component = $this->withRealExpenses($this->journalForm($journal), 140000, 45000);
+        $component->set('data.other_expense_items', [
+            ['description' => 'Sewa kendaraan', 'amount' => 25000],
+            ['description' => 'BBM', 'amount' => 15000],
+        ]);
+
+        $preview = FinanceJournalResource::realExpensePreview(
+            $component->get('data')['expense_items'],
+            $journal,
+            $component->get('data')['other_expense_items'],
+        );
+
+        $this->assertSame(225000.0, $preview['real_expense']);
+        $this->assertSame(244800.0, $preview['total_expense']);
+        $this->assertSame(-22.52, $preview['profit_percentage']);
+        $this->assertSame(112.61, $preview['real_expense_percentage']);
+        $this->assertSame(122.52, $preview['efficiency_percentage']);
+    }
+
+    public function test_other_expenses_survive_re_finalizing_the_invoice(): void
+    {
+        [, $invoice, $journal] = $this->billedInvoice();
+
+        $invoice->update(['shipping_real_expense' => 140000]);
+        $invoice->items()->where('description', 'Packing kayu')->update(['real_expense' => 45000]);
+        $invoice->otherExpenses()->create([
+            'description' => 'Sewa kendaraan',
+            'amount' => 25000,
+        ]);
+
+        $service = app(InvoiceService::class);
+        $service->transitionTo($invoice->refresh(), Invoice::STATUS_DRAFT);
+        $service->transitionTo($invoice->refresh(), Invoice::STATUS_FINAL);
+
+        $revenue = FinanceJournal::where('journal_type', FinanceJournal::TYPE_REVENUE)->sole();
+
+        $this->assertSame(210000.0, (float) $revenue->cost_of_goods, 'pengeluaran lain tetap masuk modal setelah difinalkan ulang');
+        $this->assertSame(1, $invoice->refresh()->otherExpenses()->count(), 'baris pengeluaran lain tidak terhapus');
     }
 
     /**

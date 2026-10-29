@@ -48,14 +48,14 @@ class FinanceDashboardTest extends TestCase
         ], $attributes));
     }
 
-    public function test_billing_an_invoice_creates_a_revenue_journal(): void
+    public function test_finalizing_an_invoice_creates_a_revenue_journal(): void
     {
         $shipment = $this->shipment();
         $invoice = $this->invoice($shipment);
 
         $this->assertSame(0, FinanceJournal::count(), 'invoice draft tidak menghasilkan jurnal');
 
-        app(InvoiceService::class)->markBilled($invoice);
+        app(InvoiceService::class)->markFinal($invoice);
 
         $journal = FinanceJournal::sole();
 
@@ -76,7 +76,7 @@ class FinanceDashboardTest extends TestCase
         $invoice = $this->invoice($shipment);
         $service = app(InvoiceService::class);
 
-        $service->markBilled($invoice);
+        $service->markFinal($invoice);
         $revenue = FinanceJournal::where('journal_type', FinanceJournal::TYPE_REVENUE)->sole();
 
         $revenue->update([
@@ -85,6 +85,7 @@ class FinanceDashboardTest extends TestCase
             'notes' => 'Modal dari supplier X',
         ]);
 
+        $service->markInProgress($invoice->refresh());
         $service->markPaid($invoice->refresh());
 
         $this->assertSame(2, FinanceJournal::count(), 'invoice lunas punya jurnal pendapatan dan kas');
@@ -105,13 +106,13 @@ class FinanceDashboardTest extends TestCase
         $this->assertSame('Modal dari supplier X', $revenue->notes);
     }
 
-    public function test_re_billing_updates_the_revenue_journal_without_touching_manual_costs(): void
+    public function test_re_finalizing_updates_the_revenue_journal_without_touching_manual_costs(): void
     {
         $shipment = $this->shipment();
         $invoice = $this->invoice($shipment);
         $service = app(InvoiceService::class);
 
-        $service->markBilled($invoice);
+        $service->markFinal($invoice);
 
         $journal = FinanceJournal::sole();
         $journal->update([
@@ -120,9 +121,9 @@ class FinanceDashboardTest extends TestCase
             'notes' => 'Modal dari supplier X',
         ]);
 
-        $service->markBilled($invoice->refresh());
+        $service->markFinal($invoice->refresh());
         $invoice->update(['total' => 200000]);
-        $service->markBilled($invoice->refresh());
+        $service->markFinal($invoice->refresh());
 
         $this->assertSame(1, FinanceJournal::count(), 'tidak boleh membuat jurnal ganda');
 
@@ -142,14 +143,18 @@ class FinanceDashboardTest extends TestCase
         $invoice = $this->invoice($shipment);
         $service = app(InvoiceService::class);
 
-        $service->markBilled($invoice);
+        $service->markFinal($invoice);
+        $service->markInProgress($invoice->refresh());
         $service->markPaid($invoice->refresh());
         $this->assertSame(2, FinanceJournal::count());
 
         // Penurunan status hanya boleh lewat transisi satu langkah, dan
         // transisi itulah yang harus membersihkan jurnal.
-        $service->transitionTo($invoice->fresh(), Invoice::STATUS_TERTAGIH);
-        $this->assertSame(1, FinanceJournal::count(), 'kembali ke tertagih menghapus jurnal kas');
+        $service->transitionTo($invoice->fresh(), Invoice::STATUS_BERJALAN);
+        $this->assertSame(1, FinanceJournal::count(), 'kembali ke berjalan menghapus jurnal kas');
+
+        $service->transitionTo($invoice->fresh(), Invoice::STATUS_FINAL);
+        $this->assertSame(1, FinanceJournal::count(), 'kembali ke final mempertahankan jurnal pendapatan');
 
         $service->transitionTo($invoice->fresh(), Invoice::STATUS_DRAFT);
         $this->assertSame(0, FinanceJournal::count(), 'kembali ke draft menghapus jurnal pendapatan');
@@ -161,7 +166,8 @@ class FinanceDashboardTest extends TestCase
         $invoice = $this->invoice($shipment);
         $service = app(InvoiceService::class);
 
-        $service->markBilled($invoice);
+        $service->markFinal($invoice);
+        $service->markInProgress($invoice->refresh());
         $service->markPaid($invoice->refresh());
 
         $html = $this->financeStatsHtml(
@@ -177,9 +183,13 @@ class FinanceDashboardTest extends TestCase
 
     public function test_outstanding_receivable_ignores_the_period_filter(): void
     {
-        $tertagih = $this->invoice($this->shipment(), [
-            'status' => Invoice::STATUS_TERTAGIH,
+        $final = $this->invoice($this->shipment(), [
+            'status' => Invoice::STATUS_FINAL,
             'total' => 400000,
+        ]);
+        $berjalan = $this->invoice($this->shipment(), [
+            'status' => Invoice::STATUS_BERJALAN,
+            'total' => 250000,
         ]);
         $lunas = $this->invoice($this->shipment(), [
             'status' => Invoice::STATUS_LUNAS,
@@ -192,10 +202,12 @@ class FinanceDashboardTest extends TestCase
             now()->endOfMonth()->toDateString(),
         );
 
-        $this->assertStringContainsString('400.000', $html, 'piutang = invoice tertagih yang belum dibayar');
+        $this->assertStringContainsString('650.000', $html, 'piutang = invoice final + berjalan yang belum lunas');
+        $this->assertStringContainsString('2 invoice final/berjalan', $html);
         $this->assertStringNotContainsString('900.000', $html, 'invoice lunas bukan piutang');
         $this->assertStringNotContainsString('700.000', $html, 'invoice draft bukan piutang');
-        $this->assertSame(Invoice::STATUS_TERTAGIH, $tertagih->status);
+        $this->assertSame(Invoice::STATUS_FINAL, $final->status);
+        $this->assertSame(Invoice::STATUS_BERJALAN, $berjalan->status);
         $this->assertSame(Invoice::STATUS_LUNAS, $lunas->status);
     }
 
@@ -323,11 +335,11 @@ class FinanceDashboardTest extends TestCase
         $this->assertNotContains(RecentFinanceJournalsTable::class, $widgets);
     }
 
-    public function test_journal_from_a_billed_invoice_cannot_be_deleted(): void
+    public function test_journal_from_a_final_invoice_cannot_be_deleted(): void
     {
         $shipment = $this->shipment();
         $invoice = $this->invoice($shipment);
-        app(InvoiceService::class)->markBilled($invoice);
+        app(InvoiceService::class)->markFinal($invoice);
 
         $journal = FinanceJournal::sole();
 
@@ -342,7 +354,7 @@ class FinanceDashboardTest extends TestCase
     {
         $shipment = $this->shipment();
         $invoice = $this->invoice($shipment);
-        app(InvoiceService::class)->markBilled($invoice);
+        app(InvoiceService::class)->markFinal($invoice);
 
         $this->journalAt(now(), 75000);
 

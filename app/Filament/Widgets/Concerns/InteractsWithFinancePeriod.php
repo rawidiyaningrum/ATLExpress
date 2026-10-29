@@ -163,7 +163,7 @@ trait InteractsWithFinancePeriod
     protected function financeOutstandingReceivable(): array
     {
         $outstanding = Invoice::query()
-            ->where('status', Invoice::STATUS_TERTAGIH)
+            ->whereIn('status', [Invoice::STATUS_FINAL, Invoice::STATUS_BERJALAN])
             ->selectRaw('count(*) as entries')
             ->selectRaw('coalesce(sum(total), 0) as total')
             ->first();

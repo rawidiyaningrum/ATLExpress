@@ -190,7 +190,8 @@ class FinanceJournal extends Model
 
         return match ($invoice->status) {
             Invoice::STATUS_LUNAS => 'Sudah lunas',
-            Invoice::STATUS_TERTAGIH => 'Belum dibayar',
+            Invoice::STATUS_BERJALAN => 'Menunggu pencairan',
+            Invoice::STATUS_FINAL => 'Belum dibayar',
             default => 'Belum dicatat',
         };
     }
@@ -377,7 +378,7 @@ class FinanceJournal extends Model
 
         return Invoice::query()
             ->where('shipment_id', $this->shipment_id)
-            ->whereIn('status', [Invoice::STATUS_TERTAGIH, Invoice::STATUS_LUNAS])
+            ->whereIn('status', [Invoice::STATUS_FINAL, Invoice::STATUS_BERJALAN, Invoice::STATUS_LUNAS])
             ->exists();
     }
 }

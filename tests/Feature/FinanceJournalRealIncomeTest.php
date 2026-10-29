@@ -34,8 +34,8 @@ class FinanceJournalRealIncomeTest extends TestCase
     /**
      * Invoice yang sudah ditagihkan lalu dilunasi, beserta jurnal kas masuknya.
      *
-     * Lunas harus lewat tertagih dulu, sama seperti alur aslinya, karena
-     * pendapatan dan kas masuk dicatat pada dua titik yang berbeda.
+     * Lunas harus lewat final dan berjalan dulu, sama seperti alur aslinya,
+     * karena pendapatan dan kas masuk dicatat pada titik yang berbeda.
      */
     private function paidInvoice(float $total = 199800): array
     {
@@ -54,7 +54,8 @@ class FinanceJournalRealIncomeTest extends TestCase
         ]);
 
         $service = app(InvoiceService::class);
-        $service->markBilled($invoice);
+        $service->markFinal($invoice);
+        $service->markInProgress($invoice->refresh());
         $service->markPaid($invoice->refresh());
 
         $receipt = FinanceJournal::query()

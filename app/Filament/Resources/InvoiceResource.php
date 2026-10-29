@@ -265,7 +265,7 @@ class InvoiceResource extends Resource
 
     /**
      * Aksi untuk mengubah tanggal dokumen tanpa membuka form invoice, supaya
-     * invoice yang sudah tertagih atau lunas tetap bisa disesuaikan tanggalnya.
+     * invoice yang sudah final, berjalan, atau lunas tetap bisa disesuaikan tanggalnya.
      */
     public static function documentDatesAction(): Tables\Actions\Action
     {
@@ -321,6 +321,14 @@ class InvoiceResource extends Resource
                     ->placeholder(fn (Invoice $record): string => $record->created_at?->format('d M Y') ?? '-'),
                 Infolists\Components\TextEntry::make('receipt_date')
                     ->label('Tanggal Kwitansi')
+                    ->date('d M Y')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('berjalan_date')
+                    ->label('Tanggal Berjalan')
+                    ->date('d M Y')
+                    ->placeholder('-'),
+                Infolists\Components\TextEntry::make('lunas_date')
+                    ->label('Tanggal Lunas')
                     ->date('d M Y')
                     ->placeholder('-'),
                 Infolists\Components\TextEntry::make('sppb_number')
@@ -482,8 +490,9 @@ class InvoiceResource extends Resource
      * mundur lebih dari satu langkah.
      *
      * Nama aksi memuat status asal dan tujuan, bukan hanya tujuan. Tanpa itu,
-     * "ke tertagih" yang dibuat dari draft akan menimpa definisi "ke tertagih"
-     * dari lunas, karena registry Filament mengunci aksi berdasarkan nama.
+     * "ke final" yang dibuat dari draft akan menimpa definisi transisi lain
+     * dengan nama yang sama, karena registry Filament mengunci aksi berdasarkan
+     * nama.
      *
      * @return array<int, Tables\Actions\Action>
      */
@@ -500,7 +509,13 @@ class InvoiceResource extends Resource
                     ->modalDescription($definition['description'])
                     ->modalSubmitActionLabel($definition['label'])
                     ->visible(fn (Invoice $record): bool => $record->status === $from)
-                    ->action(fn (Invoice $record) => static::applyInvoiceStatus($record, $to)),
+                    ->form(static::statusDateForm($to))
+                    ->fillForm(fn (Invoice $record): array => static::statusDateFormData($record, $to))
+                    ->action(fn (Invoice $record, array $data) => static::applyInvoiceStatus(
+                        $record,
+                        $to,
+                        $data['status_date'] ?? null,
+                    )),
                 )
                 ->values()
                 ->all(),

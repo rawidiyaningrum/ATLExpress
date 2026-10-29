@@ -5,6 +5,7 @@ namespace App\Filament\Resources\FinanceJournalResource\Concerns;
 use App\Models\FinanceJournal;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\InvoiceOtherExpense;
 use Filament\Forms;
 
 /**
@@ -46,13 +47,21 @@ trait HasRealExpenseItems
         return 'expense_items';
     }
 
+    /**
+     * State path repeater pengeluaran lain di luar item invoice.
+     */
+    public static function otherExpenseItemsStatePath(): string
+    {
+        return 'other_expense_items';
+    }
+
     public static function realExpenseSection(): Forms\Components\Section
     {
         return Forms\Components\Section::make('Pengeluaran Real per Item Invoice')
             // Aksi form component hanya bisa dipasang kalau komponen induknya
             // punya key, tanpa itu tombolnya tidak dirender sama sekali.
             ->key('pengeluaran-real-item-invoice')
-            ->description('Isi nominal yang benar-benar dibayar untuk tiap item. Baris diskon dan pajak hanya ditampilkan sebagai informasi. Centang "sama dengan modal" untuk memakai nominal invoice tanpa mengetik angka.')
+            ->description('Isi nominal yang benar-benar dibayar untuk tiap item. Baris diskon dan pajak hanya ditampilkan sebagai informasi. Centang "sama dengan modal" untuk memakai nominal invoice tanpa mengetik angka. Pengeluaran lain di luar item invoice ikut dihitung sebagai modal, tetapi tidak menambah total tagihan invoice.')
             ->headerActions([
                 Forms\Components\Actions\Action::make('isiSemuaSamaDenganModal')
                     ->label('Isi Semua Sama Dengan Modal')
@@ -105,27 +114,63 @@ trait HasRealExpenseItems
                             ->required()
                             ->live(onBlur: true),
                     ]),
+                Forms\Components\Repeater::make(static::otherExpenseItemsStatePath())
+                    ->label('Pengeluaran Lain di Luar Item Invoice')
+                    ->helperText('Tambahkan biaya yang tidak ada di item invoice, misalnya sewa kendaraan, tenaga kerja, atau BBM. Nominal ini menjadi modal jurnal, bukan tagihan ke pelanggan.')
+                    ->defaultItems(0)
+                    ->addActionLabel('Tambah pengeluaran lain')
+                    ->reorderable(false)
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('description')
+                            ->label('Keterangan')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Pengeluaran Real')
+                            ->numeric()
+                            ->minValue(0)
+                            ->prefix('Rp')
+                            ->required()
+                            ->live(onBlur: true),
+                    ]),
                 Forms\Components\Grid::make(4)
                     ->schema([
                         Forms\Components\Placeholder::make('real_expense_total_preview')
                             ->label('Total Pengeluaran Real')
                             ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::rupiah(
-                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['real_expense'],
+                                static::realExpensePreview(
+                                    $get(static::expenseItemsStatePath()),
+                                    $record,
+                                    $get(static::otherExpenseItemsStatePath()),
+                                )['real_expense'],
                             )),
                         Forms\Components\Placeholder::make('profit_percentage_preview')
                             ->label('Margin / Profit')
                             ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::percent(
-                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['profit_percentage'],
+                                static::realExpensePreview(
+                                    $get(static::expenseItemsStatePath()),
+                                    $record,
+                                    $get(static::otherExpenseItemsStatePath()),
+                                )['profit_percentage'],
                             )),
                         Forms\Components\Placeholder::make('real_expense_percentage_preview')
                             ->label('Porsi Pengeluaran Real')
                             ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::percent(
-                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['real_expense_percentage'],
+                                static::realExpensePreview(
+                                    $get(static::expenseItemsStatePath()),
+                                    $record,
+                                    $get(static::otherExpenseItemsStatePath()),
+                                )['real_expense_percentage'],
                             )),
                         Forms\Components\Placeholder::make('efficiency_percentage_preview')
                             ->label('Efisiensi Biaya')
                             ->content(fn (Forms\Get $get, ?FinanceJournal $record): string => static::percent(
-                                static::realExpensePreview($get(static::expenseItemsStatePath()), $record)['efficiency_percentage'],
+                                static::realExpensePreview(
+                                    $get(static::expenseItemsStatePath()),
+                                    $record,
+                                    $get(static::otherExpenseItemsStatePath()),
+                                )['efficiency_percentage'],
                             )),
                     ]),
             ]);
@@ -176,6 +221,79 @@ trait HasRealExpenseItems
         }
 
         return $rows;
+    }
+
+    /**
+     * Baris pengeluaran lain yang tersimpan untuk invoice.
+     *
+     * @return array<int, array{description: string, amount: float}>
+     */
+    public static function otherExpenseRowsFromInvoice(Invoice $invoice): array
+    {
+        return $invoice->otherExpenses()
+            ->orderBy('id')
+            ->get()
+            ->map(fn (InvoiceOtherExpense $expense): array => [
+                'description' => $expense->description,
+                'amount' => (float) $expense->amount,
+            ])
+            ->all();
+    }
+
+    /**
+     * Total nominal pengeluaran lain dari state repeater.
+     */
+    public static function sumOtherExpenseRows(mixed $rows): float
+    {
+        if (! is_array($rows)) {
+            return 0.0;
+        }
+
+        $total = 0.0;
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $total += max(0, (float) ($row['amount'] ?? 0));
+        }
+
+        return round($total, 2);
+    }
+
+    /**
+     * Menyimpan pengeluaran lain ke invoice. Baris tanpa keterangan dibuang,
+     * sama seperti item invoice yang kosong diabaikan.
+     *
+     * @param  array<int|string, mixed>  $rows
+     */
+    public static function persistOtherExpenses(Invoice $invoice, array $rows): void
+    {
+        $expenses = [];
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $description = trim((string) ($row['description'] ?? ''));
+
+            if ($description === '') {
+                continue;
+            }
+
+            $expenses[] = [
+                'description' => $description,
+                'amount' => round(max(0, (float) ($row['amount'] ?? 0)), 2),
+            ];
+        }
+
+        $invoice->otherExpenses()->delete();
+
+        if ($expenses !== []) {
+            $invoice->otherExpenses()->createMany($expenses);
+        }
     }
 
     /**
@@ -315,16 +433,20 @@ trait HasRealExpenseItems
     /**
      * Angka turunan preview pengeluaran real di form jurnal.
      *
-     * Modal diambil dari baris yang boleh diedit, sedangkan pendapatan, biaya
-     * operasional, dan pajak diambil dari jurnal yang sedang diedit. Dengan
-     * begitu previewnya memakai rumus yang sama dengan perhitungan model saat
-     * jurnal disimpan, jadi tidak ada dua sumber kebenaran.
+     * Modal diambil dari baris yang boleh diedit ditambah pengeluaran lain di
+     * luar item invoice, sedangkan pendapatan, biaya operasional, dan pajak
+     * diambil dari jurnal yang sedang diedit. Dengan begitu previewnya memakai
+     * rumus yang sama dengan perhitungan model saat jurnal disimpan, jadi tidak
+     * ada dua sumber kebenaran.
      *
      * @return array{real_expense: float, total_expense: float, profit_percentage: float, real_expense_percentage: float, efficiency_percentage: float}
      */
-    public static function realExpensePreview(mixed $rows, ?FinanceJournal $record): array
+    public static function realExpensePreview(mixed $rows, ?FinanceJournal $record, mixed $otherRows = null): array
     {
-        $realExpense = static::sumEditableRows($rows);
+        $realExpense = round(
+            static::sumEditableRows($rows) + static::sumOtherExpenseRows($otherRows),
+            2,
+        );
         $income = (float) ($record?->income ?? 0);
 
         $totalExpense = FinanceJournal::totalExpense(

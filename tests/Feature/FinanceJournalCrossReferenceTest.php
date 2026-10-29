@@ -52,7 +52,8 @@ class FinanceJournalCrossReferenceTest extends TestCase
         $invoice = $this->invoice($this->shipment());
 
         $service = app(InvoiceService::class);
-        $service->markBilled($invoice);
+        $service->markFinal($invoice);
+        $service->markInProgress($invoice->refresh());
         $service->markPaid($invoice->refresh());
 
         return [
@@ -72,14 +73,16 @@ class FinanceJournalCrossReferenceTest extends TestCase
     public function test_revenue_placeholder_follows_invoice_status(): void
     {
         $invoice = $this->invoice($this->shipment());
-        app(InvoiceService::class)->markBilled($invoice);
+        app(InvoiceService::class)->markFinal($invoice);
 
         $revenue = FinanceJournal::query()->where('journal_type', FinanceJournal::TYPE_REVENUE)->sole();
 
-        $this->assertSame('Belum dibayar', $revenue->kasRealPlaceholder(), 'invoice tertagih belum menerima kas');
+        $this->assertSame('Belum dibayar', $revenue->kasRealPlaceholder(), 'invoice final belum menerima kas');
+
+        $revenue->linkedInvoice()->update(['status' => Invoice::STATUS_BERJALAN]);
+        $this->assertSame('Menunggu pencairan', $revenue->refresh()->kasRealPlaceholder());
 
         $revenue->linkedInvoice()->update(['status' => Invoice::STATUS_LUNAS]);
-
         $this->assertSame('Sudah lunas', $revenue->refresh()->kasRealPlaceholder());
 
         $manual = FinanceJournal::create([
@@ -106,10 +109,10 @@ class FinanceJournalCrossReferenceTest extends TestCase
         $this->assertStringContainsString('Pasangan jurnal pendapatan', $html, 'baris kas masuk menunjuk baris pendapatan');
     }
 
-    public function test_tertagih_revenue_row_shows_belum_dibayar(): void
+    public function test_final_revenue_row_shows_belum_dibayar(): void
     {
         $invoice = $this->invoice($this->shipment());
-        app(InvoiceService::class)->markBilled($invoice);
+        app(InvoiceService::class)->markFinal($invoice);
 
         $html = Livewire::actingAs(User::factory()->create())
             ->test(RecentFinanceJournalsTable::class)

@@ -53,7 +53,7 @@ class FinanceOverviewStats extends StatsOverviewWidget
                 ->color('success'),
             Stat::make('Piutang Belum Lunas', $this->rupiah($receivable['total']))
                 ->description(sprintf(
-                    '%d invoice tertagih, saldo saat ini dan tidak ikut difilter periode',
+                    '%d invoice final/berjalan, saldo saat ini dan tidak ikut difilter periode',
                     $receivable['count'],
                 ))
                 ->descriptionIcon('heroicon-m-clock')

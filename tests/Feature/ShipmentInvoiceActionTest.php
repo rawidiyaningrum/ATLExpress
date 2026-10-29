@@ -124,7 +124,7 @@ class ShipmentInvoiceActionTest extends TestCase
 
         $invoice = Invoice::sole();
 
-        $this->assertSame(Invoice::STATUS_TERTAGIH, $invoice->status);
+        $this->assertSame(Invoice::STATUS_FINAL, $invoice->status);
         $this->assertSame('PT Tempo billed', $invoice->billed_to_name);
         $this->assertSame(300000.0, (float) $invoice->subtotal, '200000 + 2 x 50000');
 

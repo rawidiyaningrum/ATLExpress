@@ -48,13 +48,13 @@ class InvoiceMenuTest extends TestCase
     public function test_invoice_menu_lists_and_filters_invoices(): void
     {
         $draft = $this->draftInvoice([], 'AWB-MENU-0001');
-        $tertagih = $this->draftInvoice(['billed_to_name' => 'Siti Aminah'], 'AWB-MENU-0002');
-        $tertagih->update(['status' => Invoice::STATUS_TERTAGIH]);
+        $final = $this->draftInvoice(['billed_to_name' => 'Siti Aminah'], 'AWB-MENU-0002');
+        $final->update(['status' => Invoice::STATUS_FINAL]);
 
         Livewire::actingAs(User::factory()->create())
             ->test(ListInvoices::class)
             ->assertActionHidden('create')
-            ->assertCanSeeTableRecords([$draft, $tertagih])
+            ->assertCanSeeTableRecords([$draft, $final])
             ->assertSee($draft->invoice_number)
             ->assertSee('AWB-MENU-0001')
             ->assertSee('Jakarta')
@@ -62,15 +62,15 @@ class InvoiceMenuTest extends TestCase
 
         Livewire::actingAs(User::factory()->create())
             ->test(ListInvoices::class)
-            ->set('activeTab', Invoice::STATUS_TERTAGIH)
-            ->assertCanSeeTableRecords([$tertagih])
-            ->assertCanNotSeeTableRecords([$draft], 'tab Tertagih tidak memuat invoice draft');
+            ->set('activeTab', Invoice::STATUS_FINAL)
+            ->assertCanSeeTableRecords([$final])
+            ->assertCanNotSeeTableRecords([$draft], 'tab Final tidak memuat invoice draft');
 
         Livewire::actingAs(User::factory()->create())
             ->test(ListInvoices::class)
             ->set('activeTab', Invoice::STATUS_DRAFT)
             ->assertCanSeeTableRecords([$draft])
-            ->assertCanNotSeeTableRecords([$tertagih], 'tab Draft tidak memuat invoice tertagih');
+            ->assertCanNotSeeTableRecords([$final], 'tab Draft tidak memuat invoice Final');
     }
 
     public function test_invoice_detail_shows_items_totals_and_print_link(): void
@@ -191,7 +191,7 @@ class InvoiceMenuTest extends TestCase
     public function test_document_dates_can_be_changed_after_invoice_is_billed(): void
     {
         $invoice = $this->draftInvoice();
-        $invoice->update(['status' => Invoice::STATUS_TERTAGIH]);
+        $invoice->update(['status' => Invoice::STATUS_FINAL]);
 
         Livewire::actingAs(User::factory()->create())
             ->test(ViewInvoice::class, ['record' => $invoice->getKey()])
@@ -206,13 +206,13 @@ class InvoiceMenuTest extends TestCase
 
         $this->assertSame('2026-09-01', $invoice->invoice_date->toDateString());
         $this->assertSame('2026-09-02', $invoice->receipt_date->toDateString());
-        $this->assertSame(Invoice::STATUS_TERTAGIH, $invoice->status, 'status invoice tidak berubah');
+        $this->assertSame(Invoice::STATUS_FINAL, $invoice->status, 'status invoice tidak berubah');
     }
 
     public function test_billed_invoice_is_locked_against_editing(): void
     {
         $invoice = $this->draftInvoice();
-        $invoice->update(['status' => Invoice::STATUS_TERTAGIH]);
+        $invoice->update(['status' => Invoice::STATUS_FINAL]);
 
         Livewire::actingAs(User::factory()->create())
             ->test(ViewInvoice::class, ['record' => $invoice->getKey()])

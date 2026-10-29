@@ -69,7 +69,7 @@ class ShipmentDashboardTest extends TestCase
             'subtotal' => 150000,
             'tax' => 0,
             'total' => 150000,
-            'status' => Invoice::STATUS_TERTAGIH,
+            'status' => Invoice::STATUS_FINAL,
         ]);
 
         $widget = Livewire::actingAs(User::factory()->create())

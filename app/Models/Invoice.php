@@ -13,18 +13,21 @@ class Invoice extends Model
 
     public const STATUS_DRAFT = 'draft';
 
-    public const STATUS_TERTAGIH = 'tertagih';
+    public const STATUS_FINAL = 'final';
+
+    public const STATUS_BERJALAN = 'berjalan';
 
     public const STATUS_LUNAS = 'lunas';
 
     /**
-     * Urutan alur invoice: draft -> tertagih -> lunas.
+     * Urutan alur invoice: draft -> final -> berjalan -> lunas.
      *
      * @var array<int, string>
      */
     public const STATUSES = [
         self::STATUS_DRAFT,
-        self::STATUS_TERTAGIH,
+        self::STATUS_FINAL,
+        self::STATUS_BERJALAN,
         self::STATUS_LUNAS,
     ];
 
@@ -33,7 +36,8 @@ class Invoice extends Model
      */
     public const STATUS_LABELS = [
         self::STATUS_DRAFT => 'Draft',
-        self::STATUS_TERTAGIH => 'Tertagih',
+        self::STATUS_FINAL => 'Final',
+        self::STATUS_BERJALAN => 'Berjalan',
         self::STATUS_LUNAS => 'Lunas',
     ];
 
@@ -42,7 +46,8 @@ class Invoice extends Model
      */
     public const STATUS_COLORS = [
         self::STATUS_DRAFT => 'gray',
-        self::STATUS_TERTAGIH => 'warning',
+        self::STATUS_FINAL => 'warning',
+        self::STATUS_BERJALAN => 'info',
         self::STATUS_LUNAS => 'success',
     ];
 
@@ -57,19 +62,19 @@ class Invoice extends Model
      */
     public const STATUS_ACTIONS = [
         self::STATUS_DRAFT => [
-            self::STATUS_TERTAGIH => [
-                'label' => 'Tandai Tertagih',
+            self::STATUS_FINAL => [
+                'label' => 'Tandai Final',
                 'icon' => 'heroicon-o-document-check',
                 'color' => 'warning',
                 'description' => 'Invoice akan terkunci dan jurnal pendapatan dibuat. Nominal dan item invoice tidak bisa diubah lagi.',
             ],
         ],
-        self::STATUS_TERTAGIH => [
-            self::STATUS_LUNAS => [
-                'label' => 'Tandai Lunas',
-                'icon' => 'heroicon-o-banknotes',
-                'color' => 'success',
-                'description' => 'Jurnal kas masuk akan dicatat untuk invoice ini. Pendapatan tidak dihitung dua kali.',
+        self::STATUS_FINAL => [
+            self::STATUS_BERJALAN => [
+                'label' => 'Tandai Berjalan',
+                'icon' => 'heroicon-o-truck',
+                'color' => 'info',
+                'description' => 'Tanggal berjalan akan dicatat. Invoice menunggu pencairan dan piutang tetap dihitung.',
             ],
             self::STATUS_DRAFT => [
                 'label' => 'Kembalikan ke Draft',
@@ -78,12 +83,26 @@ class Invoice extends Model
                 'description' => 'Invoice bisa diedit lagi dan jurnal pendapatan dihapus, termasuk modal dan biaya operasional yang sudah diisi.',
             ],
         ],
-        self::STATUS_LUNAS => [
-            self::STATUS_TERTAGIH => [
-                'label' => 'Kembalikan ke Tertagih',
+        self::STATUS_BERJALAN => [
+            self::STATUS_LUNAS => [
+                'label' => 'Tandai Lunas',
+                'icon' => 'heroicon-o-banknotes',
+                'color' => 'success',
+                'description' => 'Tanggal lunas akan dicatat dan jurnal kas masuk dibuat. Pendapatan tidak dihitung dua kali.',
+            ],
+            self::STATUS_FINAL => [
+                'label' => 'Kembalikan ke Final',
                 'icon' => 'heroicon-o-arrow-uturn-left',
                 'color' => 'warning',
-                'description' => 'Jurnal kas masuk akan dihapus. Jurnal pendapatan tetap tersimpan.',
+                'description' => 'Tanggal berjalan akan dihapus. Jurnal pendapatan tetap tersimpan.',
+            ],
+        ],
+        self::STATUS_LUNAS => [
+            self::STATUS_BERJALAN => [
+                'label' => 'Kembalikan ke Berjalan',
+                'icon' => 'heroicon-o-arrow-uturn-left',
+                'color' => 'info',
+                'description' => 'Tanggal lunas akan dihapus dan jurnal kas masuk dibatalkan. Jurnal pendapatan tetap tersimpan.',
             ],
         ],
     ];
@@ -96,6 +115,8 @@ class Invoice extends Model
         'due_date',
         'invoice_date',
         'receipt_date',
+        'berjalan_date',
+        'lunas_date',
         'sppb_number',
         'packing_list_number',
         'period',
@@ -114,6 +135,8 @@ class Invoice extends Model
         'due_date' => 'date',
         'invoice_date' => 'date',
         'receipt_date' => 'date',
+        'berjalan_date' => 'date',
+        'lunas_date' => 'date',
         'shipping_cost' => 'decimal:2',
         'shipping_real_expense' => 'decimal:2',
         'subtotal' => 'decimal:2',
@@ -133,6 +156,14 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    /**
+     * Pengeluaran real yang tidak berasal dari item invoice.
+     */
+    public function otherExpenses(): HasMany
+    {
+        return $this->hasMany(InvoiceOtherExpense::class);
+    }
+
     public function hasAdditionalItems(): bool
     {
         return $this->items()->where('type', '!=', 'shipping')->exists();
@@ -141,10 +172,11 @@ class Invoice extends Model
     /**
      * Total pengeluaran real yang dicatat operator dari halaman jurnal keuangan.
      *
-     * Hanya ongkos kirim dan biaya tambahan yang dijumlahkan. Baris diskon dan
-     * pajak tidak punya biaya riil sendiri: diskon adalah pengurangan tagihan,
-     * sedangkan pajak sudah dibukukan lewat kolom tax di jurnal keuangan, jadi
-     * ikut dijumlahkan akan menghitung dua kali.
+     * Hanya ongkos kirim, biaya tambahan, dan pengeluaran lain di luar item
+     * invoice yang dijumlahkan. Baris diskon dan pajak tidak punya biaya riil
+     * sendiri: diskon adalah pengurangan tagihan, sedangkan pajak sudah
+     * dibukukan lewat kolom tax di jurnal keuangan, jadi ikut dijumlahkan akan
+     * menghitung dua kali.
      */
     public function realExpenseTotal(): float
     {
@@ -152,7 +184,8 @@ class Invoice extends Model
             (float) $this->shipping_real_expense
             + (float) $this->items()
                 ->whereNotIn('type', ['discount', 'diskon', 'tax'])
-                ->sum('real_expense'),
+                ->sum('real_expense')
+            + (float) $this->otherExpenses()->sum('amount'),
             2,
         );
     }
@@ -170,7 +203,7 @@ class Invoice extends Model
      */
     public function isBilled(): bool
     {
-        return in_array($this->status, [self::STATUS_TERTAGIH, self::STATUS_LUNAS], true);
+        return in_array($this->status, [self::STATUS_FINAL, self::STATUS_BERJALAN, self::STATUS_LUNAS], true);
     }
 
     public function isPaid(): bool
@@ -216,5 +249,29 @@ class Invoice extends Model
         }
 
         return self::STATUS_LABELS[$status] ?? $status;
+    }
+
+    /**
+     * Kolom tanggal yang diisi saat invoice masuk ke status tertentu.
+     */
+    public static function dateFieldForStatus(?string $status): ?string
+    {
+        return match ($status) {
+            self::STATUS_BERJALAN => 'berjalan_date',
+            self::STATUS_LUNAS => 'lunas_date',
+            default => null,
+        };
+    }
+
+    /**
+     * Label input tanggal untuk status tujuan.
+     */
+    public static function dateLabelForStatus(?string $status): ?string
+    {
+        return match ($status) {
+            self::STATUS_BERJALAN => 'Tanggal Berjalan',
+            self::STATUS_LUNAS => 'Tanggal Lunas',
+            default => null,
+        };
     }
 }

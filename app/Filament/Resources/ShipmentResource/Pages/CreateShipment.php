@@ -600,7 +600,7 @@ class CreateShipment extends CreateRecord
             ->icon('heroicon-o-printer')
             ->schema([
                 Forms\Components\Section::make('Invoice')
-                    ->description('Nomor invoice terbit saat langkah 4 disimpan. Invoice tetap berstatus draft sampai ditandai tertagih dari daftar atau halaman detail invoice.')
+                    ->description('Nomor invoice terbit saat langkah 4 disimpan. Invoice tetap berstatus draft sampai ditandai final dari daftar atau halaman detail invoice.')
                     ->schema([
                         Forms\Components\Placeholder::make('invoice_summary')
                             ->hiddenLabel()

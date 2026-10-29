@@ -21,6 +21,14 @@ class EditFinanceJournal extends EditRecord
     private array $expenseRows = [];
 
     /**
+     * Baris pengeluaran lain di luar item invoice, ditahan dengan alasan yang
+     * sama seperti $expenseRows: ditulis ke invoice setelah jurnal tersimpan.
+     *
+     * @var array<int|string, mixed>
+     */
+    private array $otherExpenseRows = [];
+
+    /**
      * Baris pengeluaran real diambil dari invoice yang terkait, jadi formnya
      * selalu urut sama dengan invoice cetak. Jurnal kas masuk tidak punya baris
      * ini, jadi state-nya tidak perlu diisi.
@@ -53,6 +61,7 @@ class EditFinanceJournal extends EditRecord
 
         return $data + [
             FinanceJournalResource::expenseItemsStatePath() => FinanceJournalResource::rowsFromInvoice($invoice),
+            FinanceJournalResource::otherExpenseItemsStatePath() => FinanceJournalResource::otherExpenseRowsFromInvoice($invoice),
         ];
     }
 
@@ -81,13 +90,24 @@ class EditFinanceJournal extends EditRecord
         );
 
         $rows = $data[FinanceJournalResource::expenseItemsStatePath()] ?? [];
-        unset($data[FinanceJournalResource::expenseItemsStatePath()]);
+        $otherRows = $data[FinanceJournalResource::otherExpenseItemsStatePath()] ?? [];
+        unset(
+            $data[FinanceJournalResource::expenseItemsStatePath()],
+            $data[FinanceJournalResource::otherExpenseItemsStatePath()],
+        );
 
         $this->expenseRows = [];
+        $this->otherExpenseRows = [];
 
         if ($this->record?->isRevenue() && $this->linkedInvoice() instanceof Invoice) {
             $this->expenseRows = is_array($rows) ? $rows : [];
-            $data['cost_of_goods'] = FinanceJournalResource::sumEditableRows($this->expenseRows);
+            $this->otherExpenseRows = is_array($otherRows) ? $otherRows : [];
+
+            $data['cost_of_goods'] = round(
+                FinanceJournalResource::sumEditableRows($this->expenseRows)
+                + FinanceJournalResource::sumOtherExpenseRows($this->otherExpenseRows),
+                2,
+            );
         }
 
         return $data;
@@ -98,14 +118,17 @@ class EditFinanceJournal extends EditRecord
         $journal = $this->record;
         $invoice = $this->linkedInvoice();
         $rows = $this->expenseRows;
+        $otherRows = $this->otherExpenseRows;
 
         $this->expenseRows = [];
+        $this->otherExpenseRows = [];
 
         if (! $journal instanceof FinanceJournal || ! $journal->isRevenue() || ! $invoice instanceof Invoice) {
             return;
         }
 
         FinanceJournalResource::persistRows($invoice, $rows);
+        FinanceJournalResource::persistOtherExpenses($invoice, $otherRows);
     }
 
     private function linkedInvoice(): ?Invoice

@@ -105,7 +105,13 @@ class ViewInvoice extends ViewRecord
                 ->modalHeading($definition['label'])
                 ->modalDescription($definition['description'])
                 ->modalSubmitActionLabel($definition['label'])
-                ->action(fn () => static::applyInvoiceStatus($invoice, $status)),
+                ->form(static::statusDateForm($status))
+                ->fillForm(fn (): array => static::statusDateFormData($invoice, $status))
+                ->action(fn (array $data) => static::applyInvoiceStatus(
+                    $invoice,
+                    $status,
+                    $data['status_date'] ?? null,
+                )),
             )
             ->values()
             ->all();
