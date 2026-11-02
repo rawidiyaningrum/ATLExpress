@@ -14,6 +14,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -287,6 +288,40 @@ class InvoiceResource extends Resource
             ->successNotificationTitle('Tanggal dokumen diperbarui');
     }
 
+    /**
+     * Aksi menghitung ulang nominal invoice dari ongkos kirim dan itemnya.
+     *
+     * Tetap tersedia untuk invoice yang sudah terkunci (final, berjalan,
+     * lunas), karena justru invoice seperti itu yang tidak bisa diperbaiki
+     * lewat form edit. Jurnal keuangan ikut diselaraskan oleh service.
+     */
+    public static function recalculateAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('recalculate')
+            ->label('Hitung Ulang')
+            ->icon('heroicon-o-arrow-path')
+            ->color('gray')
+            ->requiresConfirmation()
+            ->modalHeading('Hitung Ulang Nominal Invoice')
+            ->modalDescription('Nominal item, PPN, PPh, dan total akan dihitung ulang dari data invoice. Jurnal keuangan ikut disesuaikan.')
+            ->modalSubmitActionLabel('Hitung Ulang')
+            ->action(function (Invoice $record): void {
+                $oldTotal = (float) $record->total;
+                $invoice = app(InvoiceService::class)->recalculate($record);
+
+                Notification::make()
+                    ->title('Nominal invoice dihitung ulang')
+                    ->body(sprintf(
+                        'Total invoice %s: Rp %s → Rp %s. Jurnal keuangan sudah disesuaikan.',
+                        $invoice->invoice_number,
+                        number_format($oldTotal, 0, ',', '.'),
+                        number_format((float) $invoice->total, 0, ',', '.'),
+                    ))
+                    ->success()
+                    ->send();
+            });
+    }
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
@@ -464,6 +499,7 @@ class InvoiceResource extends Resource
                         ->visible(fn (Invoice $record): bool => filled($record->total))
                         ->url(fn (Invoice $record): string => PrintReceipt::getUrl(['record' => $record])),
                     static::documentDatesAction(),
+                    static::recalculateAction(),
                     ...static::statusTransitionActions(),
                     Tables\Actions\EditAction::make()
                         ->visible(fn (Invoice $record): bool => $record->isDraft()),

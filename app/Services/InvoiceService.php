@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FinanceJournal;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Shipment;
 use App\Support\NumberGenerator;
 use Illuminate\Support\Collection;
@@ -301,6 +302,71 @@ class InvoiceService
         // tempat pengeluaran real dicatat. Jangan sampaikode ini ke invoice
         // berstatus final, berjalan, atau lunas, karena isLocked() di atas akan
         // menggagalkan lebih dulu.
+        $this->syncFinanceJournals($invoice->refresh());
+
+        return $invoice->refresh();
+    }
+
+    /**
+     * Menghitung ulang nominal invoice dari ongkos kirim dan item tersimpan.
+     *
+     * Dipakai tombol "Hitung Ulang" di daftar invoice, termasuk untuk invoice
+     * yang sudah terkunci. Baris PPN/PPh mengikuti DPP terbaru, line_total
+     * setiap item dihitung ulang, lalu jurnal keuangan diselaraskan.
+     *
+     * Item diperbarui di tempat, bukan dihapus lalu dibuat ulang, supaya
+     * real_expense yang sudah dicatat operator tetap tersimpan.
+     */
+    public function recalculate(Invoice $invoice): Invoice
+    {
+        $shippingCost = round(max(0, (float) $invoice->shipping_cost), 2);
+        $items = $invoice->items()->orderBy('id')->get();
+
+        $rows = $items
+            ->map(fn (InvoiceItem $item): array => [
+                'description' => $item->description,
+                'type' => $item->type,
+                'basis' => $item->basis,
+                'quantity' => (int) $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+            ])
+            ->values()
+            ->all();
+
+        // PPN dan PPh dihitung ulang dari DPP terbaru; baris biaya tambahan
+        // dan diskon manual tetap memakai nominal yang tersimpan.
+        $prices = $this->derivedUnitPrices($shippingCost, $rows);
+
+        foreach ($rows as $index => &$row) {
+            if (isset($prices[$index])) {
+                $row['unit_price'] = $prices[$index];
+            }
+
+            $row['line_total'] = round(
+                max(1, (int) $row['quantity']) * max(0, (float) $row['unit_price']),
+                2,
+            );
+        }
+        unset($row);
+
+        foreach ($items->values() as $index => $item) {
+            $item->update([
+                'unit_price' => $rows[$index]['unit_price'],
+                'line_total' => $rows[$index]['line_total'],
+            ]);
+        }
+
+        $totals = $this->calculate($shippingCost, $rows);
+
+        $invoice->update([
+            'shipping_cost' => $totals['shipping'],
+            'subtotal' => $totals['subtotal'],
+            'discount' => $totals['discount'],
+            'diskon' => $totals['diskon'],
+            'tax' => $totals['tax'],
+            'total' => $totals['total'],
+        ]);
+
         $this->syncFinanceJournals($invoice->refresh());
 
         return $invoice->refresh();
