@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Service extends Model
@@ -44,6 +45,9 @@ class Service extends Model
                 $service->slug = $service->generateUniqueSlug(Str::slug($service->title));
             }
         });
+
+        static::saved(fn () => Cache::forget('footer_services'));
+        static::deleted(fn () => Cache::forget('footer_services'));
     }
 
     protected function generateUniqueSlug(string $slug): string
@@ -52,7 +56,7 @@ class Service extends Model
         $suffix = 2;
 
         while (static::where('slug', $slug)->where('id', '!=', $this->id)->exists()) {
-            $slug = $base . '-' . $suffix++;
+            $slug = $base.'-'.$suffix++;
         }
 
         return $slug;
@@ -60,7 +64,7 @@ class Service extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image ? asset('storage/' . $this->image) : null;
+        return $this->image ? asset('storage/'.$this->image) : null;
     }
 
     public function scopeActive(Builder $query): Builder

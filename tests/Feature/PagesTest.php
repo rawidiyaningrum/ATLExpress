@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PagesTest extends TestCase
@@ -11,6 +10,16 @@ class PagesTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
+    }
+
+    public function test_home_page_exposes_open_graph_image_metadata(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertStatus(200);
+        $response->assertSee('images/og-default.png', false);
+        $response->assertSee('property="og:image:width"', false);
+        $response->assertSee('property="og:image:height"', false);
     }
 
     public function test_about_page_is_ok(): void

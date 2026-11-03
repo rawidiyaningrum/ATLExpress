@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 class BookingSubmitted extends Mailable
 {
@@ -21,8 +22,12 @@ class BookingSubmitted extends Mailable
 
     public function envelope(): Envelope
     {
+        // Nama berasal dari input publik: buang CR/LF agar tidak bisa
+        // menyuntikkan header email tambahan.
+        $name = Str::limit(trim(preg_replace('/[\r\n]+/', ' ', (string) $this->request->name)), 80, '');
+
         $subject = $this->forAdmin
-            ? 'Pemesanan Baru dari ' . $this->request->name . ' - ATL Express'
+            ? 'Pemesanan Baru dari '.$name.' - ATL Express'
             : 'Pemesanan Anda Diterima - ATL Express';
 
         return new Envelope(subject: $subject);

@@ -35,26 +35,46 @@ class Register extends FilamentRegister
 
     protected function handleRegistration(array $data): Model
     {
+        // Token dikirim lewat query string saat user membuka link undangan.
+        $token = request()->query('token');
+
         $user = $this->getUserModel()
             ::where('email', $data['email'])
             ->first();
 
-        if (! $user) {
+        // Pastikan akun memang sedang menunggu undangan.
+        if (! $user || $user->invited_at === null) {
             throw ValidationException::withMessages([
-                'data.email' => 'Email tersebut belum diundang. Hubungi administrator untuk mendapatkan undangan.',
+                'data.email' => $user
+                    ? 'Akun ini sudah terdaftar. Silakan login langsung.'
+                    : 'Email tersebut belum diundang. Hubungi administrator untuk mendapatkan undangan.',
             ]);
         }
 
-        if ($user->invited_at === null) {
+        // Validasi token: harus ada, cocok, dan belum kedaluwarsa.
+        if (
+            blank($token)
+            || blank($user->invite_token)
+            || ! hash_equals((string) $user->invite_token, (string) $token)
+        ) {
             throw ValidationException::withMessages([
-                'data.email' => 'Akun ini sudah terdaftar. Silakan login langsung.',
+                'data.email' => 'Link undangan tidak valid. Minta administrator untuk mengirim ulang undangan.',
             ]);
         }
 
+        if ($user->invite_expires_at !== null && $user->invite_expires_at->isPast()) {
+            throw ValidationException::withMessages([
+                'data.email' => 'Link undangan sudah kedaluwarsa. Minta administrator untuk mengirim ulang undangan.',
+            ]);
+        }
+
+        // Selesaikan pendaftaran dan hapus token agar tidak bisa dipakai ulang.
         $user->forceFill([
-            'name' => $data['name'],
-            'password' => $data['password'],
-            'invited_at' => null,
+            'name'             => $data['name'],
+            'password'         => $data['password'],
+            'invited_at'       => null,
+            'invite_token'     => null,
+            'invite_expires_at' => null,
         ])->save();
 
         return $user;

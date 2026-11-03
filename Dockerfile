@@ -35,9 +35,12 @@ COPY docker/opcache.ini /usr/local/etc/php/conf.d/zz-atlexpress-opcache.ini
 COPY docker/entrypoint.sh /usr/local/bin/atlexpress-entrypoint
 
 RUN mkdir -p /var/www/html \
-    && chmod +x /usr/local/bin/atlexpress-entrypoint
+    && chmod +x /usr/local/bin/atlexpress-entrypoint \
+    && chown -R www-data:www-data /var/www/html
 
 WORKDIR /var/www/html
+
+USER www-data
 
 ENTRYPOINT ["atlexpress-entrypoint"]
 CMD ["php-fpm"]

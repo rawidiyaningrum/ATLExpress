@@ -12,6 +12,7 @@ class RobotsController extends Controller
             'User-agent: *',
             'Allow: /',
             'Disallow: /admin',
+            'Disallow: /admin/',
             'Disallow: /login',
             'Disallow: /register',
             '',
@@ -19,6 +20,7 @@ class RobotsController extends Controller
         ]);
 
         return response($content)
-            ->header('Content-Type', 'text/plain');
+            ->header('Content-Type', 'text/plain; charset=UTF-8')
+            ->header('Cache-Control', 'public, max-age=3600');
     }
 }

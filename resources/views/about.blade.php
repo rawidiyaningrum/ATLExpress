@@ -22,7 +22,7 @@
                     <span class="inline-block bg-primary/10 text-primary text-sm font-bold px-4 py-1.5 rounded-full mb-4">Profil Perusahaan</span>
                     <h2 class="text-3xl font-extrabold text-primary mb-6">ATL Express</h2>
                     <p class="text-gray-600 leading-relaxed mb-6">
-                        {{ $settings['about_text'] ?? 'ATL Express adalah perusahaan cargo dan logistik yang berkomitmen untuk memberikan layanan pengiriman barang terbaik di seluruh Indonesia. Dengan jaringan yang luas dan armada yang handal, kami siap menjadi solusi logistik terpercaya untuk bisnis Anda.' }}
+                        {{ $settings['about_text'] ?: 'ATL Express adalah perusahaan cargo dan logistik yang berkomitmen untuk memberikan layanan pengiriman barang terbaik di seluruh Indonesia. Dengan jaringan yang luas dan armada yang handal, kami siap menjadi solusi logistik terpercaya untuk bisnis Anda.' }}
                     </p>
                     <p class="text-gray-600 leading-relaxed">
                         Kami percaya bahwa setiap pengiriman memiliki nilai penting, oleh karena itu kami selalu berusaha memberikan pelayanan terbaik dengan standar operasional yang tinggi untuk memastikan barang Anda sampai dengan aman dan tepat waktu.
@@ -59,7 +59,7 @@
                     </div>
                     <h3 class="text-2xl font-extrabold text-primary mb-4">Visi</h3>
                     <p class="text-gray-600 leading-relaxed">
-                        {{ $settings['vision'] ?? 'Menjadi perusahaan logistik terdepan di Indonesia yang memberikan layanan berkualitas tinggi, inovatif, dan berkelanjutan untuk mendukung pertumbuhan ekonomi nasional.' }}
+                        {{ $settings['vision'] ?: 'Menjadi perusahaan logistik terdepan di Indonesia yang memberikan layanan berkualitas tinggi, inovatif, dan berkelanjutan untuk mendukung pertumbuhan ekonomi nasional.' }}
                     </p>
                 </div>
                 <div class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100">
@@ -68,7 +68,7 @@
                     </div>
                     <h3 class="text-2xl font-extrabold text-primary mb-4">Misi</h3>
                     <p class="text-gray-600 leading-relaxed">
-                        {{ $settings['mission'] ?? 'Memberikan layanan logistik terbaik melalui inovasi teknologi, jaringan distribusi yang luas, dan tim profesional yang berkomitmen untuk kepuasan pelanggan.' }}
+                        {{ $settings['mission'] ?: 'Memberikan layanan logistik terbaik melalui inovasi teknologi, jaringan distribusi yang luas, dan tim profesional yang berkomitmen untuk kepuasan pelanggan.' }}
                     </p>
                 </div>
             </div>

@@ -6,6 +6,7 @@ use App\Mail\BookingSubmitted;
 use App\Models\ShippingRequest;
 use App\Services\TariffCalculatorService;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 class TariffWidget extends Component
@@ -100,6 +101,16 @@ class TariffWidget extends Component
 
     public function submitBooking()
     {
+        $throttleKey = 'booking-submission:' . request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->addError('name', "Terlalu banyak percobaan pemesanan. Silakan tunggu {$seconds} detik lagi.");
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, 60);
+
         $this->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',

@@ -10,7 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rules\Password;
 
 class UserResource extends Resource
 {
@@ -48,6 +50,8 @@ class UserResource extends Resource
                     ->label('Password')
                     ->password()
                     ->revealable()
+                    ->nullable()
+                    ->rule(Password::default())
                     ->helperText('Kosongkan untuk password acak otomatis.')
                     ->dehydrated(fn ($state) => filled($state)),
             ])->columns(3),
@@ -106,7 +110,14 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->action(function (Collection $records) {
+                            $records->each(function (User $record) {
+                                if ($record->id !== auth()->id()) {
+                                    $record->delete();
+                                }
+                            });
+                        }),
                 ]),
             ]);
     }

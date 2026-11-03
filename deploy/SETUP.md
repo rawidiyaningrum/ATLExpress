@@ -113,6 +113,23 @@ scp backups/migration-*/atlexpress-backup-*.tar.gz ubuntu@IP_VPS_BARU:~/
 
 > Backup DB & migrate sengaja tidak mengubah skema; restore cukup mengembalikan dump lalu `deploy.sh` (migrate jadi no-op). Simpan `APP_KEY` dari `.env` — jangan di-generate ulang di VPS baru.
 
+### Rotasi & Penanganan Kompromi `APP_KEY`
+
+Jika `APP_KEY` terkompromi atau dicurigai bocor:
+1. `APP_KEY` digunakan untuk mengenkripsi cookie session, password reset token, dan token remember-me.
+2. Generate key baru:
+   ```bash
+   docker compose run --rm app php artisan key:generate --show
+   ```
+3. Update `APP_KEY` di file `.env` produksi dengan hasil di atas.
+4. Kosongkan cache & restart worker/scheduler agar menggunakan key baru:
+   ```bash
+   docker compose run --rm app php artisan optimize:clear
+   docker compose run --rm app php artisan optimize
+   docker compose restart app worker scheduler
+   ```
+5. **Catatan:** Mengganti `APP_KEY` akan membatalkan seluruh sesi aktif saat ini, sehingga seluruh admin/user akan diminta login ulang.
+
 ### Di VPS baru
 
 1. Selesaikan prasyarat (Docker, DNS) & clone kode seperti bagian **Setup satu kali** di atas.
@@ -160,4 +177,4 @@ scheduler -> schedule:work (pengganti cron)
 - Setelah deploy, submit sitemap ke Google Search Console & Bing Webmaster Tools.
 - Caddy: gzip compression aktif, static assets di-cache 1 tahun (`immutable`), admin pages no-store.
 - PHP OPcache aktif (revalidate 5s), Laravel `optimize` + `view:cache` dijalankan otomatis setiap deploy.
-- Jalankan `docker compose run --rm app php artisan tinker` lalu `Setting::where('key','og_image')->update(['value'=>'https://atlexpress.biz.id/images/logo.jpg'])` untuk mengatur OG image default (thumbnail saat link dishare di media sosial).
+- OG image default sudah tersedia di `public/images/og-default.png` (1200x630) dan otomatis dipakai bila setting `og_image` kosong. Untuk menggantinya, jalankan `docker compose run --rm app php artisan tinker` lalu `Setting::where('key','og_image')->update(['value'=>'https://atlexpress.biz.id/images/og-default.png'])`.

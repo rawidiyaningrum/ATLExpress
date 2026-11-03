@@ -14,7 +14,7 @@ class PostController extends Controller
         $settings = $this->getSettings();
 
         $canonical = $posts->currentPage() > 1
-            ? url()->current() . '?page=' . $posts->currentPage()
+            ? url()->current().'?page='.$posts->currentPage()
             : route('posts.index');
 
         $seo = array_merge($this->baseSeo($settings), [
@@ -47,7 +47,7 @@ class PostController extends Controller
             'keywords' => $post->meta_keywords ?: ($settings['seo_keywords'] ?? ''),
             'canonical' => route('posts.show', $post->slug),
             'type' => 'article',
-            'image' => $post->image_url ?: ($settings['og_image'] ?: asset('images/logo.png')),
+            'image' => $post->image_url ?: ($settings['og_image'] ?: asset('images/og-default.png')),
             // Meta title artikel sudah lengkap dengan nama brand, jangan
             // ditambahkan lagi supaya judul di browser tidak melebihi 60 karakter.
             'append_name' => ! $post->meta_title,
@@ -57,22 +57,30 @@ class PostController extends Controller
                     '@type' => 'NewsArticle',
                     'headline' => $post->title,
                     'description' => $description,
-                    'image' => $post->image_url ?: asset('images/logo.png'),
+                    'image' => $post->image_url ?: asset('images/og-default.png'),
                     'datePublished' => $published,
                     'dateModified' => $post->updated_at->toIso8601String(),
+                    ...array_filter([
+                        'articleSection' => $post->category?->name,
+                    ]),
                     'author' => [
                         '@type' => 'Organization',
+                        '@id' => SeoService::organizationId(),
                         'name' => $settings['company_name'] ?? 'ATL Express',
                     ],
                     'publisher' => [
                         '@type' => 'Organization',
+                        '@id' => SeoService::organizationId(),
                         'name' => $settings['company_name'] ?? 'ATL Express',
                         'logo' => [
                             '@type' => 'ImageObject',
                             'url' => asset('images/logo.png'),
                         ],
                     ],
-                    'mainEntityOfPage' => route('posts.show', $post->slug),
+                    'mainEntityOfPage' => [
+                        '@type' => 'WebPage',
+                        '@id' => route('posts.show', $post->slug),
+                    ],
                 ],
                 SeoService::breadcrumb([
                     [route('home'), 'Beranda'],
@@ -88,13 +96,13 @@ class PostController extends Controller
     protected function baseSeo(array $settings): array
     {
         return [
-            'title' => $settings['company_name'] ?? 'ATL Express',
+            'title' => $settings['company_name'] ?: 'ATL Express',
             'append_name' => true,
             'description' => $settings['seo_description']
-                ?? ($settings['about_text'] ?: 'Solusi cargo dan logistik terpercaya di Indonesia'),
-            'keywords' => $settings['seo_keywords'] ?? '',
+                ?: ($settings['about_text'] ?: 'Solusi cargo dan logistik terpercaya di Indonesia'),
+            'keywords' => $settings['seo_keywords'] ?: '',
             'type' => 'website',
-            'image' => $settings['og_image'] ?: asset('images/logo.png'),
+            'image' => $settings['og_image'] ?: asset('images/og-default.png'),
             'json_ld' => [],
         ];
     }

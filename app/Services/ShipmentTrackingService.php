@@ -41,6 +41,10 @@ class ShipmentTrackingService
      */
     public function recordStatus(Shipment $shipment, string $status, ?string $location = null, ?int $trackerUserId = null): ShipmentLog
     {
+        if (! $shipment->isActive()) {
+            abort(422, 'Tidak dapat menambahkan status pada pengiriman yang sudah selesai atau dibatalkan.');
+        }
+
         $label = Shipment::statusLabel($status);
 
         $log = $shipment->logs()->create([

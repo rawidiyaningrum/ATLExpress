@@ -17,6 +17,18 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# ── P0 Security gate: tolak deploy bila APP_DEBUG aktif ───────────────────────
+# Baca langsung dari .env (bukan env proses) supaya tidak terpengaruh nilai
+# yang sudah di-export sebelumnya.
+_DEBUG_VAL="$(grep -E '^APP_DEBUG=' .env | cut -d= -f2 | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+if [ "${_DEBUG_VAL}" = "true" ]; then
+    echo "ERROR [P0-security]: APP_DEBUG=true terdeteksi di .env."
+    echo "  Set APP_DEBUG=false dan APP_ENV=production di .env produksi sebelum deploy."
+    exit 1
+fi
+echo "security-gate: APP_DEBUG=${_DEBUG_VAL} — OK"
+# ──────────────────────────────────────────────────────────────────────────────
+
 echo "==> [1/13] git pull"
 git pull origin main
 
@@ -35,8 +47,17 @@ docker compose --profile tools run --rm assets sh -c "npm ci --no-audit --no-fun
 echo "==> [4/13] composer install (--no-dev)"
 docker compose run --rm app composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
+# ── P0 Security gate: composer audit ──────────────────────────────────────────
+# Dijalankan setelah install supaya vendor/ selalu sinkron dengan lock file.
+# Kegagalan audit (ada advisory) menghentikan deploy; tambahkan --no-dev supaya
+# advisory package dev (yang tidak masuk produksi) tidak memblokir.
+# Idempoten: jalankan tiap deploy; tidak menulis state ke disk.
+echo "==> [4b] composer audit (security gate)"
+docker compose run --rm app composer audit --no-dev --no-interaction
+# ──────────────────────────────────────────────────────────────────────────────
+
 echo "==> [5/13] permissions (www-data)"
-docker compose run --rm app sh -c "chown -R www-data:www-data storage bootstrap/cache"
+docker compose run --rm --user root app sh -c "chown -R www-data:www-data storage bootstrap/cache"
 
 echo "==> [6/13] build image"
 docker compose build app worker scheduler
@@ -69,7 +90,7 @@ echo "==> [11/13] verify schema"
 # Migrasi hanya diuji di SQLite, sedangkan produksi memakai PostgreSQL. Kolom
 # yang diharapkan didaftarkan di sini supaya kegagalan khusus pgsql tertangkap
 # eksplisit, bukan muncul sebagai 500 di halaman yang tidak dicek health check.
-EXPECTED_COLUMNS="invoices.status,finance_journals.journal_type,shipments.service_type,shipments.dimension_length,shipments.dimension_width,shipments.dimension_height,invoice_items.basis,invoice_items.real_expense,invoices.shipping_real_expense,posts.meta_keywords,ai_usages.model,ai_usages.prompt_tokens,ai_usages.output_tokens,ai_usages.estimated_cost_usd,ai_usages.status,article_generation_batches.uuid,article_generation_batches.status,article_generation_batches.generated,article_generation_batches.fallback,article_generation_batches.actual_cost_usd"
+EXPECTED_COLUMNS="invoices.status,finance_journals.journal_type,shipments.service_type,shipments.dimension_length,shipments.dimension_width,shipments.dimension_height,invoice_items.basis,invoice_items.real_expense,invoices.shipping_real_expense,posts.meta_keywords,ai_usages.model,ai_usages.prompt_tokens,ai_usages.output_tokens,ai_usages.estimated_cost_usd,ai_usages.status,article_generation_batches.uuid,article_generation_batches.status,article_generation_batches.generated,article_generation_batches.fallback,article_generation_batches.actual_cost_usd,users.invite_token,users.invite_expires_at"
 
 MISSING="$(docker compose exec -T db psql -U "${DB_USERNAME:-atlexpress}" -d "${DB_DATABASE:-atlexpress}" -tAc "
     SELECT coalesce(string_agg(wanted.name, ', '), '')

@@ -34,7 +34,6 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
-        'role',
         'invited_at',
     ];
 
@@ -46,6 +45,7 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'invite_token',
     ];
 
     /**
@@ -58,13 +58,18 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'invited_at' => 'datetime',
+            'invite_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return in_array($this->role, [
+            self::ROLE_ADMIN,
+            self::ROLE_ADMIN_ATL,
+            self::ROLE_TRACKER,
+        ], true);
     }
 
     public function isAdmin(): bool
@@ -100,5 +105,20 @@ class User extends Authenticatable implements FilamentUser
     public function scopeTrackers($query)
     {
         return $query->where('role', self::ROLE_TRACKER);
+    }
+
+    /**
+     * Generate token undangan acak, simpan ke model (belum disave ke DB).
+     * Kembalikan token plain-text agar bisa dimasukkan ke URL email.
+     */
+    public function generateInviteToken(int $expiryDays = 7): string
+    {
+        $token = bin2hex(random_bytes(32)); // 64 karakter hex
+
+        $this->invite_token     = $token;
+        $this->invite_expires_at = now()->addDays($expiryDays);
+        $this->invited_at        = now();
+
+        return $token;
     }
 }

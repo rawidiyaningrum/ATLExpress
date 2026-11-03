@@ -20,10 +20,12 @@ Route::get('/cek-tarif', [PageController::class, 'tariff'])->name('tariff');
 Route::get('/berita', [PostController::class, 'index'])->name('posts.index');
 Route::get('/berita/{slug}', [PostController::class, 'show'])->name('posts.show');
 Route::get('/kontak', [PageController::class, 'contact'])->name('contact');
-Route::post('/kontak', [InquiryController::class, 'store'])->name('inquiry.store');
+Route::post('/kontak', [InquiryController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('inquiry.store');
 
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/admin/shipment-tracking/log/{log}/delete', function (\App\Models\ShipmentLog $log) {
+    Route::delete('/admin/shipment-tracking/log/{log}', function (\App\Models\ShipmentLog $log) {
         if (! auth()->user()?->isAdminRole()) {
             abort(403);
         }

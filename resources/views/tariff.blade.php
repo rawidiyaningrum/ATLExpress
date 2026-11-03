@@ -23,4 +23,34 @@
         </div>
     </section>
 
+    <section class="py-16 bg-white">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-extrabold text-primary mb-4">Cara Cek Tarif Pengiriman Cargo</h2>
+            <p class="text-gray-600 leading-relaxed mb-6">
+                Halaman Cek Tarif membantu Anda memperkirakan biaya pengiriman sebelum melakukan pemesanan.
+                Estimasi dihitung berdasarkan kota asal, kota tujuan, dan berat barang, sehingga Anda dapat
+                merencanakan anggaran logistik dengan lebih mudah dan transparan.
+            </p>
+            <ol class="space-y-2 text-gray-600 list-decimal list-inside">
+                <li>Pilih kota asal dan kota tujuan pengiriman.</li>
+                <li>Masukkan berat barang dalam kilogram.</li>
+                <li>Sistem menampilkan estimasi tarif secara otomatis.</li>
+                <li>Hubungi tim kami untuk konfirmasi tarif final dan pemesanan.</li>
+            </ol>
+
+            <h2 class="text-2xl font-extrabold text-primary mt-12 mb-6">Pertanyaan yang Sering Diajukan</h2>
+            <div class="space-y-4">
+                @foreach($faq as $item)
+                    <details class="group bg-gray-50 rounded-xl border border-gray-100 p-5">
+                        <summary class="cursor-pointer font-bold text-primary list-none flex items-center justify-between gap-4">
+                            {{ $item['q'] }}
+                            <svg class="w-5 h-5 shrink-0 text-gold-600 transition group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <p class="text-gray-600 mt-3 text-sm leading-relaxed">{{ $item['a'] }}</p>
+                    </details>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
 </x-layouts.app>

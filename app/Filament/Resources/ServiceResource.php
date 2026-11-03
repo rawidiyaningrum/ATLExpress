@@ -40,7 +40,8 @@ class ServiceResource extends Resource
                 Forms\Components\RichEditor::make('content')
                     ->nullable(),
                 Forms\Components\FileUpload::make('image')
-                    ->image(),
+                    ->image()
+                    ->maxSize(2048),
                 Forms\Components\Toggle::make('is_active')
                     ->default(true),
                 Forms\Components\TextInput::make('sort_order')
@@ -50,11 +51,12 @@ class ServiceResource extends Resource
             Forms\Components\Section::make('SEO')->schema([
                 Forms\Components\TextInput::make('meta_title')
                     ->label('Meta Title')
-                    ->helperText('Kosongkan untuk default: judul layanan')
-                    ->maxLength(255),
+                    ->helperText('Maks 60 karakter termasuk " - ATL Express". Kosongkan untuk default: judul layanan.')
+                    ->maxLength(60),
                 Forms\Components\Textarea::make('meta_description')
                     ->label('Meta Description')
-                    ->helperText('Kosongkan untuk auto-generate dari deskripsi')
+                    ->helperText('Maks 160 karakter. Kosongkan untuk auto-generate dari deskripsi.')
+                    ->maxLength(160)
                     ->rows(3),
             ])->columns(1),
         ]);
