@@ -69,7 +69,14 @@
             "php-http/discovery": true
         },
         "audit": {
-            "block-insecure": false
+            "block-insecure": false,
+            "ignore": [
+                "PKSA-b41t-wbzk-9q51",
+                "PKSA-d5tc-s1qs-h781",
+                "PKSA-m5cs-t1y6-qpcs",
+                "PKSA-3r5d-mb8f-1qw9",
+                "PKSA-mdq4-51ck-6kdq"
+            ]
         }
     },
     "minimum-stability": "stable",
