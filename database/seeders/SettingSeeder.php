@@ -24,7 +24,7 @@ class SettingSeeder extends Seeder
             'vision' => 'Menjadi perusahaan logistik terdepan di Indonesia yang menghadirkan layanan cargo terpercaya, cepat, dan terjangkau bagi seluruh masyarakat.',
             'mission' => 'Menyediakan layanan pengiriman yang cepat dan aman.|Memiliki jangkauan pengiriman ke seluruh pelosok Indonesia.|Menghadirkan teknologi tracking real-time untuk transparansi pengiriman.|Memberikan pelayanan pelanggan terbaik dengan harga kompetitif.',
             'facebook' => 'https://facebook.com/atlexpress',
-            'instagram' => 'https://instagram.com/atlexpress',
+            'instagram' => 'https://instagram.com/douzekargo',
             'youtube' => 'https://youtube.com/atlexpress',
             'tiktok' => 'https://tiktok.com/@atlexpress',
             'google_maps_embed_url' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126920.28628095436!2d106.759478!3d-6.229728!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e94d436811%3A0x2cb6e0370b3b4!2sJakarta!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid',

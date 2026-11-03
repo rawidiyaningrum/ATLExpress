@@ -65,6 +65,7 @@ class PagesTest extends TestCase
         $response->assertSee('Google Maps', false);
         $response->assertSee('Google Business Profile', false);
         $response->assertSee('Instagram', false);
+        $response->assertSee('douzekargo', false);
         $response->assertSee('TikTok', false);
     }
 }

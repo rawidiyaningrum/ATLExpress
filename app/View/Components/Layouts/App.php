@@ -16,7 +16,7 @@ class App extends Component
     {
         $keys = [
             'company_name', 'company_tagline', 'phone', 'email', 'address', 'whatsapp',
-            'facebook', 'instagram', 'youtube',
+            'facebook', 'instagram', 'youtube', 'tiktok',
         ];
 
         $values = [];
@@ -37,8 +37,9 @@ class App extends Component
             'address' => 'Jakarta, Indonesia',
             'whatsapp' => '6285777079581',
             'facebook' => '#',
-            'instagram' => '#',
+            'instagram' => 'https://instagram.com/douzekargo',
             'youtube' => '#',
+            'tiktok' => 'https://tiktok.com/@atlexpress',
         ];
     }
 
