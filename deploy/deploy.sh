@@ -55,10 +55,10 @@ docker compose --profile tools run --rm assets sh -c "npm ci --no-audit --no-fun
 
 if [ "$UPDATE_DEPS" = "true" ]; then
     echo "==> [4/13] composer update (--no-dev, resolve paket terbaru)"
-    docker compose run --rm app composer update --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+    docker compose run --rm --user root -e COMPOSER_ALLOW_SUPERUSER=1 app composer update --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 else
     echo "==> [4/13] composer install (--no-dev)"
-    docker compose run --rm app composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+    docker compose run --rm --user root -e COMPOSER_ALLOW_SUPERUSER=1 app composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 fi
 
 # ── P0 Security gate: composer audit ──────────────────────────────────────────
@@ -71,7 +71,7 @@ docker compose run --rm app composer audit --no-dev --no-interaction
 # ──────────────────────────────────────────────────────────────────────────────
 
 echo "==> [5/13] permissions (www-data)"
-docker compose run --rm --user root app sh -c "chown -R www-data:www-data storage bootstrap/cache"
+docker compose run --rm --user root app sh -c "chown -R www-data:www-data storage bootstrap/cache public"
 
 echo "==> [6/13] build image"
 docker compose build app worker scheduler
