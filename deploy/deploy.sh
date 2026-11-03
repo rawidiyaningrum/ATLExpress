@@ -9,6 +9,15 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 APP_URL="${APP_URL:-https://atlexpress.biz.id}"
+UPDATE_DEPS="${UPDATE_DEPS:-false}"
+
+for arg in "$@"; do
+    case "$arg" in
+        --update-deps|--update)
+            UPDATE_DEPS=true
+            ;;
+    esac
+done
 
 if [ ! -f .env ]; then
     echo "ERROR: .env belum ada. Buat dulu:"
@@ -44,8 +53,13 @@ echo "backup disimpan di $BACKUP_FILE"
 echo "==> [3/13] build frontend assets (npm)"
 docker compose --profile tools run --rm assets sh -c "npm ci --no-audit --no-fund && npm run build"
 
-echo "==> [4/13] composer install (--no-dev)"
-docker compose run --rm app composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+if [ "$UPDATE_DEPS" = "true" ]; then
+    echo "==> [4/13] composer update (--no-dev, resolve paket terbaru)"
+    docker compose run --rm app composer update --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+else
+    echo "==> [4/13] composer install (--no-dev)"
+    docker compose run --rm app composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+fi
 
 # ── P0 Security gate: composer audit ──────────────────────────────────────────
 # Dijalankan setelah install supaya vendor/ selalu sinkron dengan lock file.
@@ -134,3 +148,12 @@ curl -fsSI --resolve "$APP_HOST:443:127.0.0.1" "$APP_URL" >/dev/null && echo "OK
 # Probe eksternal non-fatal: gagal di sini normal bila hairpin tidak didukung.
 curl -fsSI "$APP_URL" >/dev/null 2>&1 && echo "OK (external): $APP_URL" \
     || echo "catatan: akses dari dalam VPS lewat IP publik gagal (hairpin) — normal"
+
+if [ "$UPDATE_DEPS" = "true" ] && ! git diff --quiet composer.lock; then
+    echo ""
+    echo "======================================================================"
+    echo "PEMBERITAHUAN: composer.lock telah diperbarui oleh --update-deps."
+    echo "Jangan lupa commit & push lockfile ini kembali ke repositori Git:"
+    echo "  git commit -am 'fix(deps): update composer.lock' && git push origin main"
+    echo "======================================================================"
+fi

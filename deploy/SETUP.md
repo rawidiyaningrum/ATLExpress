@@ -160,7 +160,14 @@ scheduler -> schedule:work (pengganti cron)
 ## Catatan & troubleshooting
 
 - **Kode live via bind mount** `.:/var/www/html` di container app/worker/scheduler/caddy → artefak (`vendor/`, `node_modules/`, `public/build`) tersimpan di host. Gitignore sudah mengabaikan folder-folder tersebut.
-- **Update & Audit Security Dependensi Composer**: Selalu jalankan di dalam container `app`, bukan di host VPS:
+- **Update & Audit Security Dependensi Composer**: Dapat dijalankan sekali perintah langsung via `deploy.sh`:
+  ```bash
+  # Cara Praktis (Sekali Eksekusi Saat Deploy):
+  bash deploy/deploy.sh --update-deps
+  ```
+  Opsi `--update-deps` otomatis menjalankan `composer update` di dalam container, melakukan security audit gate, lalu melanjutkan seluruh tahapan deploy hingga selesai. Bila ada perubahan pada `composer.lock`, jangan lupa commit & push kembali ke Git.
+  
+  Atau secara manual:
   ```bash
   # 1. Update paket & patch keamanan ke composer.lock
   docker compose run --rm app composer update --prefer-dist --no-progress
