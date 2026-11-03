@@ -53,6 +53,10 @@ echo "backup disimpan di $BACKUP_FILE"
 echo "==> [3/13] build frontend assets (npm)"
 docker compose --profile tools run --rm assets sh -c "npm ci --no-audit --no-fund && npm run build"
 
+# Pastikan public, storage, dan cache dapat ditulis sebelum composer & filament dijalankan
+echo "==> [3b] set write permissions for build & assets"
+docker compose run --rm --user root app sh -c "chmod -R 777 public storage bootstrap/cache 2>/dev/null || true"
+
 if [ "$UPDATE_DEPS" = "true" ]; then
     echo "==> [4/13] composer update (--no-dev, resolve paket terbaru)"
     docker compose run --rm --user root -e COMPOSER_ALLOW_SUPERUSER=1 app composer update --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
