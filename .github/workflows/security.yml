@@ -41,7 +41,7 @@ jobs:
           node-version: 20
 
       - name: Composer Security Audit
-        run: composer audit --no-dev
+        run: composer audit --locked --no-dev
 
       - name: NPM Security Audit
         run: npm audit --omit=dev
