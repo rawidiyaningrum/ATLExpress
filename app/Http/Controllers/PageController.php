@@ -182,6 +182,57 @@ class PageController extends Controller
         ];
     }
 
+    public function location()
+    {
+        $settings = $this->getSettings();
+
+        $seo = $this->baseSeo($settings);
+        $seo = array_merge($seo, [
+            'title' => 'Lokasi & Profil Bisnis Resmi',
+            'description' => 'Temukan lokasi kantor dan hub operasional ATL Express di Google Maps, Google Business Profile resmi, serta update kegiatan pengiriman di Instagram & TikTok.',
+            'canonical' => route('location'),
+            'json_ld' => [
+                SeoService::breadcrumb([
+                    [route('home'), 'Beranda'],
+                    [route('location'), 'Lokasi & Profil'],
+                ]),
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'LocalBusiness',
+                    'name' => $settings['company_name'] ?: 'ATL Express',
+                    'image' => $settings['og_image'] ?: asset('images/logo-192.png'),
+                    '@id' => route('location') . '#localbusiness',
+                    'url' => route('location'),
+                    'telephone' => $settings['phone'] ?: '+6285777079581',
+                    'address' => [
+                        '@type' => 'PostalAddress',
+                        'streetAddress' => $settings['address'] ?: 'Jakarta, Indonesia',
+                        'addressLocality' => 'Jakarta',
+                        'addressRegion' => 'DKI Jakarta',
+                        'addressCountry' => 'ID',
+                    ],
+                    'openingHoursSpecification' => [
+                        [
+                            '@type' => 'OpeningHoursSpecification',
+                            'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                            'opens' => '08:00',
+                            'closes' => '18:00',
+                        ],
+                    ],
+                    'sameAs' => array_values(array_filter([
+                        $settings['google_business_url'] ?? '',
+                        $settings['instagram'] ?? '',
+                        $settings['tiktok'] ?? '',
+                        $settings['facebook'] ?? '',
+                        $settings['youtube'] ?? '',
+                    ])),
+                ],
+            ],
+        ]);
+
+        return view('location', compact('settings', 'seo'));
+    }
+
     public function contact()
     {
         $settings = $this->getSettings();
@@ -221,7 +272,8 @@ class PageController extends Controller
         $keys = [
             'company_name', 'company_tagline', 'phone', 'email', 'address', 'website', 'whatsapp',
             'about_text', 'vision', 'mission',
-            'facebook', 'instagram', 'youtube',
+            'facebook', 'instagram', 'youtube', 'tiktok',
+            'google_maps_embed_url', 'google_business_url',
             'seo_title', 'seo_description', 'seo_keywords', 'og_image',
         ];
 

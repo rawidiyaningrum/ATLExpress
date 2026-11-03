@@ -36,6 +36,7 @@ class SitemapController extends Controller
         foreach ([
             route('about'),
             route('services'),
+            route('location'),
             route('tracking'),
             route('tariff'),
             route('posts.index'),

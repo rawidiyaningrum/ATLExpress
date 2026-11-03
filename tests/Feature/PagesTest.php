@@ -57,4 +57,14 @@ class PagesTest extends TestCase
         $response = $this->get('/kontak');
         $response->assertStatus(200);
     }
+
+    public function test_location_page_is_ok(): void
+    {
+        $response = $this->get('/lokasi');
+        $response->assertStatus(200);
+        $response->assertSee('Google Maps', false);
+        $response->assertSee('Google Business Profile', false);
+        $response->assertSee('Instagram', false);
+        $response->assertSee('TikTok', false);
+    }
 }

@@ -15,6 +15,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/tentang-kami', [PageController::class, 'about'])->name('about');
 Route::get('/layanan', [PageController::class, 'services'])->name('services');
 Route::get('/layanan/{slug}', [PageController::class, 'serviceDetail'])->name('service.detail');
+Route::get('/lokasi', [PageController::class, 'location'])->name('location');
 Route::get('/cek-resi', [PageController::class, 'tracking'])->name('tracking');
 Route::get('/cek-tarif', [PageController::class, 'tariff'])->name('tariff');
 Route::get('/berita', [PostController::class, 'index'])->name('posts.index');
