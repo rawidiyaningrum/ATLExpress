@@ -42,7 +42,7 @@ class HomeController extends Controller
         $keys = [
             'company_name', 'company_tagline', 'phone', 'email', 'address', 'website', 'whatsapp',
             'hero_title', 'hero_subtitle', 'about_text', 'vision', 'mission',
-            'facebook', 'instagram', 'youtube',
+            'facebook', 'instagram', 'youtube', 'tiktok',
             'seo_title', 'seo_description', 'seo_keywords', 'og_image',
         ];
 
