@@ -108,5 +108,67 @@ class TruckingPageTest extends TestCase
             ->assertSee('Rp 3.500')
             ->assertSee('ATL-202611-TEST01');
     }
+
+    public function test_list_trayek_trucking_tab_filters_and_sorts_correctly(): void
+    {
+        $admin = User::factory()->create();
+
+        $vendorA = DeliveryAgent::create([
+            'name' => 'Vendor Alpha Logistik',
+            'phone' => '0811111111',
+            'location' => 'Jakarta Timur',
+            'is_active' => true,
+        ]);
+
+        $vendorB = DeliveryAgent::create([
+            'name' => 'Vendor Beta Trans',
+            'phone' => '0822222222',
+            'location' => 'Jakarta Barat',
+            'is_active' => true,
+        ]);
+
+        $vendorA->routes()->create([
+            'origin' => 'Jakarta',
+            'destination' => 'Bandung',
+            'fleet_type' => 'CDD',
+            'rate_type' => 'carter',
+            'tariff' => 2000000,
+        ]);
+
+        $vendorB->routes()->create([
+            'origin' => 'Jakarta',
+            'destination' => 'Surabaya',
+            'fleet_type' => 'CDDL',
+            'rate_type' => 'carter',
+            'tariff' => 5000000,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Trucking::class)
+            ->set('activeTab', 'trayek')
+            ->set('trayekOrigin', 'Jakarta')
+            ->assertSee('Vendor Alpha Logistik')
+            ->assertSee('0811111111')
+            ->assertSee('Bandung')
+            ->assertSee('Vendor Beta Trans')
+            ->assertSee('0822222222')
+            ->assertSee('Surabaya')
+            // Test sorting by destination desc
+            ->call('sortBy', 'destination')
+            ->assertSet('trayekSortField', 'destination')
+            ->assertSet('trayekSortDirection', 'desc')
+            // Test sorting by phone
+            ->call('sortBy', 'phone')
+            ->assertSet('trayekSortField', 'phone')
+            ->assertSet('trayekSortDirection', 'asc')
+            // Test quick origin selection
+            ->call('selectTrayekOrigin', 'Jakarta')
+            ->assertSet('trayekOrigin', 'Jakarta')
+            // Test trayek search filter
+            ->set('trayekSearch', 'Bandung')
+            ->assertSee('Vendor Alpha Logistik')
+            ->assertSee('Bandung')
+            ->assertDontSee('Vendor Beta Trans');
+    }
 }
 

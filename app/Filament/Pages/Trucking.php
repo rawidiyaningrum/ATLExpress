@@ -39,6 +39,9 @@ class Trucking extends Page implements HasForms
 
     public ?array $data = [];
 
+    public string $activeTab = 'compare'; // 'compare' atau 'trayek'
+
+    // Properti untuk Tab 1: Cek & Komparasi Rute
     public bool $hasSearched = false;
 
     public string $searchOrigin = '';
@@ -52,6 +55,15 @@ class Trucking extends Page implements HasForms
     public Collection $shippingRates;
 
     public Collection $recentShipments;
+
+    // Properti untuk Tab 2: List Trayek Trucking
+    public string $trayekOrigin = '';
+
+    public string $trayekSearch = '';
+
+    public string $trayekSortField = 'destination';
+
+    public string $trayekSortDirection = 'asc';
 
     public function mount(): void
     {
@@ -193,5 +205,69 @@ class Trucking extends Page implements HasForms
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    public function sortBy(string $field): void
+    {
+        if ($this->trayekSortField === $field) {
+            $this->trayekSortDirection = $this->trayekSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->trayekSortField = $field;
+            $this->trayekSortDirection = 'asc';
+        }
+    }
+
+    public function selectTrayekOrigin(string $origin): void
+    {
+        $this->trayekOrigin = $origin;
+    }
+
+    public function getTrayekRoutes()
+    {
+        if (trim($this->trayekOrigin) === '') {
+            return collect();
+        }
+
+        $origin = trim($this->trayekOrigin);
+
+        $query = DeliveryAgentRoute::query()
+            ->with('agent')
+            ->whereHas('agent', fn ($q) => $q->where('is_active', true))
+            ->where(function ($q) use ($origin) {
+                $q->where('origin', 'like', "%{$origin}%")
+                    ->orWhere('origin', 'like', '%' . strtolower($origin) . '%');
+            });
+
+        if (! empty($this->trayekSearch)) {
+            $search = trim($this->trayekSearch);
+            $query->where(function ($q) use ($search) {
+                $q->where('destination', 'like', "%{$search}%")
+                    ->orWhere('fleet_type', 'like', "%{$search}%")
+                    ->orWhereHas('agent', function ($aq) use ($search) {
+                        $aq->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($this->trayekSortField === 'destination') {
+            $query->orderBy('destination', $this->trayekSortDirection);
+        } elseif ($this->trayekSortField === 'phone') {
+            $query->join('delivery_agents', 'delivery_agent_routes.delivery_agent_id', '=', 'delivery_agents.id')
+                ->select('delivery_agent_routes.*')
+                ->orderBy('delivery_agents.phone', $this->trayekSortDirection);
+        } elseif ($this->trayekSortField === 'vendor') {
+            $query->join('delivery_agents', 'delivery_agent_routes.delivery_agent_id', '=', 'delivery_agents.id')
+                ->select('delivery_agent_routes.*')
+                ->orderBy('delivery_agents.name', $this->trayekSortDirection);
+        } elseif ($this->trayekSortField === 'tariff') {
+            $query->orderBy('tariff', $this->trayekSortDirection);
+        } elseif ($this->trayekSortField === 'fleet_type') {
+            $query->orderBy('fleet_type', $this->trayekSortDirection);
+        } else {
+            $query->orderBy('destination', 'asc');
+        }
+
+        return $query->get();
     }
 }
