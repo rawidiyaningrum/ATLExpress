@@ -59,6 +59,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N13TSG0WJ0"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-N13TSG0WJ0');
+    </script>
     <title>{{ $fullTitle }}@if($fullTitle === $siteName && $tagline) - {{ $tagline }}@endif</title>
 
     <meta name="description" content="{{ $metaDescription }}">

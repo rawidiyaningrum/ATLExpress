@@ -10,6 +10,8 @@ class PagesTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
+        $response->assertSee('https://www.googletagmanager.com/gtag/js?id=G-N13TSG0WJ0', false);
+        $response->assertSee("gtag('config', 'G-N13TSG0WJ0');", false);
     }
 
     public function test_home_page_exposes_open_graph_image_metadata(): void
