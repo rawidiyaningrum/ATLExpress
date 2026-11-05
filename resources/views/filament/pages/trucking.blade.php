@@ -1,54 +1,47 @@
 <x-filament-panels::page>
-    {{-- Tab Navigation --}}
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-            <button
-                type="button"
-                wire:click="$set('activeTab', 'compare')"
-                class="py-3 px-2 border-b-2 font-bold text-sm inline-flex items-center gap-2 transition duration-150 {{ $activeTab === 'compare' ? 'border-[#0D2053] text-[#0D2053] dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                <span>Cek & Komparasi Rute</span>
-            </button>
+    {{-- Tab Navigation Native Filament --}}
+    <x-filament::tabs class="mb-6">
+        <x-filament::tabs.item
+            :active="$activeTab === 'compare'"
+            wire:click="$set('activeTab', 'compare')"
+            icon="heroicon-m-arrows-right-left"
+        >
+            Cek & Komparasi Rute
+        </x-filament::tabs.item>
 
-            <button
-                type="button"
-                wire:click="$set('activeTab', 'trayek')"
-                class="py-3 px-2 border-b-2 font-bold text-sm inline-flex items-center gap-2 transition duration-150 {{ $activeTab === 'trayek' ? 'border-[#0D2053] text-[#0D2053] dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span>List Trayek Trucking</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-[#0D2053] dark:bg-blue-900/40 dark:text-blue-300">
-                    Tabel Rute Vendor
-                </span>
-            </button>
-        </nav>
-    </div>
+        <x-filament::tabs.item
+            :active="$activeTab === 'trayek'"
+            wire:click="$set('activeTab', 'trayek')"
+            icon="heroicon-m-table-cells"
+            badge="Tabel Rute Vendor"
+        >
+            List Trayek Trucking
+        </x-filament::tabs.item>
+    </x-filament::tabs>
 
     {{-- TAB 1: CEK & KOMPARASI RUTE --}}
     @if ($activeTab === 'compare')
-        {{-- Form Pencarian Rute --}}
         <form wire:submit.prevent="search" class="space-y-4">
             {{ $this->form }}
 
-            <div class="flex items-center justify-end gap-3">
+            <div class="flex items-center justify-end gap-3 pt-2">
                 @if ($hasSearched)
-                    <button
+                    <x-filament::button
                         type="button"
+                        color="gray"
                         wire:click="resetSearch"
-                        class="fi-btn fi-btn-size-md relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-color-gray bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 px-4 py-2 text-sm shadow-sm"
                     >
                         Reset
-                    </button>
+                    </x-filament::button>
                 @endif
 
-                <button
+                <x-filament::button
                     type="submit"
-                    class="fi-btn fi-btn-size-md relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg bg-[#0D2053] hover:bg-opacity-90 text-white px-5 py-2 text-sm shadow-sm flex items-center gap-2"
+                    color="primary"
+                    icon="heroicon-m-magnifying-glass"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <span>Cek Tarif Trucking & Shipment</span>
-                </button>
+                    Cek Tarif Trucking & Shipment
+                </x-filament::button>
             </div>
         </form>
 
@@ -56,23 +49,26 @@
         @if ($hasSearched)
             <div class="mt-8 space-y-6">
                 {{-- Banner Ringkasan Rute --}}
-                <div class="p-4 rounded-xl bg-gradient-to-r from-[#0D2053] to-blue-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+                <div
+                    class="p-5 rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-blue-950"
+                    style="background: linear-gradient(135deg, #0D2053 0%, #172554 100%); color: #ffffff;"
+                >
                     <div>
                         <span class="text-xs uppercase tracking-wider text-blue-200 font-bold block">Rute yang Dicek</span>
-                        <h2 class="text-xl font-extrabold flex items-center gap-2">
+                        <h2 class="text-xl font-extrabold flex items-center gap-2 text-white mt-1">
                             <span>{{ $searchOrigin }}</span>
-                            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            <svg class="w-5 h-5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             <span>{{ $searchDestination }}</span>
                         </h2>
-                        <p class="text-xs text-blue-100 mt-0.5">
-                            Estimasi berat acuan: <strong class="text-amber-300">{{ number_format($searchWeight, 1, ',', '.') }} kg</strong>
+                        <p class="text-xs text-blue-100 mt-1">
+                            Estimasi berat acuan: <strong class="text-amber-300 font-bold">{{ number_format($searchWeight, 1, ',', '.') }} kg</strong>
                         </p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-semibold backdrop-blur">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-semibold backdrop-blur text-white border border-white/20">
                             🚚 <strong>{{ $vendorRoutes->count() }}</strong> Vendor Trucking
                         </span>
-                        <span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-semibold backdrop-blur">
+                        <span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-semibold backdrop-blur text-white border border-white/20">
                             📦 <strong>{{ $shippingRates->count() }}</strong> Tarif Ongkir
                         </span>
                     </div>
@@ -83,7 +79,7 @@
                     {{-- PANEL KIRI: Tarif Trucking dari Menu Rute Vendor (Agen Pengiriman) --}}
                     <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
                         <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2.5">
                                 <span class="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
                                 </span>
@@ -123,10 +119,10 @@
                                                 href="https://wa.me/{{ $cleanPhone }}?text={{ $waText }}"
                                                 target="_blank"
                                                 rel="noopener"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-xs shadow transition shrink-0"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-xs shadow-sm transition shrink-0 whitespace-nowrap"
                                                 title="Chat WhatsApp Vendor"
                                             >
-                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                                                <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
                                                 <span>{{ $agent->phone }}</span>
                                             </a>
                                         @endif
@@ -151,12 +147,12 @@
                                             <span class="text-gray-500 dark:text-gray-400 block text-[11px]">Tarif Rute</span>
                                             <strong class="text-amber-600 dark:text-amber-400 font-extrabold text-sm">
                                                 Rp {{ number_format($route->tariff, 0, ',', '.') }}
-                                                <span class="text-[10px] font-normal text-gray-500">{{ $route->rate_type === 'reguler' ? '/kg' : '/trip' }}</span>
+                                                <span class="text-[10px] font-normal text-gray-500 dark:text-gray-400">{{ $route->rate_type === 'reguler' ? '/kg' : '/trip' }}</span>
                                             </strong>
                                         </div>
                                         <div>
                                             <span class="text-gray-500 dark:text-gray-400 block text-[11px]">Min. Berat</span>
-                                            <span class="text-gray-800 dark:text-gray-200">{{ $route->min_weight ? $route->min_weight.' kg' : '-' }}</span>
+                                            <span class="text-gray-800 dark:text-gray-200 font-medium">{{ $route->min_weight ? $route->min_weight.' kg' : '-' }}</span>
                                         </div>
                                         <div>
                                             <span class="text-gray-500 dark:text-gray-400 block text-[11px]">Total (Est. {{ (float)$searchWeight }}kg)</span>
@@ -189,7 +185,7 @@
                         {{-- Sub-panel 1: Master Tarif Ongkir ATL Express --}}
                         <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
                             <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2.5">
                                     <span class="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                     </span>
@@ -215,11 +211,11 @@
                                                 <h4 class="font-bold text-gray-900 dark:text-white text-sm">
                                                     {{ $rate->destination_city }} {{ $rate->kabupaten_tujuan ? '('.$rate->kabupaten_tujuan.')' : '' }}
                                                 </h4>
-                                                <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                    Asal: {{ $rate->origin_city ?? 'Jakarta' }} &bull; Layanan: <strong class="text-blue-600 dark:text-blue-400">{{ ucfirst($rate->service_type ?? 'Cargo Darat') }}</strong>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                    Asal: <strong>{{ $rate->origin_city ?? 'Jakarta' }}</strong> &bull; Layanan: <strong class="text-blue-600 dark:text-blue-400">{{ ucfirst($rate->service_type ?? 'Cargo Darat') }}</strong>
                                                 </p>
                                             </div>
-                                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 shrink-0">
                                                 Estimasi: {{ $rate->estimated_delivery ?? '2-4 Hari' }}
                                             </span>
                                         </div>
@@ -256,7 +252,7 @@
                         {{-- Sub-panel 2: Riwayat Pengiriman Terakhir dari Menu Shipment --}}
                         <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
                             <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2.5">
                                     <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                     </span>
@@ -324,9 +320,9 @@
         <div class="space-y-6">
             {{-- Panel Input Asal Kota & Filter --}}
             <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-                <div class="mb-4">
+                <div class="mb-5">
                     <h3 class="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                        <svg class="w-5 h-5 text-[#0D2053] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A2 2 0 013 15.488V5.512a2 2 0 011.553-1.954L9 2m0 18l6 3m-6-3V2m6 21l5.447-2.724A2 2 0 0021 18.488V8.512a2 2 0 00-1.553-1.954L15 4m0 17V4m0 0L9 2"/></svg>
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A2 2 0 013 15.488V5.512a2 2 0 011.553-1.954L9 2m0 18l6 3m-6-3V2m6 21l5.447-2.724A2 2 0 0021 18.488V8.512a2 2 0 00-1.553-1.954L15 4m0 17V4m0 0L9 2"/></svg>
                         <span>Cari List Trayek Vendor Berdasarkan Kota Asal</span>
                     </h3>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -334,19 +330,23 @@
                     </p>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-4 items-end">
+                {{-- Form Controls (Grid Berjajar Rapi) --}}
+                <div class="grid md:grid-cols-3 gap-5 items-start">
                     {{-- Input Asal Kota --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
-                            Asal Kota
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                            Asal Kota <span class="text-red-500">*</span>
                         </label>
-                        <div class="relative">
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 text-gray-400 pointer-events-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </span>
                             <input
                                 type="text"
                                 list="trayek-origins-list"
                                 wire:model.live.debounce.300ms="trayekOrigin"
-                                placeholder="Ketik atau pilih asal kota..."
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white px-4 py-2.5 text-sm shadow-sm focus:border-[#0D2053] focus:ring-[#0D2053]"
+                                placeholder="Ketik atau pilih asal kota (contoh: Jakarta)..."
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white pl-9 pr-12 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             />
                             <datalist id="trayek-origins-list">
                                 @foreach ($this->getOriginSuggestions() as $originSuggest)
@@ -358,26 +358,30 @@
                                 <button
                                     type="button"
                                     wire:click="$set('trayekOrigin', '')"
-                                    class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                    title="Hapus filter"
+                                    class="absolute right-8 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                    title="Hapus kota asal"
                                 >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
                             @endif
                         </div>
 
-                        {{-- Quick Origin Pills --}}
+                        {{-- Quick Origin Pills (Pilihan Cepat) --}}
                         @php
                             $quickOrigins = collect($this->getOriginSuggestions())->take(6);
                         @endphp
                         @if ($quickOrigins->isNotEmpty())
-                            <div class="flex items-center gap-1.5 flex-wrap mt-2">
-                                <span class="text-[11px] text-gray-500 dark:text-gray-400">Pilihan cepat:</span>
+                            <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                                <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Pilihan cepat:</span>
                                 @foreach ($quickOrigins as $quickCity)
+                                    @php
+                                        $isSelected = strtolower(trim($trayekOrigin)) === strtolower(trim($quickCity));
+                                    @endphp
                                     <button
                                         type="button"
                                         wire:click="selectTrayekOrigin('{{ $quickCity }}')"
-                                        class="px-2 py-0.5 rounded text-xs font-semibold transition {{ strtolower($trayekOrigin) === strtolower($quickCity) ? 'bg-[#0D2053] text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }}"
+                                        class="px-2.5 py-1 rounded-md text-xs font-semibold transition border {{ $isSelected ? 'border-blue-900 text-white shadow-sm' : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}"
+                                        style="{{ $isSelected ? 'background-color: #0D2053; border-color: #0D2053; color: #ffffff;' : '' }}"
                                     >
                                         {{ $quickCity }}
                                     </button>
@@ -387,22 +391,26 @@
                     </div>
 
                     {{-- Search Filter Dalam Tabel --}}
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                             Saring Tabel Trayek
                         </label>
-                        <div class="relative">
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 text-gray-400 pointer-events-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </span>
                             <input
                                 type="text"
                                 wire:model.live.debounce.300ms="trayekSearch"
                                 placeholder="Cari tujuan / vendor / armada..."
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white px-3 py-2 text-sm shadow-sm focus:border-[#0D2053] focus:ring-[#0D2053]"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white pl-9 pr-9 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             />
                             @if (!empty($trayekSearch))
                                 <button
                                     type="button"
                                     wire:click="$set('trayekSearch', '')"
-                                    class="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+                                    class="absolute right-2.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                    title="Hapus pencarian"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
@@ -422,20 +430,20 @@
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <h3 class="mt-3 text-sm font-bold text-gray-900 dark:text-white">Silakan Masukkan / Pilih Asal Kota</h3>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-                        Ketik nama kota asal di atas (misal: "Jakarta") untuk menampilkan daftar trayek vendor yang melayani rute dari kota tersebut.
+                        Ketik nama kota asal di atas (misal: "Jakarta") atau klik tombol pilihan cepat untuk menampilkan daftar trayek vendor.
                     </p>
                 </div>
             @else
                 <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
                     {{-- Header Hasil Trayek --}}
-                    <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="flex items-center gap-3">
-                            <span class="p-2 rounded-lg bg-blue-500/10 text-[#0D2053] dark:text-blue-400">
+                            <span class="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                             </span>
                             <div>
                                 <h4 class="font-extrabold text-gray-900 dark:text-white text-base">
-                                    Trayek dari Kota: <span class="text-[#0D2053] dark:text-blue-400 underline">{{ $trayekOrigin }}</span>
+                                    Trayek dari Kota: <span class="text-blue-700 dark:text-blue-300 font-black underline">{{ $trayekOrigin }}</span>
                                 </h4>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                     Klik judul kolom <strong>Tujuan</strong> atau <strong>Kontak</strong> untuk mengurutkan (sort).
@@ -443,13 +451,13 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-[#0D2053] dark:bg-blue-900/40 dark:text-blue-300">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
                                 Total: {{ $trayekRoutes->count() }} Rute
                             </span>
                             <a
                                 href="{{ \App\Filament\Resources\DeliveryAgentResource::getUrl('index') }}"
-                                class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200"
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
                             >
                                 <span>Kelola Vendor</span> &rarr;
                             </a>
@@ -459,62 +467,62 @@
                     {{-- Tabel Trayek --}}
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-900/40 text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                            <thead class="bg-gray-50 dark:bg-gray-900/50 text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3.5 text-center w-12">
+                                    <th scope="col" class="px-4 py-3.5 text-center w-12 whitespace-nowrap">
                                         No
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" wire:click="sortBy('vendor')" title="Klik untuk mengurutkan vendor">
+                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap" wire:click="sortBy('vendor')" title="Klik untuk mengurutkan vendor">
                                         <div class="flex items-center gap-1.5">
                                             <span>Nama Vendor</span>
                                             @if ($trayekSortField === 'vendor')
-                                                <span class="text-[#0D2053] dark:text-blue-400 font-bold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                                <span class="text-blue-600 dark:text-blue-400 font-extrabold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
                                             @else
                                                 <span class="text-gray-400">↕</span>
                                             @endif
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" wire:click="sortBy('phone')" title="Klik untuk mengurutkan kontak">
+                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap" wire:click="sortBy('phone')" title="Klik untuk mengurutkan kontak">
                                         <div class="flex items-center gap-1.5">
                                             <span>Kontak</span>
                                             @if ($trayekSortField === 'phone')
-                                                <span class="text-[#0D2053] dark:text-blue-400 font-bold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                                <span class="text-blue-600 dark:text-blue-400 font-extrabold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
                                             @else
                                                 <span class="text-gray-400">↕</span>
                                             @endif
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" wire:click="sortBy('destination')" title="Klik untuk mengurutkan tujuan">
+                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap" wire:click="sortBy('destination')" title="Klik untuk mengurutkan tujuan">
                                         <div class="flex items-center gap-1.5">
                                             <span>Tujuan</span>
                                             @if ($trayekSortField === 'destination')
-                                                <span class="text-[#0D2053] dark:text-blue-400 font-bold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                                <span class="text-blue-600 dark:text-blue-400 font-extrabold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
                                             @else
                                                 <span class="text-gray-400">↕</span>
                                             @endif
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" wire:click="sortBy('fleet_type')" title="Klik untuk mengurutkan armada">
+                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap" wire:click="sortBy('fleet_type')" title="Klik untuk mengurutkan armada">
                                         <div class="flex items-center gap-1.5">
                                             <span>Armada</span>
                                             @if ($trayekSortField === 'fleet_type')
-                                                <span class="text-[#0D2053] dark:text-blue-400 font-bold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                                <span class="text-blue-600 dark:text-blue-400 font-extrabold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
                                             @else
                                                 <span class="text-gray-400">↕</span>
                                             @endif
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" wire:click="sortBy('tariff')" title="Klik untuk mengurutkan tarif">
+                                    <th scope="col" class="px-4 py-3.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap" wire:click="sortBy('tariff')" title="Klik untuk mengurutkan tarif">
                                         <div class="flex items-center gap-1.5">
                                             <span>Tarif</span>
                                             @if ($trayekSortField === 'tariff')
-                                                <span class="text-[#0D2053] dark:text-blue-400 font-bold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                                <span class="text-blue-600 dark:text-blue-400 font-extrabold">{{ $trayekSortDirection === 'asc' ? '▲' : '▼' }}</span>
                                             @else
                                                 <span class="text-gray-400">↕</span>
                                             @endif
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 text-center">
+                                    <th scope="col" class="px-4 py-3.5 text-center whitespace-nowrap">
                                         Aksi / WhatsApp
                                     </th>
                                 </tr>
@@ -532,17 +540,17 @@
                                         </td>
                                         <td class="px-4 py-3.5 font-bold text-gray-900 dark:text-white">
                                             <div class="flex flex-col">
-                                                <span>{{ $agent->name ?? '-' }}</span>
+                                                <span class="text-gray-900 dark:text-white font-bold">{{ $agent->name ?? '-' }}</span>
                                                 @if ($agent->location)
-                                                    <span class="text-[11px] font-normal text-gray-500 dark:text-gray-400">
+                                                    <span class="text-[11px] font-normal text-gray-500 dark:text-gray-400 mt-0.5">
                                                         📍 {{ $agent->location }}
                                                     </span>
                                                 @endif
                                             </div>
                                         </td>
                                         <td class="px-4 py-3.5 text-xs text-gray-800 dark:text-gray-200">
-                                            <div class="flex flex-col">
-                                                <span class="font-mono font-semibold">{{ $agent->phone ?? '-' }}</span>
+                                            <div class="flex flex-col whitespace-nowrap">
+                                                <span class="font-mono font-semibold text-gray-900 dark:text-gray-100">{{ $agent->phone ?? '-' }}</span>
                                                 @if ($agent->pic_name)
                                                     <span class="text-[11px] text-gray-500 dark:text-gray-400">
                                                         PIC: {{ $agent->pic_name }}
@@ -550,28 +558,28 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3.5 font-semibold text-gray-900 dark:text-white">
+                                        <td class="px-4 py-3.5 font-semibold text-gray-900 dark:text-white whitespace-nowrap">
                                             <div class="flex items-center gap-1.5">
                                                 <span class="text-xs text-gray-400">{{ $route->origin }} &rarr;</span>
-                                                <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-[#0D2053] dark:text-blue-300 font-bold text-xs">
+                                                <span class="px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800">
                                                     {{ $route->destination }}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3.5">
-                                            <span class="inline-block px-2 py-1 rounded text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                        <td class="px-4 py-3.5 whitespace-nowrap">
+                                            <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
                                                 {{ $route->fleet_type }}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3.5 font-extrabold text-amber-600 dark:text-amber-400">
+                                        <td class="px-4 py-3.5 font-extrabold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                                             <div class="flex flex-col">
-                                                <span>Rp {{ number_format($route->tariff, 0, ',', '.') }}</span>
-                                                <span class="text-[10px] font-normal text-gray-500 uppercase">
+                                                <span class="text-sm">Rp {{ number_format($route->tariff, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-normal text-gray-500 dark:text-gray-400 uppercase">
                                                     {{ $route->rate_type }} {{ $route->rate_type === 'reguler' ? '/ kg' : '/ trip' }}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3.5 text-center">
+                                        <td class="px-4 py-3.5 text-center whitespace-nowrap">
                                             @if ($cleanPhone)
                                                 <a
                                                     href="https://wa.me/{{ $cleanPhone }}?text={{ $waText }}"
@@ -580,7 +588,7 @@
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-xs shadow-sm transition"
                                                     title="Hubungi via WhatsApp"
                                                 >
-                                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                                                    <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
                                                     <span>Chat Vendor</span>
                                                 </a>
                                             @else
