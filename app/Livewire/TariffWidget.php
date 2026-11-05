@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Mail\BookingSubmitted;
 use App\Models\ShippingRequest;
+use App\Models\TariffSearchLog;
 use App\Services\TariffCalculatorService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -81,6 +82,14 @@ class TariffWidget extends Component
         ]);
 
         $this->results = $this->tariffService->calculate($this->origin, $this->kabupaten, $this->destination, $this->weight);
+
+        TariffSearchLog::record(
+            origin: $this->origin,
+            kabupaten: $this->kabupaten,
+            destination: $this->destination,
+            weight: (float) $this->weight,
+            results: $this->results,
+        );
     }
 
     public function openBooking()
