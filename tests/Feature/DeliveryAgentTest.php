@@ -81,6 +81,45 @@ class DeliveryAgentTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_atl_can_access_and_create_delivery_agent(): void
+    {
+        $adminAtl = User::factory()->adminAtl()->create();
+
+        $this->actingAs($adminAtl)
+            ->get(DeliveryAgentResource::getUrl('index'))
+            ->assertSuccessful();
+
+        $this->actingAs($adminAtl)
+            ->get(DeliveryAgentResource::getUrl('create'))
+            ->assertSuccessful();
+
+        Livewire::actingAs($adminAtl)
+            ->test(CreateDeliveryAgent::class)
+            ->fillForm([
+                'name' => 'Agen Mitra ATL',
+                'phone' => '081234567899',
+                'location' => 'Bandung, Jawa Barat',
+                'is_active' => true,
+                'routes' => [
+                    [
+                        'origin' => 'Bandung',
+                        'destination' => 'Surabaya',
+                        'fleet_type' => 'CDDL',
+                        'rate_type' => 'carter',
+                        'tariff' => 4500000,
+                        'estimated_days' => '2 Hari',
+                    ],
+                ],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('delivery_agents', [
+            'name' => 'Agen Mitra ATL',
+            'phone' => '081234567899',
+        ]);
+    }
+
     public function test_admin_can_create_delivery_agent_with_routes(): void
     {
         $admin = User::factory()->create();

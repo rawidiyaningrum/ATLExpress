@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\FinanceDashboard;
 use App\Filament\Resources\CategoryResource;
+use App\Filament\Resources\DeliveryAgentResource;
 use App\Filament\Resources\FinanceJournalResource;
 use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\ServiceResource;
@@ -37,6 +38,8 @@ class AdminAtlRoleTest extends TestCase
         $this->actingAs($adminAtl)->get(ServiceResource::getUrl('index'))->assertSuccessful();
         $this->actingAs($adminAtl)->get(SettingResource::getUrl('index'))->assertSuccessful();
         $this->actingAs($adminAtl)->get(TrackerResource::getUrl('index'))->assertSuccessful();
+        $this->actingAs($adminAtl)->get(DeliveryAgentResource::getUrl('index'))->assertSuccessful();
+        $this->actingAs($adminAtl)->get(DeliveryAgentResource::getUrl('create'))->assertSuccessful();
     }
 
     public function test_admin_atl_cannot_access_invoice_and_finance_menus(): void
