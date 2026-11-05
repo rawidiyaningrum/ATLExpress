@@ -109,3 +109,4 @@ class TruckingPageTest extends TestCase
             ->assertSee('ATL-202611-TEST01');
     }
 }
+
