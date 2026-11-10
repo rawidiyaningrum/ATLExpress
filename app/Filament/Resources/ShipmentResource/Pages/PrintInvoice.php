@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\ShipmentResource\Pages;
 
 use App\Filament\Resources\ShipmentResource;
+use App\Support\CompanyProfile;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
+use Livewire\Attributes\Url;
 
 class PrintInvoice extends Page
 {
@@ -21,6 +23,9 @@ class PrintInvoice extends Page
 
     protected static string $view = 'filament.shipments.print-invoice';
 
+    #[Url(as: 'company')]
+    public string $company = CompanyProfile::ATL;
+
     public function mount(int|string $record): void
     {
         abort_unless(auth()->user()?->isAdmin() ?? false, 403);
@@ -32,6 +37,17 @@ class PrintInvoice extends Page
             404,
             'Invoice belum dibuat untuk pengiriman ini.',
         );
+
+        if (! in_array($this->company, [CompanyProfile::ATL, CompanyProfile::DOUZE], true)) {
+            $this->company = CompanyProfile::ATL;
+        }
+    }
+
+    public function setCompany(string $company): void
+    {
+        if (in_array($company, [CompanyProfile::ATL, CompanyProfile::DOUZE], true)) {
+            $this->company = $company;
+        }
     }
 
     /**
@@ -51,6 +67,8 @@ class PrintInvoice extends Page
         return [
             'shipment' => $this->record,
             'invoice' => $this->record->latestInvoice,
+            'company' => $this->company,
+            'companyProfile' => CompanyProfile::get($this->company),
         ];
     }
 

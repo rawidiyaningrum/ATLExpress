@@ -17,4 +17,12 @@ class Setting extends Model
 
         return $setting ? $setting->value : $default;
     }
+
+    public static function set(string $key, ?string $value): self
+    {
+        return static::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value ?? '']
+        );
+    }
 }

@@ -34,6 +34,14 @@ class SettingSeeder extends Seeder
             'seo_keywords' => 'cargo jakarta, jasa ekspedisi, pengiriman barang, cargo laut, cargo udara, ekspedisi murah, logistik indonesia, atl express',
             'og_image' => '',
             'receipt_signer_name' => 'Harimsa S.H',
+            'npwp_atl' => '-',
+            'bank_name_atl' => 'Bank BCA',
+            'bank_account_number_atl' => '604.3792.330',
+            'bank_account_name_atl' => 'PT ANGKASA TRANS LOGISTIK',
+            'npwp_douze' => '-',
+            'bank_name_douze' => 'Bank BCA',
+            'bank_account_number_douze' => '-',
+            'bank_account_name_douze' => 'PT DOUZE',
         ];
 
         foreach ($settings as $key => $value) {

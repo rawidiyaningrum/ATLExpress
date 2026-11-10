@@ -27,10 +27,26 @@
     </style>
 
     <div class="space-y-6">
-        <div class="no-print flex items-center justify-between gap-4">
-            <h2 class="text-xl font-semibold tracking-tight text-gray-950">
-                Airway Bill
-            </h2>
+        <div class="no-print flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">Kop Perusahaan:</span>
+                <div class="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800">
+                    <button
+                        type="button"
+                        wire:click="setCompany('atl')"
+                        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition {{ $company === 'atl' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-white' }}"
+                    >
+                        <span>ATL Express</span>
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="setCompany('douze')"
+                        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition {{ $company === 'douze' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-white' }}"
+                    >
+                        <span>PT Douze</span>
+                    </button>
+                </div>
+            </div>
 
             <x-filament::button
                 icon="heroicon-o-printer"
@@ -43,15 +59,20 @@
         <div class="rounded-xl border border-gray-200 bg-white p-8 text-gray-900 shadow-sm print:border-0 print:p-0 print:shadow-none">
             <div class="flex items-start justify-between border-b-2 border-gray-900 pb-4">
                 <div class="flex items-start gap-3">
-                    <img src="{{ asset('images/logo.png') }}" alt="ATL Express" style="width: 100px; height: auto" class="rounded-lg object-contain">
+                    <img src="{{ $companyProfile['logo'] }}" alt="{{ $companyProfile['name'] }}" style="width: 100px; height: auto" class="rounded-lg object-contain">
                     <div>
-                        <p class="text-2xl font-bold uppercase tracking-wide">ATL Express</p>
+                        <p class="text-2xl font-bold uppercase tracking-wide">{{ $companyProfile['full_name'] }}</p>
                         <p class="text-xs uppercase tracking-widest text-gray-500">
                             Airway Bill / Nota Pengiriman
                         </p>
                         <p class="mt-1 text-xs leading-tight text-gray-600">
-                            Graha Buana , Jl. Dr. Saharjo No.210A, RT.5/RW.9, Menteng Dalam, Kec. Tebet, <br>Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12870
+                            {!! nl2br(e($companyProfile['address'])) !!}
                         </p>
+                        @if ($companyProfile['npwp'] !== '-' && !empty($companyProfile['npwp']))
+                            <p class="mt-1 text-xs text-gray-600">
+                                <span class="font-semibold">NPWP:</span> {{ $companyProfile['npwp'] }}
+                            </p>
+                        @endif
                     </div>
                 </div>
 
