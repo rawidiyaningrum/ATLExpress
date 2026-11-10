@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ShippingEstimateResource\Pages;
 
 use App\Filament\Resources\ShippingEstimateResource;
+use App\Support\CompanyProfile;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -36,6 +37,7 @@ class PrintShippingEstimate extends Page
         return [
             'estimate' => $this->record,
             'rows' => $this->record->comparison(),
+            'companyProfile' => CompanyProfile::get(),
         ];
     }
 

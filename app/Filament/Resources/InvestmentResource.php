@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\OnlyFullAdmins;
 use App\Filament\Resources\InvestmentResource\Pages;
 use App\Models\Investment;
-use App\Models\Investor;
 use App\Models\Shipment;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -276,6 +275,12 @@ class InvestmentResource extends Resource
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
+                    Tables\Actions\Action::make('print_agreement')
+                        ->label('Cetak Perjanjian')
+                        ->icon('heroicon-o-document-text')
+                        ->color('gray')
+                        ->url(fn (Investment $record): string => Pages\PrintAgreement::getUrl(['record' => $record]))
+                        ->openUrlInNewTab(),
                     Tables\Actions\Action::make('mark_profit_paid')
                         ->label('Cairkan Bagi Hasil')
                         ->icon('heroicon-o-banknotes')
@@ -283,7 +288,7 @@ class InvestmentResource extends Resource
                         ->visible(fn (Investment $record): bool => $record->profit_payout_status !== Investment::PAYOUT_PAID)
                         ->requiresConfirmation()
                         ->modalHeading('Cairkan Bagi Hasil ke Investor')
-                        ->modalDescription(fn (Investment $record): string => "Konfirmasi pencairan bagi hasil sebesar Rp ".number_format((float) $record->profit_sharing_amount, 0, ',', '.')." ke {$record->investor?->name}?")
+                        ->modalDescription(fn (Investment $record): string => 'Konfirmasi pencairan bagi hasil sebesar Rp '.number_format((float) $record->profit_sharing_amount, 0, ',', '.')." ke {$record->investor?->name}?")
                         ->action(function (Investment $record): void {
                             $record->update([
                                 'profit_payout_status' => Investment::PAYOUT_PAID,
@@ -297,7 +302,7 @@ class InvestmentResource extends Resource
                         ->visible(fn (Investment $record): bool => $record->capital_payout_status !== Investment::PAYOUT_PAID)
                         ->requiresConfirmation()
                         ->modalHeading('Kembalikan Pokok Modal ke Investor')
-                        ->modalDescription(fn (Investment $record): string => "Konfirmasi pengembalian pokok modal sebesar Rp ".number_format((float) $record->amount, 0, ',', '.')." ke {$record->investor?->name}?")
+                        ->modalDescription(fn (Investment $record): string => 'Konfirmasi pengembalian pokok modal sebesar Rp '.number_format((float) $record->amount, 0, ',', '.')." ke {$record->investor?->name}?")
                         ->action(function (Investment $record): void {
                             $record->update([
                                 'capital_payout_status' => Investment::PAYOUT_PAID,
@@ -326,6 +331,7 @@ class InvestmentResource extends Resource
             'index' => Pages\ListInvestments::route('/'),
             'create' => Pages\CreateInvestment::route('/create'),
             'edit' => Pages\EditInvestment::route('/{record}/edit'),
+            'agreement' => Pages\PrintAgreement::route('/{record}/agreement'),
         ];
     }
 }

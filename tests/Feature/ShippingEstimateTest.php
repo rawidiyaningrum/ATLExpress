@@ -248,6 +248,7 @@ class ShippingEstimateTest extends TestCase
             ->assertSee('ESTIMASI')
             ->assertSee('Total Biaya Lainnya')
             ->assertSee('100 kg')
+            ->assertSee('Jl. Dr. Saharjo No.210A')
             ->assertDontSee('Tanda tangan')
             ->assertDontSee('Kota Surabaya')
             ->assertSee('shape-rendering="crispEdges"', false);

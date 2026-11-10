@@ -72,6 +72,9 @@
                         <p class="text-xs uppercase tracking-widest text-gray-500">
                             Estimasi Pengiriman
                         </p>
+                        <p class="mt-1 text-xs leading-tight text-gray-600">
+                            {!! nl2br(e($companyProfile['address'])) !!}
+                        </p>
                     </div>
                 </div>
 

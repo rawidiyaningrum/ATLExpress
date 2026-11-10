@@ -13,6 +13,12 @@ class EditInvestment extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('print_agreement')
+                ->label('Cetak Perjanjian')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->url(fn (): string => PrintAgreement::getUrl(['record' => $this->record]))
+                ->openUrlInNewTab(),
             Actions\DeleteAction::make(),
         ];
     }

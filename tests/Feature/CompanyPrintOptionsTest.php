@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Filament\Resources\InvoiceResource\Pages\PrintReceipt;
 use App\Filament\Resources\ShipmentResource\Pages\PrintAirwayBill;
 use App\Filament\Resources\ShipmentResource\Pages\PrintInvoice;
-use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\User;
@@ -167,5 +166,39 @@ class CompanyPrintOptionsTest extends TestCase
             ->call('setCompany', 'douze')
             ->assertSet('company', 'douze')
             ->assertSee('logo_douze.jpeg');
+    }
+
+    public function test_print_headers_show_the_company_address(): void
+    {
+        [$shipment, $invoice] = $this->createShipmentWithInvoice();
+        $user = User::factory()->create();
+        $address = 'Graha Buana , Jl. Dr. Saharjo No.210A';
+
+        $this->actingAs($user)
+            ->get(route('filament.atlexpress-admin.resources.shipments.print-airway-bill', ['record' => $shipment]))
+            ->assertOk()
+            ->assertSee($address);
+
+        $this->actingAs($user)
+            ->get(route('filament.atlexpress-admin.resources.shipments.print-invoice', ['record' => $shipment]))
+            ->assertOk()
+            ->assertSee($address);
+
+        $this->actingAs($user)
+            ->get(route('filament.atlexpress-admin.resources.invoices.kwitansi', ['record' => $invoice]))
+            ->assertOk()
+            ->assertSee($address);
+    }
+
+    public function test_per_company_address_setting_overrides_the_default_in_print_header(): void
+    {
+        Setting::set('address_atl', 'Jl. Khusus ATL No. 5, Jakarta');
+        [$shipment] = $this->createShipmentWithInvoice();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('filament.atlexpress-admin.resources.shipments.print-airway-bill', ['record' => $shipment]))
+            ->assertOk()
+            ->assertSee('Jl. Khusus ATL No. 5, Jakarta');
     }
 }

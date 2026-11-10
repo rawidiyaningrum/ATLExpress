@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\InvestmentResource;
+use App\Filament\Resources\InvestmentResource\Pages\PrintAgreement;
 use App\Models\Investment;
 use App\Models\Investor;
 use App\Models\Invoice;
@@ -142,5 +143,92 @@ class InvestmentResourceTest extends TestCase
         $investment->refresh();
         $this->assertSame(Investment::PAYOUT_PAID, $investment->capital_payout_status);
         $this->assertSame(Investment::STATUS_REIMBURSED, $investment->status);
+    }
+
+    private function createPrintableInvestment(): Investment
+    {
+        $investor = Investor::create([
+            'name' => 'Investor Andalan',
+            'address' => 'Jl. Merdeka No. 1, Jakarta',
+            'phone' => '081200001111',
+        ]);
+
+        return Investment::create([
+            'investor_id' => $investor->id,
+            'project_name' => 'Ekspedisi Mesin Pabrik',
+            'amount' => 10000000,
+            'status' => Investment::STATUS_ONGOING,
+            'investment_date' => '2026-11-10',
+            'profit_sharing_percentage' => 15,
+            'profit_sharing_amount' => 1500000,
+            'profit_payout_status' => Investment::PAYOUT_PENDING,
+            'capital_payout_status' => Investment::PAYOUT_PENDING,
+        ]);
+    }
+
+    public function test_admin_can_print_investment_agreement_with_standard_clauses(): void
+    {
+        $admin = User::factory()->create();
+        $investment = $this->createPrintableInvestment();
+
+        $this->actingAs($admin)
+            ->get(InvestmentResource::getUrl('agreement', ['record' => $investment]))
+            ->assertOk()
+            ->assertSee('PERJANJIAN INVESTASI')
+            ->assertSee('IVT/atl/10/11/2026/001')
+            ->assertSee('Investor Andalan')
+            ->assertSee('Ekspedisi Mesin Pabrik')
+            ->assertSee('10.000.000')
+            ->assertSee('Pasal 1')
+            ->assertSee('Pasal 8')
+            ->assertSee('Jl. Dr. Saharjo No.210A')
+            ->assertSee('images/logo.png');
+    }
+
+    public function test_investment_agreement_switches_company_and_number_prefix(): void
+    {
+        $admin = User::factory()->create();
+        $investment = $this->createPrintableInvestment();
+
+        $this->actingAs($admin)
+            ->get(InvestmentResource::getUrl('agreement', [
+                'record' => $investment,
+                'company' => 'douze',
+            ]))
+            ->assertOk()
+            ->assertSee('images/logo_douze.jpeg')
+            ->assertSee('IVT/douze/10/11/2026/001');
+
+        Livewire::actingAs($admin)
+            ->test(PrintAgreement::class, ['record' => $investment->getKey()])
+            ->assertSet('company', 'atl')
+            ->call('setCompany', 'douze')
+            ->assertSet('company', 'douze')
+            ->assertSee('IVT/douze/10/11/2026/001');
+    }
+
+    public function test_agreement_number_is_sequential_within_month(): void
+    {
+        $admin = User::factory()->create();
+        $first = $this->createPrintableInvestment();
+        $second = $this->createPrintableInvestment();
+
+        $this->actingAs($admin)
+            ->get(InvestmentResource::getUrl('agreement', ['record' => $first]))
+            ->assertSee('IVT/atl/10/11/2026/001');
+
+        $this->actingAs($admin)
+            ->get(InvestmentResource::getUrl('agreement', ['record' => $second]))
+            ->assertSee('IVT/atl/10/11/2026/002');
+    }
+
+    public function test_tracker_cannot_print_investment_agreement(): void
+    {
+        $tracker = User::factory()->tracker()->create();
+        $investment = $this->createPrintableInvestment();
+
+        $this->actingAs($tracker)
+            ->get(InvestmentResource::getUrl('agreement', ['record' => $investment]))
+            ->assertForbidden();
     }
 }
