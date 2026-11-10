@@ -174,4 +174,29 @@ class Shipment extends Model
     {
         return $this->hasMany(FinanceJournal::class);
     }
+
+    public function investments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Investment::class);
+    }
+
+    /**
+     * Mengambil estimasi modal/biaya riil dari shipment ini.
+     * Prioritas:
+     * 1. Pengeluaran riil invoice terbaru (shipping_real_expense + item expense + other expense).
+     * 2. Modal (cost_of_goods) dari jurnal pendapatan yang tercatat.
+     */
+    public function getCostModal(): float
+    {
+        $invoiceModal = (float) ($this->latestInvoice?->realExpenseTotal() ?? 0);
+        if ($invoiceModal > 0) {
+            return $invoiceModal;
+        }
+
+        $journalModal = (float) ($this->financeJournals()
+            ->where('journal_type', FinanceJournal::TYPE_REVENUE)
+            ->value('cost_of_goods') ?? 0);
+
+        return $journalModal > 0 ? $journalModal : 0.0;
+    }
 }

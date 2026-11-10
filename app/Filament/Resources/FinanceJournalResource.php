@@ -107,6 +107,42 @@ class FinanceJournalResource extends Resource
                         ->required()
                         ->helperText('Uang yang benar-benar masuk ke rekening, boleh lebih kecil dari nominal invoice.'),
                 ])->columns(2),
+            Forms\Components\Section::make('Investasi & Bagi Hasil')
+                ->description('Pengiriman ini memiliki alokasi modal investor yang otomatis mengurangi nilai profit.')
+                ->visible(fn (?FinanceJournal $record): bool => (float) ($record?->investment_profit_sharing ?? 0) > 0 || ($record?->shipment?->investments()->exists() ?? false))
+                ->schema([
+                    Forms\Components\Placeholder::make('investment_info')
+                        ->label('Rincian Investasi Terkait')
+                        ->content(function (?FinanceJournal $record): \Illuminate\Support\HtmlString {
+                            if (! $record || ! $record->shipment_id) {
+                                return new \Illuminate\Support\HtmlString('Tidak ada data investasi.');
+                            }
+
+                            $investments = \App\Models\Investment::with('investor')
+                                ->where('shipment_id', $record->shipment_id)
+                                ->get();
+
+                            if ($investments->isEmpty()) {
+                                return new \Illuminate\Support\HtmlString('Tidak ada data investasi.');
+                            }
+
+                            $html = '<ul class="space-y-1.5 text-sm">';
+                            foreach ($investments as $inv) {
+                                $invName = e($inv->investor?->name ?? 'Investor');
+                                $modal = 'Rp '.number_format((float) $inv->amount, 0, ',', '.');
+                                $persen = number_format((float) $inv->profit_sharing_percentage, 1, ',', '.').'%';
+                                $bagiHasil = 'Rp '.number_format((float) $inv->profit_sharing_amount, 0, ',', '.');
+                                $statusBadge = $inv->profit_payout_status === \App\Models\Investment::PAYOUT_PAID
+                                    ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800">Bagi Hasil Dicairkan</span>'
+                                    : '<span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800">Hutang Bagi Hasil (Pending)</span>';
+
+                                $html .= "<li>&bull; <strong>{$invName}</strong>: Modal {$modal} &bull; Bagi Hasil: {$persen} ({$bagiHasil}) &bull; {$statusBadge}</li>";
+                            }
+                            $html .= '</ul>';
+
+                            return new \Illuminate\Support\HtmlString($html);
+                        }),
+                ]),
             static::realExpenseSection()
                 ->visible(fn (?FinanceJournal $record): bool => static::journalHasLinkedInvoice($record)),
         ]);
@@ -164,9 +200,12 @@ class FinanceJournalResource extends Resource
                                 ? $format($record->real_income)
                                 : $record->kasRealPlaceholder();
                             $biaya = $format($record->total_expense);
+                            $bagiHasil = (float) $record->investment_profit_sharing > 0
+                                ? ' | Bagi Hasil Inv: '.$format($record->investment_profit_sharing)
+                                : '';
                             $profit = $format($record->profit);
 
-                            return "Pendapatan: {$pend} | Kas Real: {$kas} | Biaya: {$biaya} | Profit: {$profit}";
+                            return "Pendapatan: {$pend} | Kas Real: {$kas} | Biaya: {$biaya}{$bagiHasil} | Profit: {$profit}";
                         })
                         ->size('xs')
                         ->color('gray'),

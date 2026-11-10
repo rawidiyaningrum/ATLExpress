@@ -17,6 +17,7 @@ class FinanceOverviewStats extends StatsOverviewWidget
     {
         $totals = $this->financeTotals();
         $receivable = $this->financeOutstandingReceivable();
+        $liabilities = $this->financeOutstandingInvestmentLiabilities();
         $margin = $totals['income'] > 0
             ? FinanceJournal::percentage($totals['profit'], $totals['income'])
             : 0.0;
@@ -35,8 +36,12 @@ class FinanceOverviewStats extends StatsOverviewWidget
             Stat::make('Total Biaya', $this->rupiah($totals['total_expense']))
                 ->description('Modal, opex, dan pajak')
                 ->descriptionIcon('heroicon-m-receipt-percent'),
+            Stat::make('Bagi Hasil Investor', $this->rupiah($totals['investment_profit_sharing']))
+                ->description('Beban bagi hasil investor pada periode ini')
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color($totals['investment_profit_sharing'] > 0 ? 'warning' : 'gray'),
             Stat::make('Profit', $this->rupiah($totals['profit']))
-                ->description('Pendapatan dikurangi total biaya')
+                ->description('Pendapatan dikurangi biaya & bagi hasil investor')
                 ->descriptionIcon($totals['profit'] >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($totals['profit'] >= 0 ? 'success' : 'danger'),
             Stat::make('Margin', $this->percentage($margin))
@@ -53,11 +58,25 @@ class FinanceOverviewStats extends StatsOverviewWidget
                 ->color('success'),
             Stat::make('Piutang Belum Lunas', $this->rupiah($receivable['total']))
                 ->description(sprintf(
-                    '%d invoice final/berjalan, saldo saat ini dan tidak ikut difilter periode',
+                    '%d invoice final/berjalan, saldo saat ini',
                     $receivable['count'],
                 ))
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($receivable['total'] > 0 ? 'warning' : 'gray'),
+            Stat::make('Hutang Bagi Hasil', $this->rupiah($liabilities['profit_sharing_total']))
+                ->description(sprintf(
+                    '%d investasi belum dicairkan bagi hasilnya (saldo saat ini)',
+                    $liabilities['profit_sharing_count'],
+                ))
+                ->descriptionIcon('heroicon-m-arrow-path')
+                ->color($liabilities['profit_sharing_total'] > 0 ? 'danger' : 'success'),
+            Stat::make('Hutang Pokok Modal', $this->rupiah($liabilities['capital_total']))
+                ->description(sprintf(
+                    '%d investasi belum dikembalikan pokok modalnya',
+                    $liabilities['capital_count'],
+                ))
+                ->descriptionIcon('heroicon-m-banknotes')
+                ->color($liabilities['capital_total'] > 0 ? 'warning' : 'gray'),
             Stat::make('Margin Rata-rata', $this->percentage($totals['average_percentage']))
                 ->description('Rata-rata profit persen per jurnal')
                 ->descriptionIcon('heroicon-m-chart-bar'),

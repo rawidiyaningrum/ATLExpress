@@ -54,6 +54,7 @@ class FinanceJournal extends Model
         'cost_of_goods',
         'operational_cost',
         'tax',
+        'investment_profit_sharing',
         'total_expense',
         'profit',
         'profit_percentage',
@@ -67,6 +68,7 @@ class FinanceJournal extends Model
         'cost_of_goods' => 'decimal:2',
         'operational_cost' => 'decimal:2',
         'tax' => 'decimal:2',
+        'investment_profit_sharing' => 'decimal:2',
         'total_expense' => 'decimal:2',
         'profit' => 'decimal:2',
         'profit_percentage' => 'decimal:2',
@@ -76,17 +78,31 @@ class FinanceJournal extends Model
      * Total biaya, profit, dan profit persen selalu diturunkan dari modal,
      * biaya operasional, pajak, dan pendapatan supaya tidak bisa diisi manual
      * dengan angka yang tidak konsisten.
+     *
+     * Jika shipment memiliki investasi, bagi hasil investasi diperhitungkan
+     * dan mengurangi nilai profit.
      */
     protected static function booted(): void
     {
         static::saving(function (self $journal): void {
+            if ($journal->shipment_id && $journal->isRevenue()) {
+                $journal->investment_profit_sharing = (float) Investment::query()
+                    ->where('shipment_id', $journal->shipment_id)
+                    ->whereIn('status', [Investment::STATUS_TRANSFERRED, Investment::STATUS_ONGOING, Investment::STATUS_REIMBURSED])
+                    ->sum('profit_sharing_amount');
+            }
+
             $journal->total_expense = static::totalExpense(
                 (float) $journal->cost_of_goods,
                 (float) $journal->operational_cost,
                 (float) $journal->tax,
             );
 
-            $journal->profit = static::profit((float) $journal->income, $journal->total_expense);
+            $journal->profit = static::profit(
+                (float) $journal->income,
+                $journal->total_expense,
+                (float) ($journal->investment_profit_sharing ?? 0),
+            );
             $journal->profit_percentage = static::percentage($journal->profit, (float) $journal->income);
         });
     }
@@ -94,6 +110,11 @@ class FinanceJournal extends Model
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);
+    }
+
+    public function investments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Investment::class, 'shipment_id', 'shipment_id');
     }
 
     /**
@@ -282,12 +303,12 @@ class FinanceJournal extends Model
     }
 
     /**
-     * Pendapatan dikurangi total biaya. Karena pendapatan sudah termasuk pajak
-     * dan pajak ikut masuk total biaya, hasilnya adalah profit bersih pajak.
+     * Pendapatan dikurangi total biaya dan bagi hasil investasi (jika ada).
+     * Bagi hasil investasi mengurangi nilai profit.
      */
-    public static function profit(float $income, float $totalExpense): float
+    public static function profit(float $income, float $totalExpense, float $investmentProfitSharing = 0): float
     {
-        return round($income - $totalExpense, 2);
+        return round($income - $totalExpense - max(0, $investmentProfitSharing), 2);
     }
 
     public static function percentage(float $profit, float $income): float

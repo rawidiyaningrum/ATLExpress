@@ -107,7 +107,9 @@ trait InteractsWithFinancePeriod
      * dengan nama yang tepat: untuk jurnal dari invoice, kolom modal tersebut
      * berisi jumlah pengeluaran real per item yang dicatat operator.
      *
-     * @return array{entries: int, income: float, cost_of_goods: float, real_expense: float, operational_cost: float, tax: float, total_expense: float, profit: float, average_percentage: float}
+     * investment_profit_sharing adalah total bagi hasil investor yang mengurangi profit.
+     *
+     * @return array{entries: int, income: float, cost_of_goods: float, real_expense: float, operational_cost: float, tax: float, investment_profit_sharing: float, total_expense: float, profit: float, average_percentage: float}
      */
     protected function financeTotals(): array
     {
@@ -118,6 +120,7 @@ trait InteractsWithFinancePeriod
             ->selectRaw('coalesce(sum(cost_of_goods), 0) as real_expense')
             ->selectRaw('coalesce(sum(operational_cost), 0) as operational_cost')
             ->selectRaw('coalesce(sum(tax), 0) as tax')
+            ->selectRaw('coalesce(sum(investment_profit_sharing), 0) as investment_profit_sharing')
             ->selectRaw('coalesce(sum(total_expense), 0) as total_expense')
             ->selectRaw('coalesce(sum(profit), 0) as profit')
             ->selectRaw('coalesce(avg(profit_percentage), 0) as average_percentage')
@@ -130,9 +133,44 @@ trait InteractsWithFinancePeriod
             'real_expense' => (float) ($totals?->real_expense ?? 0),
             'operational_cost' => (float) ($totals?->operational_cost ?? 0),
             'tax' => (float) ($totals?->tax ?? 0),
+            'investment_profit_sharing' => (float) ($totals?->investment_profit_sharing ?? 0),
             'total_expense' => (float) ($totals?->total_expense ?? 0),
             'profit' => (float) ($totals?->profit ?? 0),
             'average_percentage' => (float) ($totals?->average_percentage ?? 0),
+        ];
+    }
+
+    /**
+     * Saldo kewajiban / hutang investor yang belum dicairkan.
+     * Sama seperti piutang, ini saldo berjalan saat ini (tidak dibatasi filter periode tanggal).
+     *
+     * @return array{profit_sharing_count: int, profit_sharing_total: float, capital_count: int, capital_total: float, total_liability: float}
+     */
+    protected function financeOutstandingInvestmentLiabilities(): array
+    {
+        $profitSharingUnpaid = \App\Models\Investment::query()
+            ->where('profit_payout_status', '!=', \App\Models\Investment::PAYOUT_PAID)
+            ->where('profit_sharing_amount', '>', 0)
+            ->selectRaw('count(*) as entries')
+            ->selectRaw('coalesce(sum(profit_sharing_amount), 0) as total')
+            ->first();
+
+        $capitalUnpaid = \App\Models\Investment::query()
+            ->where('capital_payout_status', '!=', \App\Models\Investment::PAYOUT_PAID)
+            ->where('amount', '>', 0)
+            ->selectRaw('count(*) as entries')
+            ->selectRaw('coalesce(sum(amount), 0) as total')
+            ->first();
+
+        $profitTotal = (float) ($profitSharingUnpaid?->total ?? 0);
+        $capitalTotal = (float) ($capitalUnpaid?->total ?? 0);
+
+        return [
+            'profit_sharing_count' => (int) ($profitSharingUnpaid?->entries ?? 0),
+            'profit_sharing_total' => $profitTotal,
+            'capital_count' => (int) ($capitalUnpaid?->entries ?? 0),
+            'capital_total' => $capitalTotal,
+            'total_liability' => round($profitTotal + $capitalTotal, 2),
         ];
     }
 
