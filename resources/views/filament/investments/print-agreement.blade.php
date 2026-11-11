@@ -1,107 +1,38 @@
 <x-filament-panels::page>
-    @php
-        $money = fn ($value): string => 'Rp ' . number_format((float) $value, 0, ',', '.');
-    @endphp
+    @include('filament.partials.print-document-styles')
 
     <style>
-        /* Ukuran kertas & margin cetak: A4 portrait */
+        /* Penyesuaian khusus Perjanjian Investasi: dokumen legal berhalaman
+           banyak yang selalu dicetak A4 portrait dengan margin dokumen resmi. */
         @page {
             size: A4 portrait;
-            margin: 14mm 16mm 16mm 16mm;
+            margin: 13mm 15mm 15mm 15mm;
         }
 
-        .agreement-sheet ol.pasal {
+        .print-sheet ol.pasal {
             list-style: decimal;
             padding-left: 1.25rem;
         }
 
-        .agreement-sheet ol.pasal > li::marker,
-        .agreement-sheet ol.huruf > li::marker {
+        .print-sheet ol.pasal > li::marker {
             font-weight: 700;
         }
 
         @media print {
-            html,
-            body {
-                width: auto !important;
-                background: #fff !important;
-                color: #000 !important;
-                font-size: 11pt !important;
+            /* Cegah satu baris/ayat terpotong sendirian di ujung halaman. */
+            .print-sheet p,
+            .print-sheet li {
+                orphans: 2;
+                widows: 2;
             }
 
-            .fi-sidebar,
-            .fi-topbar,
-            .fi-header,
-            .no-print {
-                display: none !important;
+            /* Beri jarak antar pasal tanpa memaksa tinggi halaman baru. */
+            .print-sheet .pasal-block + .pasal-block {
+                margin-top: 4mm !important;
             }
 
-            /* Hilangkan padding/layout aplikasi agar konten pas di area cetak A4 */
-            .fi-main,
-            .fi-main-ctn,
-            .fi-page,
-            .fi-page-main,
-            .fi-page-content {
-                margin: 0 !important;
-                padding: 0 !important;
-                max-width: none !important;
-                width: 100% !important;
-                gap: 0 !important;
-            }
-
-            .space-y-6 {
-                margin: 0 !important;
-            }
-
-            .agreement-sheet {
-                width: 100% !important;
-                max-width: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border: 0 !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                background: #fff !important;
-                color: #000 !important;
-                font-size: 11pt !important;
-                line-height: 1.5 !important;
-            }
-
-            /* Pastikan seluruh teks & garis tercetak hitam-putih, termasuk saat mode gelap */
-            .agreement-sheet,
-            .agreement-sheet * {
-                color: #000 !important;
-                background-color: transparent !important;
-                border-color: #000 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .agreement-sheet h1 {
-                font-size: 16pt !important;
-                line-height: 1.3 !important;
-            }
-
-            .agreement-sheet img,
-            .agreement-sheet table {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-
-            /* Jangan potong blok penting di tengah halaman */
-            .agreement-sheet .avoid-break,
-            .agreement-sheet .signature-block {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-
-            .agreement-sheet .avoid-break > p:first-child {
-                break-after: avoid;
-                page-break-after: avoid;
-            }
-
-            .agreement-sheet .signature-block {
-                margin-top: 18mm !important;
+            .print-sheet .signature-block {
+                margin-top: 16mm !important;
             }
         }
     </style>
@@ -136,7 +67,7 @@
             </x-filament::button>
         </div>
 
-        <div class="agreement-sheet mx-auto max-w-3xl rounded-xl border border-gray-200 bg-white p-10 text-gray-900 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100">
+        <div class="print-sheet mx-auto max-w-3xl rounded-xl border border-gray-200 bg-white p-10 text-gray-900 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100">
             {{-- KOP PERUSAHAAN --}}
             <div class="border-b-2 border-gray-900 pb-4">
                 <div class="flex items-start justify-between gap-4">
@@ -212,7 +143,7 @@
 
             {{-- PASAL-PASAL --}}
             <div class="mt-6 space-y-4 text-sm leading-relaxed">
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 1 &mdash; Objek dan Nilai Investasi</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -226,7 +157,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 2 &mdash; Maksud, Tujuan, dan Alokasi Dana</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -239,7 +170,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 3 &mdash; Bagi Hasil</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -263,7 +194,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 4 &mdash; Jangka Waktu dan Pengembalian Pokok Modal</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -281,7 +212,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 5 &mdash; Hak dan Kewajiban Para Pihak</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -299,7 +230,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 6 &mdash; Risiko dan Force Majeure</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -315,7 +246,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 7 &mdash; Wanprestasi dan Penyelesaian Sengketa</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
@@ -333,7 +264,7 @@
                     </ol>
                 </div>
 
-                <div class="avoid-break">
+                <div class="avoid-break pasal-block">
                     <p class="font-bold uppercase">Pasal 8 &mdash; Ketentuan Lain</p>
                     <ol class="pasal mt-1 space-y-1">
                         <li>
