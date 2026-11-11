@@ -500,6 +500,10 @@ class InvoiceService
             return;
         }
 
+        // Pendapatan memakai total invoice, yang sudah memuat PPN dan sudah
+        // dipotong PPh. Karena itu PPN disimpan di kolom tax hanya sebagai
+        // keterangan; FinanceJournal tidak lagi menambahkannya ke total biaya
+        // supaya pajak tidak terhitung dua kali.
         $revenueTotals = [
             'income' => (float) $invoice->total,
             'tax' => (float) $invoice->tax,

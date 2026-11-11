@@ -76,8 +76,14 @@ class FinanceJournal extends Model
 
     /**
      * Total biaya, profit, dan profit persen selalu diturunkan dari modal,
-     * biaya operasional, pajak, dan pendapatan supaya tidak bisa diisi manual
-     * dengan angka yang tidak konsisten.
+     * biaya operasional, dan pendapatan supaya tidak bisa diisi manual dengan
+     * angka yang tidak konsisten.
+     *
+     * Pajak (tax) sengaja TIDAK ikut dijumlahkan ke total biaya. Pendapatan
+     * jurnal diambil dari total invoice, dan total invoice sudah memuat PPN
+     * serta sudah dipotong PPh. Menambahkan PPN sebagai biaya lagi akan
+     * menghitung pajak dua kali. Kolom tax tetap disimpan sebagai keterangan
+     * PPN invoice.
      *
      * Jika shipment memiliki investasi, bagi hasil investasi diperhitungkan
      * dan mengurangi nilai profit.
@@ -95,7 +101,6 @@ class FinanceJournal extends Model
             $journal->total_expense = static::totalExpense(
                 (float) $journal->cost_of_goods,
                 (float) $journal->operational_cost,
-                (float) $journal->tax,
             );
 
             $journal->profit = static::profit(
@@ -295,11 +300,15 @@ class FinanceJournal extends Model
     }
 
     /**
-     * Total biaya dari modal, biaya operasional, dan pajak.
+     * Total biaya dari modal dan biaya operasional.
+     *
+     * Pajak tidak ikut dihitung karena pendapatan sudah berasal dari total
+     * invoice yang memuat PPN. Kalau PPN ditambahkan lagi sebagai biaya,
+     * pajaknya terhitung dua kali dan profit jadi terlalu kecil.
      */
-    public static function totalExpense(float $costOfGoods, float $operationalCost, float $tax): float
+    public static function totalExpense(float $costOfGoods, float $operationalCost): float
     {
-        return round(max(0, $costOfGoods) + max(0, $operationalCost) + max(0, $tax), 2);
+        return round(max(0, $costOfGoods) + max(0, $operationalCost), 2);
     }
 
     /**

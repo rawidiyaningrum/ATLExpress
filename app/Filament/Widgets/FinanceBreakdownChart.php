@@ -21,15 +21,14 @@ class FinanceBreakdownChart extends ChartWidget
         $totals = $this->financeTotals();
 
         return [
-            'labels' => ['Modal', 'Biaya Operasional', 'Pajak'],
+            'labels' => ['Modal', 'Biaya Operasional'],
             'datasets' => [[
                 'label' => 'Total Biaya',
                 'data' => [
                     $totals['cost_of_goods'],
                     $totals['operational_cost'],
-                    $totals['tax'],
                 ],
-                'backgroundColor' => ['#0D2053', '#3b82f6', '#f59e0b'],
+                'backgroundColor' => ['#0D2053', '#3b82f6'],
                 'borderRadius' => 4,
                 'maxBarThickness' => 64,
             ]],

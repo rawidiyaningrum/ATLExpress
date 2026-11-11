@@ -67,7 +67,7 @@ class EditFinanceJournal extends EditRecord
 
     /**
      * Nominal turunan tidak dikirim balik dari form, karena hook saving di
-     * model sudah menghitung ulang dari modal, opex, pajak, dan pendapatan.
+     * model sudah menghitung ulang dari modal, opex, dan pendapatan.
      *
      * Status centang "sama dengan nominal invoice" juga tidak dikirim, karena
      * field-nya sudah ditandai tidak didehidrasi dan statusnya diturunkan dari

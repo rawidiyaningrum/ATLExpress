@@ -169,10 +169,10 @@ class FinanceJournalRealExpenseTest extends TestCase
 
         $journal->refresh();
 
-        // 199800 - (185000 modal + 0 opex + 19800 pajak) = -5000
-        $this->assertSame(204800.0, (float) $journal->total_expense);
-        $this->assertSame(-5000.0, (float) $journal->profit, 'pengeluaran real lebih besar dari pendapatan');
-        $this->assertSame(-2.5, (float) $journal->profit_percentage);
+        // 199800 - 185000 modal = 14800 (pajak tidak ikut karena pendapatan sudah memuat PPN)
+        $this->assertSame(185000.0, (float) $journal->total_expense);
+        $this->assertSame(14800.0, (float) $journal->profit, 'pajak tidak mengurangi profit dua kali');
+        $this->assertSame(7.41, (float) $journal->profit_percentage);
     }
 
     public function test_same_as_modal_is_derived_from_the_stored_amount(): void
@@ -432,22 +432,22 @@ class FinanceJournalRealExpenseTest extends TestCase
             $journal,
         );
 
-        // 199800 - (185000 modal + 0 opex + 19800 pajak) = -5000
+        // 199800 - 185000 modal = 14800 (pajak tidak ikut karena pendapatan sudah memuat PPN)
         $this->assertSame(185000.0, $preview['real_expense']);
-        $this->assertSame(204800.0, $preview['total_expense']);
-        $this->assertSame(-2.5, $preview['profit_percentage']);
+        $this->assertSame(185000.0, $preview['total_expense']);
+        $this->assertSame(7.41, $preview['profit_percentage']);
         $this->assertSame(92.59, $preview['real_expense_percentage']);
-        $this->assertSame(102.5, $preview['efficiency_percentage']);
+        $this->assertSame(92.59, $preview['efficiency_percentage']);
 
         $component
             ->assertSee('Total Pengeluaran Real')
             ->assertSee('Rp 185.000')
             ->assertSee('Margin / Profit')
-            ->assertSee('-2,50%')
+            ->assertSee('7,41%')
             ->assertSee('Porsi Pengeluaran Real')
             ->assertSee('92,59%')
             ->assertSee('Efisiensi Biaya')
-            ->assertSee('102,50%');
+            ->assertSee('92,59%');
     }
 
     public function test_other_expenses_are_counted_as_modal_without_changing_invoice_total(): void
@@ -535,10 +535,10 @@ class FinanceJournalRealExpenseTest extends TestCase
         );
 
         $this->assertSame(225000.0, $preview['real_expense']);
-        $this->assertSame(244800.0, $preview['total_expense']);
-        $this->assertSame(-22.52, $preview['profit_percentage']);
+        $this->assertSame(225000.0, $preview['total_expense']);
+        $this->assertSame(-12.61, $preview['profit_percentage']);
         $this->assertSame(112.61, $preview['real_expense_percentage']);
-        $this->assertSame(122.52, $preview['efficiency_percentage']);
+        $this->assertSame(112.61, $preview['efficiency_percentage']);
     }
 
     public function test_other_expenses_survive_re_finalizing_the_invoice(): void

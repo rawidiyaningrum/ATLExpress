@@ -18,8 +18,9 @@ use Filament\Forms;
  * Hanya ongkos kirim dan biaya tambahan yang punya kolom pengeluaran real.
  * Baris diskon dan pajak tetap ditampilkan supaya operator tahu item itu ada
  * di invoice, tapi keduanya read-only dan tidak ikut dijumlahkan ke modal:
- * diskon adalah pengurangan tagihan, sedangkan pajak sudah dibukukan lewat
- * kolom tax di jurnal keuangan sehingga ikut dihitung akan dobel.
+ * diskon adalah pengurangan tagihan, sedangkan pajak (PPN) sudah termuat di
+ * dalam total invoice yang jadi pendapatan jurnal sehingga ikut dihitung akan
+ * dobel.
  */
 trait HasRealExpenseItems
 {
@@ -434,10 +435,11 @@ trait HasRealExpenseItems
      * Angka turunan preview pengeluaran real di form jurnal.
      *
      * Modal diambil dari baris yang boleh diedit ditambah pengeluaran lain di
-     * luar item invoice, sedangkan pendapatan, biaya operasional, dan pajak
-     * diambil dari jurnal yang sedang diedit. Dengan begitu previewnya memakai
-     * rumus yang sama dengan perhitungan model saat jurnal disimpan, jadi tidak
-     * ada dua sumber kebenaran.
+     * luar item invoice, sedangkan pendapatan dan biaya operasional diambil
+     * dari jurnal yang sedang diedit. Pajak tidak ikut dihitung karena
+     * pendapatan jurnal sudah memakai total invoice yang memuat PPN. Dengan
+     * begitu previewnya memakai rumus yang sama dengan perhitungan model saat
+     * jurnal disimpan, jadi tidak ada dua sumber kebenaran.
      *
      * @return array{real_expense: float, total_expense: float, profit_percentage: float, real_expense_percentage: float, efficiency_percentage: float}
      */
@@ -452,7 +454,6 @@ trait HasRealExpenseItems
         $totalExpense = FinanceJournal::totalExpense(
             $realExpense,
             (float) ($record?->operational_cost ?? 0),
-            (float) ($record?->tax ?? 0),
         );
 
         $profit = FinanceJournal::profit($income, $totalExpense);

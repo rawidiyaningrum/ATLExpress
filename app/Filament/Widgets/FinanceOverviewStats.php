@@ -34,7 +34,7 @@ class FinanceOverviewStats extends StatsOverviewWidget
                 ->description('Modal dari pengeluaran real per item invoice')
                 ->descriptionIcon('heroicon-m-calculator'),
             Stat::make('Total Biaya', $this->rupiah($totals['total_expense']))
-                ->description('Modal, opex, dan pajak')
+                ->description('Modal dan biaya operasional')
                 ->descriptionIcon('heroicon-m-receipt-percent'),
             Stat::make('Bagi Hasil Investor', $this->rupiah($totals['investment_profit_sharing']))
                 ->description('Beban bagi hasil investor pada periode ini')

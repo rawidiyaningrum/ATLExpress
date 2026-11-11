@@ -63,11 +63,11 @@ class FinanceDashboardTest extends TestCase
         $this->assertSame($invoice->invoice_number, $journal->reference_label);
         $this->assertSame($shipment->id, $journal->shipment_id);
         $this->assertSame(166500.0, (float) $journal->income, 'pendapatan memakai total invoice termasuk pajak');
-        $this->assertSame(16500.0, (float) $journal->tax);
+        $this->assertSame(16500.0, (float) $journal->tax, 'PPN invoice tetap tersimpan sebagai keterangan');
         $this->assertSame(0.0, (float) $journal->cost_of_goods, 'modal diisi operator nanti');
-        $this->assertSame(16500.0, (float) $journal->total_expense, 'pajak masuk total biaya');
-        $this->assertSame(150000.0, (float) $journal->profit, 'profit bersih pajak');
-        $this->assertSame(90.09, (float) $journal->profit_percentage);
+        $this->assertSame(0.0, (float) $journal->total_expense, 'pajak tidak masuk total biaya karena pendapatan sudah memuat PPN');
+        $this->assertSame(166500.0, (float) $journal->profit, 'profit tidak lagi dikurangi pajak dua kali');
+        $this->assertSame(100.0, (float) $journal->profit_percentage);
     }
 
     public function test_paying_an_invoice_adds_a_cash_journal_without_touching_the_revenue_journal(): void
@@ -133,8 +133,8 @@ class FinanceDashboardTest extends TestCase
         $this->assertSame(100000.0, (float) $journal->cost_of_goods, 'modal operator tidak ditimpa');
         $this->assertSame(5000.0, (float) $journal->operational_cost, 'opex operator tidak ditimpa');
         $this->assertSame('Modal dari supplier X', $journal->notes);
-        $this->assertSame(121500.0, (float) $journal->total_expense);
-        $this->assertSame(78500.0, (float) $journal->profit);
+        $this->assertSame(105000.0, (float) $journal->total_expense);
+        $this->assertSame(95000.0, (float) $journal->profit);
     }
 
     public function test_stepping_back_through_the_statuses_removes_the_journals(): void
@@ -376,9 +376,9 @@ class FinanceDashboardTest extends TestCase
             'tax' => 50000,
         ]);
 
-        $this->assertSame(370000.0, (float) $journal->total_expense);
-        $this->assertSame(130000.0, (float) $journal->profit);
-        $this->assertSame(26.0, (float) $journal->profit_percentage);
+        $this->assertSame(320000.0, (float) $journal->total_expense);
+        $this->assertSame(180000.0, (float) $journal->profit);
+        $this->assertSame(36.0, (float) $journal->profit_percentage);
     }
 
     private function journalAt(\DateTimeInterface $date, float $income): FinanceJournal
