@@ -73,22 +73,22 @@
         {{-- Board --}}
         <div class="flex items-stretch gap-4 overflow-x-auto pb-4" x-data="{ dragging: null }">
             @foreach ($columns as $column)
-                <section class="flex w-80 shrink-0 flex-col rounded-xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900/60">
+                <section class="flex w-72 shrink-0 flex-col rounded-xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900/60">
                     <header
-                        class="flex items-center justify-between gap-2 rounded-t-xl border-b border-gray-200 px-4 py-3 dark:border-gray-700"
+                        class="flex items-center justify-between gap-2 rounded-t-xl border-b border-gray-200 px-3 py-2.5 dark:border-gray-700"
                         style="border-top: 3px solid {{ $column['hex'] }}"
                     >
                         <div class="flex items-center gap-2">
                             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $column['hex'] }}"></span>
                             <h3 class="text-sm font-bold text-gray-900 dark:text-white">{{ $column['label'] }}</h3>
                         </div>
-                        <span class="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300">
+                        <span class="rounded-full bg-white px-1.5 py-0.5 text-[11px] font-bold text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300">
                             {{ $column['histories']->count() }}
                         </span>
                     </header>
 
                     <div
-                        class="flex min-h-[140px] flex-1 flex-col gap-3 p-3"
+                        class="flex min-h-[100px] flex-1 flex-col gap-2 p-2"
                         x-on:dragover.prevent
                         x-on:drop.prevent="if (dragging !== null) { $wire.moveHistoryTo(dragging, '{{ $column['key'] }}'); dragging = null; }"
                     >
@@ -102,37 +102,25 @@
                                 x-on:drop.prevent.stop="if (dragging !== null && dragging !== {{ $history->id }}) { $wire.moveHistoryBefore(dragging, {{ $history->id }}); dragging = null; }"
                                 x-on:click="$wire.openEdit({{ $history->id }})"
                                 :class="dragging === {{ $history->id }} ? 'opacity-40' : ''"
-                                class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-primary-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                                class="cursor-pointer rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-left shadow-sm transition hover:border-primary-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
                             >
-                                <h4 class="text-sm font-bold leading-snug text-gray-900 dark:text-white">{{ $history->title }}</h4>
-
-                                <div class="mt-1.5 flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
-                                    <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                    <span class="truncate font-medium">{{ $history->project?->name ?? 'Tanpa Project' }}</span>
-                                </div>
-
-                                <div class="mt-1.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
-                                        {{ strtoupper(mb_substr($history->project?->pic?->name ?? '?', 0, 1)) }}
-                                    </span>
-                                    <span>{{ $history->project?->pic?->name ?? 'Tanpa PIC' }}</span>
-                                </div>
-
-                                <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                                    <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                                        {{ $history->update_date?->format('d M Y') ?? '-' }}
-                                    </span>
+                                <div class="flex items-start gap-2">
+                                    <h4 class="min-w-0 flex-1 truncate text-xs font-semibold leading-snug text-gray-900 dark:text-white" title="{{ $history->title }}">{{ $history->title }}</h4>
 
                                     @if ($history->progress_percent !== null)
-                                        <span class="rounded bg-blue-100 px-1.5 py-0.5 font-semibold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                        <span class="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
                                             {{ $history->progress_percent }}%
                                         </span>
                                     @endif
                                 </div>
 
-                                @if ($history->note)
-                                    <p class="mt-2 line-clamp-2 text-[11px] italic text-gray-500 dark:text-gray-400">{{ $history->note }}</p>
-                                @endif
+                                <div class="mt-1 flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                    <span class="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary-600 text-[9px] font-bold leading-none text-white">
+                                        {{ strtoupper(mb_substr($history->project?->pic?->name ?? '?', 0, 1)) }}
+                                    </span>
+                                    <span class="min-w-0 flex-1 truncate">{{ $history->project?->name ?? 'Tanpa Project' }}</span>
+                                    <span class="shrink-0">{{ $history->update_date?->format('d M') ?? '-' }}</span>
+                                </div>
                             </article>
                         @empty
                             <p class="rounded-lg border border-dashed border-gray-300 px-3 py-6 text-center text-xs text-gray-400 dark:border-gray-700">
@@ -145,7 +133,8 @@
         </div>
 
         <p class="text-xs text-gray-500 dark:text-gray-400">
-            Geser kartu antar kolom untuk mengubah status riwayat, klik kartu untuk mengubah detailnya, atau tekan "Tambah Riwayat" untuk menambah pekerjaan baru.
+            Geser kartu antar kolom untuk mengubah status, klik kartu untuk mengubah detail, atau tekan "Tambah Riwayat" untuk menambah pekerjaan baru.
+            Tanpa filter project, tiap project hanya menampilkan riwayat terakhirnya — pilih satu project untuk melihat seluruh riwayatnya.
         </p>
     </div>
 

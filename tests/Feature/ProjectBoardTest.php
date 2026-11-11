@@ -132,6 +132,35 @@ class ProjectBoardTest extends TestCase
         $this->assertSame(ProjectHistory::STATUS_CLOSE, $history->status);
     }
 
+    public function test_board_shows_only_the_latest_history_per_project_when_no_project_filter(): void
+    {
+        $projectA = Project::factory()->create();
+        $projectB = Project::factory()->create();
+
+        $this->history($projectA, ProjectHistory::STATUS_TODO, 'Riwayat lama A');
+        $this->history($projectA, ProjectHistory::STATUS_PROGRESS, 'Riwayat terbaru A');
+        $this->history($projectB, ProjectHistory::STATUS_CLOSE, 'Riwayat terbaru B');
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ProjectBoard::class)
+            ->assertSee('Riwayat terbaru A')
+            ->assertSee('Riwayat terbaru B')
+            ->assertDontSee('Riwayat lama A');
+    }
+
+    public function test_selecting_a_project_shows_all_of_its_histories(): void
+    {
+        $project = Project::factory()->create();
+        $this->history($project, ProjectHistory::STATUS_TODO, 'Riwayat lama');
+        $this->history($project, ProjectHistory::STATUS_PROGRESS, 'Riwayat terbaru');
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ProjectBoard::class)
+            ->set('projectFilter', (string) $project->getKey())
+            ->assertSee('Riwayat lama')
+            ->assertSee('Riwayat terbaru');
+    }
+
     public function test_search_filter_matches_history_title(): void
     {
         $project = Project::factory()->create();
@@ -140,6 +169,7 @@ class ProjectBoardTest extends TestCase
 
         Livewire::actingAs(User::factory()->create())
             ->test(ProjectBoard::class)
+            ->set('projectFilter', (string) $project->getKey())
             ->set('search', 'vendor')
             ->assertSee('Follow up vendor')
             ->assertDontSee('Rapat internal');

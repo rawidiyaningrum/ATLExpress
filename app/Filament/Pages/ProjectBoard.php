@@ -284,12 +284,12 @@ class ProjectBoard extends Page
      */
     protected function filteredHistories(): Builder
     {
-        return ProjectHistory::query()
+        $query = ProjectHistory::query()
             ->with(['project.pic', 'creator'])
-            ->when($this->projectFilter, fn (Builder $query, mixed $project): Builder => $query->where('project_id', (int) $project))
-            ->when($this->picFilter, fn (Builder $query, mixed $pic): Builder => $query->whereHas(
+            ->when(filled($this->projectFilter), fn (Builder $query): Builder => $query->where('project_id', (int) $this->projectFilter))
+            ->when(filled($this->picFilter), fn (Builder $query): Builder => $query->whereHas(
                 'project',
-                fn (Builder $sub): Builder => $sub->where('pic_id', (int) $pic),
+                fn (Builder $sub): Builder => $sub->where('pic_id', (int) $this->picFilter),
             ))
             ->when(trim($this->search) !== '', function (Builder $query): void {
                 $term = '%'.trim($this->search).'%';
@@ -298,8 +298,16 @@ class ProjectBoard extends Page
                     $inner->where('title', 'like', $term)
                         ->orWhere('note', 'like', $term);
                 });
-            })
-            ->orderBy('sort_order')
-            ->orderBy('id');
+            });
+
+        // Tanpa filter project, board jadi ringkasan: cukup tampilkan riwayat
+        // terakhir tiap project supaya seluruh project terlihat tanpa scroll.
+        if (blank($this->projectFilter)) {
+            $query->whereIn('id', ProjectHistory::query()
+                ->selectRaw('MAX(id)')
+                ->groupBy('project_id'));
+        }
+
+        return $query->orderBy('sort_order')->orderBy('id');
     }
 }
