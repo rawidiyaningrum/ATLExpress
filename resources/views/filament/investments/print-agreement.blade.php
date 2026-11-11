@@ -101,7 +101,7 @@
             }
 
             .agreement-sheet .signature-block {
-                margin-top: 12mm !important;
+                margin-top: 18mm !important;
             }
         }
     </style>
@@ -358,20 +358,23 @@
             </p>
 
             {{-- TANDA TANGAN --}}
-            <div class="signature-block mt-10 flex items-start justify-between gap-8 text-sm">
-                <div class="text-center">
-                    <p>PIHAK PERTAMA</p>
-                    <div class="mt-16 h-16 w-44 border border-dashed border-gray-500"></div>
-                    <p class="mt-2 font-semibold uppercase">{{ $investor_name }}</p>
-                    <p class="text-xs text-gray-500">( Investor / Pemodal )</p>
-                </div>
+            <div class="signature-block mt-16 text-sm">
+                <p class="mb-8 text-right">{{ $city_date }}</p>
 
-                <div class="text-center">
-                    <p>{{ $city_date }}</p>
-                    <p class="mt-0">PIHAK KEDUA</p>
-                    <div class="mt-16 h-16 w-44 border border-dashed border-gray-500"></div>
-                    <p class="mt-2 font-semibold uppercase">{{ $signer_name }}</p>
-                    <p class="text-xs text-gray-500">( {{ $companyProfile['full_name'] }} )</p>
+                <div class="flex items-start justify-between gap-8">
+                    <div class="text-center">
+                        <p>PIHAK PERTAMA</p>
+                        <div class="mt-16 h-16 w-44 border border-dashed border-gray-500"></div>
+                        <p class="mt-2 font-semibold uppercase">{{ $investor_name }}</p>
+                        <p class="text-xs text-gray-500">( Investor / Pemodal )</p>
+                    </div>
+
+                    <div class="text-center">
+                        <p>PIHAK KEDUA</p>
+                        <div class="mt-16 h-16 w-44 border border-dashed border-gray-500"></div>
+                        <p class="mt-2 font-semibold uppercase">{{ $signer_name }}</p>
+                        <p class="text-xs text-gray-500">( {{ $companyProfile['full_name'] }} )</p>
+                    </div>
                 </div>
             </div>
 
