@@ -44,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
             ])
             ->navigationGroups([
+                'Projects',
                 'Management',
                 'Shipping',
                 'Finance',
