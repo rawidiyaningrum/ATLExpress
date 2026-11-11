@@ -4,13 +4,14 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\ProjectResource;
 use App\Models\Project;
-use App\Models\ProjectStatusUpdate;
+use App\Models\ProjectHistory;
 use App\Models\User;
 use App\Services\ProjectService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
@@ -21,9 +22,9 @@ class ProjectBoard extends Page
 
     protected static ?string $navigationGroup = 'Projects';
 
-    protected static ?string $navigationLabel = 'Board Project';
+    protected static ?string $navigationLabel = 'Board Riwayat';
 
-    protected static ?string $title = 'Board Project';
+    protected static ?string $title = 'Board Riwayat Project';
 
     protected static ?int $navigationSort = 1;
 
@@ -37,87 +38,78 @@ class ProjectBoard extends Page
         return auth()->check();
     }
 
+    #[Url(as: 'project', history: false)]
+    public ?string $projectFilter = null;
+
     #[Url(as: 'pic', history: false)]
     public ?string $picFilter = null;
-
-    #[Url(as: 'priority', history: false)]
-    public ?string $priorityFilter = null;
 
     #[Url(as: 'q', history: false)]
     public string $search = '';
 
-    #[Url(as: 'stale', history: false)]
-    public bool $onlyStale = false;
-
     /**
-     * Project yang sedang dibuka di modal detail.
+     * Modal tambah/ubah riwayat. Null berarti modal tertutup.
      */
-    public ?int $selectedProjectId = null;
+    public ?string $modalMode = null;
 
-    public ?string $updateStatus = null;
+    public ?int $editingHistoryId = null;
 
-    public ?string $updateNote = null;
+    public ?string $formProjectId = null;
 
-    public ?int $updateProgress = null;
+    public string $formTitle = '';
+
+    public ?string $formStatus = null;
+
+    public ?string $formNote = null;
+
+    public ?int $formProgress = null;
+
+    public ?string $formUpdateDate = null;
 
     public function getHeaderActions(): array
     {
         return [
-            Action::make('create')
-                ->label('Tambah Project')
-                ->icon('heroicon-o-plus')
-                ->url(ProjectResource::getUrl('create')),
+            Action::make('manageProjects')
+                ->label('Kelola Project')
+                ->icon('heroicon-o-clipboard-document-list')
+                ->color('gray')
+                ->url(ProjectResource::getUrl('index')),
         ];
     }
 
     /**
-     * Kolom board beserta kartu project di dalamnya, sudah difilter.
+     * Kolom board berisi riwayat, bukan project. Status tinggal di tiap riwayat.
      *
-     * @return array<string, array{key: string, label: string, hex: string, projects: Collection<int, Project>}>
+     * @return array<string, array{key: string, label: string, hex: string, histories: Collection<int, ProjectHistory>}>
      */
     #[Computed]
     public function columns(): array
     {
-        $projects = $this->filteredProjects()->get();
+        $histories = $this->filteredHistories()->get();
 
-        $updatedToday = ProjectStatusUpdate::query()
-            ->whereDate('update_date', now()->toDateString())
-            ->whereIn('project_id', $projects->pluck('id'))
-            ->pluck('project_id')
-            ->unique()
-            ->all();
-
-        $projects->each(fn (Project $project) => $project->setAttribute(
-            'updated_today',
-            in_array($project->getKey(), $updatedToday, true),
-        ));
-
-        return collect(Project::STATUSES)
+        return collect(ProjectHistory::STATUSES)
             ->mapWithKeys(fn (string $status): array => [
                 $status => [
                     'key' => $status,
-                    'label' => Project::statusLabel($status),
-                    'hex' => Project::STATUS_HEX_COLORS[$status] ?? '#9ca3af',
-                    'projects' => $projects->where('status', $status)->values(),
+                    'label' => ProjectHistory::statusLabel($status),
+                    'hex' => ProjectHistory::STATUS_HEX_COLORS[$status] ?? '#9ca3af',
+                    'histories' => $histories->where('status', $status)->values(),
                 ],
             ])
             ->all();
     }
 
+    /**
+     * @return Collection<int|string, string>
+     */
     #[Computed]
-    public function selectedProject(): ?Project
+    public function projectOptions(): Collection
     {
-        if ($this->selectedProjectId === null) {
-            return null;
-        }
-
-        return Project::query()
-            ->with(['pic', 'shipment', 'statusUpdates.creator'])
-            ->find($this->selectedProjectId);
+        return Project::query()->orderBy('name')->pluck('name', 'id');
     }
 
     /**
-     * @return Collection<int, string>
+     * @return Collection<int|string, string>
      */
     #[Computed]
     public function picOptions(): Collection
@@ -128,89 +120,130 @@ class ProjectBoard extends Page
     /**
      * @return array<string, string>
      */
-    public function priorityOptions(): array
-    {
-        return Project::PRIORITY_LABELS;
-    }
-
-    /**
-     * @return array<string, string>
-     */
     public function statusOptions(): array
     {
-        return Project::STATUS_LABELS;
+        return ProjectHistory::STATUS_LABELS;
     }
 
-    public function openProject(int $projectId): void
+    public function openCreate(): void
     {
-        $project = Project::query()->findOrFail($projectId);
-
-        $this->selectedProjectId = $project->getKey();
-        $this->updateStatus = $project->status;
-        $this->updateProgress = $project->progress_percent;
-        $this->updateNote = null;
-        $this->resetValidation();
-
-        unset($this->selectedProject);
-    }
-
-    public function closeProject(): void
-    {
-        $this->selectedProjectId = null;
-        $this->updateStatus = null;
-        $this->updateProgress = null;
-        $this->updateNote = null;
+        $this->modalMode = 'create';
+        $this->editingHistoryId = null;
+        $this->formProjectId = $this->projectFilter;
+        $this->formTitle = '';
+        $this->formStatus = ProjectHistory::STATUS_TODO;
+        $this->formNote = null;
+        $this->formProgress = null;
+        $this->formUpdateDate = now()->toDateString();
         $this->resetValidation();
     }
 
-    public function saveUpdate(): void
+    public function openEdit(int $historyId): void
     {
-        $project = $this->selectedProject;
+        $history = ProjectHistory::query()->findOrFail($historyId);
 
-        if (! $project instanceof Project) {
+        $this->modalMode = 'edit';
+        $this->editingHistoryId = $history->getKey();
+        $this->formProjectId = $history->project_id !== null ? (string) $history->project_id : null;
+        $this->formTitle = (string) $history->title;
+        $this->formStatus = $history->status;
+        $this->formNote = $history->note;
+        $this->formProgress = $history->progress_percent;
+        $this->formUpdateDate = $history->update_date?->toDateString();
+        $this->resetValidation();
+    }
+
+    public function closeModal(): void
+    {
+        $this->modalMode = null;
+        $this->editingHistoryId = null;
+        $this->resetValidation();
+    }
+
+    public function saveHistory(): void
+    {
+        $validated = $this->validate([
+            'formProjectId' => ['required', 'integer', 'exists:projects,id'],
+            'formTitle' => ['required', 'string', 'max:255'],
+            'formStatus' => ['required', 'string', 'in:'.implode(',', ProjectHistory::STATUSES)],
+            'formUpdateDate' => ['required', 'date'],
+            'formProgress' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'formNote' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $service = app(ProjectService::class);
+
+        if ($this->modalMode === 'edit' && $this->editingHistoryId !== null) {
+            $history = ProjectHistory::query()->findOrFail($this->editingHistoryId);
+
+            $service->updateHistory($history, [
+                'status' => $validated['formStatus'],
+                'title' => $validated['formTitle'],
+                'note' => $validated['formNote'] ?? null,
+                'progress_percent' => $validated['formProgress'] ?? null,
+                'update_date' => $validated['formUpdateDate'],
+            ]);
+        } else {
+            $project = Project::query()->findOrFail($validated['formProjectId']);
+
+            $service->recordHistory(
+                project: $project,
+                title: $validated['formTitle'],
+                status: $validated['formStatus'],
+                note: $validated['formNote'] ?? null,
+                progressPercent: $validated['formProgress'] ?? null,
+                date: Carbon::parse($validated['formUpdateDate']),
+                userId: auth()->id(),
+            );
+        }
+
+        unset($this->columns);
+
+        Notification::make()
+            ->title('Riwayat tersimpan')
+            ->success()
+            ->send();
+
+        $this->closeModal();
+    }
+
+    public function deleteHistory(): void
+    {
+        if ($this->editingHistoryId === null) {
             return;
         }
 
-        $validated = $this->validate([
-            'updateStatus' => ['required', 'string', 'in:'.implode(',', Project::STATUSES)],
-            'updateNote' => ['nullable', 'string', 'max:2000'],
-            'updateProgress' => ['nullable', 'integer', 'min:0', 'max:100'],
-        ]);
+        $history = ProjectHistory::query()->findOrFail($this->editingHistoryId);
 
-        app(ProjectService::class)->recordUpdate(
-            project: $project,
-            status: $validated['updateStatus'],
-            note: $validated['updateNote'] ?? null,
-            progressPercent: $validated['updateProgress'] ?? null,
-            userId: auth()->id(),
-        );
+        app(ProjectService::class)->deleteHistory($history);
 
-        $this->updateNote = null;
-        unset($this->selectedProject, $this->columns);
+        unset($this->columns);
 
         Notification::make()
-            ->title('Update status tersimpan')
+            ->title('Riwayat dihapus')
             ->success()
             ->send();
+
+        $this->closeModal();
     }
 
     /**
      * Drop kartu ke area kosong sebuah kolom: pindah ke kolom itu, urutan paling
      * akhir.
      */
-    public function moveProjectTo(int $projectId, string $status): void
+    public function moveHistoryTo(int $historyId, string $status): void
     {
-        if (! in_array($status, Project::STATUSES, true)) {
+        if (! in_array($status, ProjectHistory::STATUSES, true)) {
             return;
         }
 
-        $project = Project::query()->find($projectId);
+        $history = ProjectHistory::query()->find($historyId);
 
-        if (! $project instanceof Project) {
+        if (! $history instanceof ProjectHistory) {
             return;
         }
 
-        app(ProjectService::class)->move($project, $status, null, auth()->id());
+        app(ProjectService::class)->moveHistory($history, $status, null);
 
         unset($this->columns);
     }
@@ -219,56 +252,53 @@ class ProjectBoard extends Page
      * Drop kartu tepat di atas kartu lain: ikut kolom kartu tujuan dan disisipkan
      * sebelum kartu itu.
      */
-    public function moveProjectBefore(int $projectId, int $beforeProjectId): void
+    public function moveHistoryBefore(int $historyId, int $beforeHistoryId): void
     {
-        if ($projectId === $beforeProjectId) {
+        if ($historyId === $beforeHistoryId) {
             return;
         }
 
-        $project = Project::query()->find($projectId);
-        $before = Project::query()->find($beforeProjectId);
+        $history = ProjectHistory::query()->find($historyId);
+        $before = ProjectHistory::query()->find($beforeHistoryId);
 
-        if (! $project instanceof Project || ! $before instanceof Project) {
+        if (! $history instanceof ProjectHistory || ! $before instanceof ProjectHistory) {
             return;
         }
 
-        app(ProjectService::class)->move($project, $before->status, $before->getKey(), auth()->id());
+        app(ProjectService::class)->moveHistory($history, $before->status, $before->getKey());
 
         unset($this->columns);
     }
 
     public function resetFilters(): void
     {
+        $this->projectFilter = null;
         $this->picFilter = null;
-        $this->priorityFilter = null;
         $this->search = '';
-        $this->onlyStale = false;
 
         unset($this->columns);
     }
 
     /**
-     * @return Builder<Project>
+     * @return Builder<ProjectHistory>
      */
-    protected function filteredProjects(): Builder
+    protected function filteredHistories(): Builder
     {
-        return Project::query()
-            ->with(['pic', 'latestUpdate'])
-            ->notArchived()
-            ->when($this->picFilter, fn (Builder $query, mixed $pic): Builder => $query->where('pic_id', (int) $pic))
-            ->when($this->priorityFilter, fn (Builder $query, mixed $priority): Builder => $query->where('priority', $priority))
+        return ProjectHistory::query()
+            ->with(['project.pic', 'creator'])
+            ->when($this->projectFilter, fn (Builder $query, mixed $project): Builder => $query->where('project_id', (int) $project))
+            ->when($this->picFilter, fn (Builder $query, mixed $pic): Builder => $query->whereHas(
+                'project',
+                fn (Builder $sub): Builder => $sub->where('pic_id', (int) $pic),
+            ))
             ->when(trim($this->search) !== '', function (Builder $query): void {
                 $term = '%'.trim($this->search).'%';
 
                 $query->where(function (Builder $inner) use ($term): void {
-                    $inner->where('name', 'like', $term)
-                        ->orWhere('description', 'like', $term);
+                    $inner->where('title', 'like', $term)
+                        ->orWhere('note', 'like', $term);
                 });
             })
-            ->when($this->onlyStale, fn (Builder $query): Builder => $query->whereDoesntHave(
-                'statusUpdates',
-                fn (Builder $sub): Builder => $sub->whereDate('update_date', now()->toDateString()),
-            ))
             ->orderBy('sort_order')
             ->orderBy('id');
     }

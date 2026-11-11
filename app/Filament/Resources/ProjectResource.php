@@ -83,18 +83,19 @@ class ProjectResource extends Resource
                         ->preload()
                         ->required(),
 
-                    Forms\Components\Select::make('status')
-                        ->label('Status')
-                        ->options(Project::STATUS_LABELS)
-                        ->default(Project::STATUS_BACKLOG)
-                        ->required()
-                        ->helperText('Status juga bisa diubah dengan menggeser kartu di Board Project.'),
-
                     Forms\Components\Select::make('priority')
                         ->label('Prioritas')
                         ->options(Project::PRIORITY_LABELS)
                         ->default(Project::PRIORITY_NORMAL)
                         ->required(),
+
+                    Forms\Components\TextInput::make('progress_percent')
+                        ->label('Progress Keseluruhan')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->suffix('%')
+                        ->helperText('Opsional. Status pekerjaan per item ada di tab "Riwayat".'),
 
                     Forms\Components\Textarea::make('description')
                         ->label('Deskripsi')
@@ -102,17 +103,11 @@ class ProjectResource extends Resource
                         ->columnSpanFull(),
                 ])->columns(2),
 
-            Forms\Components\Section::make('Jadwal & Progress')
+            Forms\Components\Section::make('Jadwal')
                 ->schema([
                     Forms\Components\DatePicker::make('start_date')->label('Tanggal Mulai'),
                     Forms\Components\DatePicker::make('due_date')->label('Tenggat'),
-                    Forms\Components\TextInput::make('progress_percent')
-                        ->label('Progress')
-                        ->numeric()
-                        ->minValue(0)
-                        ->maxValue(100)
-                        ->suffix('%'),
-                ])->columns(3),
+                ])->columns(2),
 
             Forms\Components\Section::make('Kaitan Pengiriman')
                 ->description('Opsional: hubungkan project dengan pengiriman yang sudah ada.')
@@ -144,13 +139,6 @@ class ProjectResource extends Resource
                     ->searchable()
                     ->placeholder('Tanpa PIC'),
 
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => Project::statusLabel($state))
-                    ->color(fn (?string $state): string => Project::STATUS_COLORS[$state] ?? 'gray')
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('priority')
                     ->label('Prioritas')
                     ->badge()
@@ -158,21 +146,17 @@ class ProjectResource extends Resource
                     ->color(fn (?string $state): string => Project::PRIORITY_COLORS[$state] ?? 'gray')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('histories_count')
+                    ->label('Riwayat')
+                    ->badge()
+                    ->color('info')
+                    ->alignCenter()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('due_date')
                     ->label('Tenggat')
                     ->date('d M Y')
                     ->placeholder('-')
-                    ->sortable()
-                    ->color(fn (Project $record): ?string => $record->due_date !== null
-                        && $record->due_date->isPast()
-                        && ! $record->isDone()
-                            ? 'danger'
-                            : null),
-
-                Tables\Columns\TextColumn::make('latestUpdate.update_date')
-                    ->label('Update Terakhir')
-                    ->date('d M Y')
-                    ->placeholder('Belum ada')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -182,14 +166,11 @@ class ProjectResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
-                ->with(['pic', 'latestUpdate'])
+                ->with(['pic'])
+                ->withCount('histories')
                 ->whereNull('archived_at'))
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->label('Status')
-                    ->options(Project::STATUS_LABELS),
-
                 Tables\Filters\SelectFilter::make('priority')
                     ->label('Prioritas')
                     ->options(Project::PRIORITY_LABELS),
@@ -199,13 +180,10 @@ class ProjectResource extends Resource
                     ->relationship('pic', 'name')
                     ->searchable(),
 
-                Tables\Filters\Filter::make('belum_update_hari_ini')
-                    ->label('Belum update hari ini')
+                Tables\Filters\Filter::make('belum_ada_riwayat')
+                    ->label('Belum ada riwayat')
                     ->toggle()
-                    ->query(fn (Builder $query): Builder => $query->whereDoesntHave(
-                        'statusUpdates',
-                        fn (Builder $sub): Builder => $sub->whereDate('update_date', now()->toDateString()),
-                    )),
+                    ->query(fn (Builder $query): Builder => $query->doesntHave('histories')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -222,7 +200,7 @@ class ProjectResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\StatusUpdatesRelationManager::class,
+            RelationManagers\HistoriesRelationManager::class,
         ];
     }
 

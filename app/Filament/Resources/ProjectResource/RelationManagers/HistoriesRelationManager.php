@@ -2,31 +2,37 @@
 
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
-use App\Models\Project;
+use App\Models\ProjectHistory;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class StatusUpdatesRelationManager extends RelationManager
+class HistoriesRelationManager extends RelationManager
 {
-    protected static string $relationship = 'statusUpdates';
+    protected static string $relationship = 'histories';
 
-    protected static ?string $title = 'Riwayat Status';
+    protected static ?string $title = 'Riwayat';
 
-    protected static ?string $modelLabel = 'riwayat status';
+    protected static ?string $modelLabel = 'riwayat';
 
-    protected static ?string $pluralModelLabel = 'riwayat status';
+    protected static ?string $pluralModelLabel = 'riwayat';
 
     public function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\TextInput::make('title')
+                ->label('Judul Riwayat')
+                ->required()
+                ->maxLength(255)
+                ->columnSpanFull(),
+
             Forms\Components\Select::make('status')
                 ->label('Status')
-                ->options(Project::STATUS_LABELS)
-                ->required()
-                ->default(fn (): string => (string) $this->getOwnerRecord()->status),
+                ->options(ProjectHistory::STATUS_LABELS)
+                ->default(ProjectHistory::STATUS_TODO)
+                ->required(),
 
             Forms\Components\DatePicker::make('update_date')
                 ->label('Tanggal')
@@ -50,23 +56,24 @@ class StatusUpdatesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('status')
+            ->recordTitleAttribute('title')
             ->columns([
-                Tables\Columns\TextColumn::make('update_date')
-                    ->label('Tanggal')
-                    ->date('d M Y')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Riwayat')
+                    ->searchable()
+                    ->wrap()
+                    ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => Project::statusLabel($state))
-                    ->color(fn (?string $state): string => Project::STATUS_COLORS[$state] ?? 'gray'),
+                    ->formatStateUsing(fn (?string $state): string => ProjectHistory::statusLabel($state))
+                    ->color(fn (?string $state): string => ProjectHistory::STATUS_COLORS[$state] ?? 'gray'),
 
-                Tables\Columns\TextColumn::make('note')
-                    ->label('Catatan')
-                    ->wrap()
-                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('update_date')
+                    ->label('Tanggal')
+                    ->date('d M Y')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('progress_percent')
                     ->label('Progress')
@@ -88,8 +95,7 @@ class StatusUpdatesRelationManager extends RelationManager
                     }),
             ])
             ->actions([
-                // Riwayat bersifat append-only: baris lama tidak diedit supaya
-                // tidak menimpa status terkini. Penghapusan dibatasi admin.
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn (): bool => auth()->user()?->isAdminRole() ?? false),
             ])

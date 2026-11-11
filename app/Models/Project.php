@@ -8,69 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Carbon;
 
 class Project extends Model
 {
     use HasFactory;
-
-    public const STATUS_BACKLOG = 'backlog';
-
-    public const STATUS_TODO = 'todo';
-
-    public const STATUS_IN_PROGRESS = 'in_progress';
-
-    public const STATUS_BLOCKED = 'blocked';
-
-    public const STATUS_DONE = 'done';
-
-    /**
-     * Urutan kolom board dari kiri ke kanan.
-     *
-     * @var array<int, string>
-     */
-    public const STATUSES = [
-        self::STATUS_BACKLOG,
-        self::STATUS_TODO,
-        self::STATUS_IN_PROGRESS,
-        self::STATUS_BLOCKED,
-        self::STATUS_DONE,
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    public const STATUS_LABELS = [
-        self::STATUS_BACKLOG => 'Backlog',
-        self::STATUS_TODO => 'To Do',
-        self::STATUS_IN_PROGRESS => 'On Progress',
-        self::STATUS_BLOCKED => 'Kendala',
-        self::STATUS_DONE => 'Selesai',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    public const STATUS_COLORS = [
-        self::STATUS_BACKLOG => 'gray',
-        self::STATUS_TODO => 'warning',
-        self::STATUS_IN_PROGRESS => 'info',
-        self::STATUS_BLOCKED => 'danger',
-        self::STATUS_DONE => 'success',
-    ];
-
-    /**
-     * Warna heksadesimal untuk aksen kolom board dan grafik.
-     *
-     * @var array<string, string>
-     */
-    public const STATUS_HEX_COLORS = [
-        self::STATUS_BACKLOG => '#9ca3af',
-        self::STATUS_TODO => '#f59e0b',
-        self::STATUS_IN_PROGRESS => '#3b82f6',
-        self::STATUS_BLOCKED => '#ef4444',
-        self::STATUS_DONE => '#10b981',
-    ];
 
     public const PRIORITY_LOW = 'low';
 
@@ -110,17 +51,18 @@ class Project extends Model
         self::PRIORITY_URGENT => 'danger',
     ];
 
+    /**
+     * Project hanya menjadi wadah pekerjaan; status tinggal di tiap riwayat.
+     */
     protected $fillable = [
         'name',
         'description',
         'pic_id',
-        'status',
         'priority',
         'start_date',
         'due_date',
         'shipment_id',
         'progress_percent',
-        'sort_order',
         'archived_at',
         'created_by',
     ];
@@ -130,16 +72,7 @@ class Project extends Model
         'due_date' => 'date',
         'archived_at' => 'datetime',
         'progress_percent' => 'integer',
-        'sort_order' => 'integer',
     ];
-
-    /**
-     * Label status yang dipakai tabel, board, dan riwayat.
-     */
-    public static function statusLabel(?string $status): string
-    {
-        return $status === null ? '-' : (self::STATUS_LABELS[$status] ?? $status);
-    }
 
     public function pic(): BelongsTo
     {
@@ -156,24 +89,14 @@ class Project extends Model
         return $this->belongsTo(Shipment::class);
     }
 
-    /**
-     * Riwayat update status, terbaru lebih dulu untuk timeline.
-     */
-    public function statusUpdates(): HasMany
+    public function histories(): HasMany
     {
-        return $this->hasMany(ProjectStatusUpdate::class)
-            ->orderByDesc('update_date')
-            ->orderByDesc('id');
+        return $this->hasMany(ProjectHistory::class);
     }
 
-    public function latestUpdate(): HasOne
+    public function latestHistory(): HasOne
     {
-        return $this->hasOne(ProjectStatusUpdate::class)->latestOfMany();
-    }
-
-    public function isDone(): bool
-    {
-        return $this->status === self::STATUS_DONE;
+        return $this->hasOne(ProjectHistory::class)->latestOfMany();
     }
 
     public function isArchived(): bool
@@ -184,34 +107,6 @@ class Project extends Model
     public function priorityLabel(): string
     {
         return self::PRIORITY_LABELS[$this->priority] ?? ucfirst((string) $this->priority);
-    }
-
-    /**
-     * Apakah project ini sudah punya update status pada tanggal tertentu.
-     */
-    public function hasUpdateOn(\DateTimeInterface|string $date): bool
-    {
-        $dateString = $date instanceof \DateTimeInterface
-            ? $date->format('Y-m-d')
-            : $date;
-
-        return $this->statusUpdates()
-            ->whereDate('update_date', $dateString)
-            ->exists();
-    }
-
-    /**
-     * Jumlah hari sejak update terakhir, null kalau belum pernah diupdate.
-     */
-    public function daysSinceLastUpdate(): ?int
-    {
-        $lastDate = $this->statusUpdates()->max('update_date');
-
-        if ($lastDate === null) {
-            return null;
-        }
-
-        return (int) Carbon::parse($lastDate)->startOfDay()->diffInDays(now()->startOfDay());
     }
 
     /**

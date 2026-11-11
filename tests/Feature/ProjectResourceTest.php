@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use App\Filament\Resources\ProjectResource;
 use App\Filament\Resources\ProjectResource\Pages\CreateProject;
 use App\Filament\Resources\ProjectResource\Pages\EditProject;
-use App\Filament\Resources\ProjectResource\RelationManagers\StatusUpdatesRelationManager;
+use App\Filament\Resources\ProjectResource\RelationManagers\HistoriesRelationManager;
 use App\Models\Project;
+use App\Models\ProjectHistory;
 use App\Models\User;
-use App\Services\ProjectService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -32,7 +32,7 @@ class ProjectResourceTest extends TestCase
         }
     }
 
-    public function test_project_can_be_created_and_gets_an_initial_history_entry(): void
+    public function test_project_can_be_created(): void
     {
         $pic = User::factory()->create();
 
@@ -41,52 +41,36 @@ class ProjectResourceTest extends TestCase
             ->fillForm([
                 'name' => 'Project Baru',
                 'pic_id' => $pic->getKey(),
-                'status' => Project::STATUS_TODO,
                 'priority' => Project::PRIORITY_HIGH,
             ])
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $project = Project::query()->where('name', 'Project Baru')->sole();
-
-        $this->assertSame(Project::STATUS_TODO, $project->status);
-        $this->assertSame(1, $project->statusUpdates()->count(), 'riwayat awal dibuat otomatis');
+        $this->assertDatabaseHas('projects', [
+            'name' => 'Project Baru',
+            'priority' => Project::PRIORITY_HIGH,
+            'pic_id' => $pic->getKey(),
+        ]);
     }
 
-    public function test_changing_status_from_the_form_logs_history(): void
+    public function test_relation_manager_lists_the_project_histories(): void
     {
-        $project = Project::factory()->create(['status' => Project::STATUS_BACKLOG]);
+        $project = Project::factory()->create();
+
+        ProjectHistory::create([
+            'project_id' => $project->getKey(),
+            'title' => 'Riwayat vendor',
+            'status' => ProjectHistory::STATUS_PROGRESS,
+            'update_date' => now()->toDateString(),
+        ]);
 
         Livewire::actingAs(User::factory()->create())
-            ->test(EditProject::class, ['record' => $project->getRouteKey()])
-            ->fillForm(['status' => Project::STATUS_DONE])
-            ->call('save')
-            ->assertHasNoFormErrors();
-
-        $project->refresh();
-
-        $this->assertSame(Project::STATUS_DONE, $project->status);
-        $this->assertSame(1, $project->statusUpdates()->count());
-    }
-
-    public function test_relation_manager_lists_the_status_history(): void
-    {
-        $project = Project::factory()->create(['status' => Project::STATUS_BACKLOG]);
-
-        app(ProjectService::class)->recordUpdate(
-            project: $project,
-            status: Project::STATUS_IN_PROGRESS,
-            note: 'Catatan riwayat',
-            userId: User::factory()->create()->getKey(),
-        );
-
-        Livewire::actingAs(User::factory()->create())
-            ->test(StatusUpdatesRelationManager::class, [
+            ->test(HistoriesRelationManager::class, [
                 'ownerRecord' => $project,
                 'pageClass' => EditProject::class,
             ])
             ->assertOk()
-            ->assertCanSeeTableRecords($project->statusUpdates()->get()->all())
-            ->assertSee('Catatan riwayat');
+            ->assertCanSeeTableRecords($project->histories()->get()->all())
+            ->assertSee('Riwayat vendor');
     }
 }

@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\ProjectBoard;
 use App\Models\Project;
+use App\Models\ProjectHistory;
 use App\Models\User;
-use App\Services\ProjectService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -13,6 +13,16 @@ use Tests\TestCase;
 class ProjectBoardTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function history(Project $project, string $status, string $title, array $attributes = []): ProjectHistory
+    {
+        return ProjectHistory::create(array_merge([
+            'project_id' => $project->getKey(),
+            'title' => $title,
+            'status' => $status,
+            'update_date' => now()->toDateString(),
+        ], $attributes));
+    }
 
     public function test_every_role_can_open_the_board(): void
     {
@@ -29,91 +39,109 @@ class ProjectBoardTest extends TestCase
         }
     }
 
-    public function test_board_renders_columns_and_cards(): void
+    public function test_board_shows_history_columns_and_cards(): void
     {
-        Project::factory()->create([
-            'name' => 'Proyek Alpha',
-            'status' => Project::STATUS_IN_PROGRESS,
-        ]);
+        $project = Project::factory()->create(['name' => 'Project Alpha']);
+        $this->history($project, ProjectHistory::STATUS_PROGRESS, 'Cek Vendor');
 
         Livewire::actingAs(User::factory()->create())
             ->test(ProjectBoard::class)
-            ->assertSee('Backlog')
-            ->assertSee('On Progress')
-            ->assertSee('Selesai')
-            ->assertSee('Proyek Alpha');
+            ->assertSee('To Do')
+            ->assertSee('Progress')
+            ->assertSee('Kendala')
+            ->assertSee('Close')
+            ->assertSee('Cek Vendor');
     }
 
-    public function test_moving_a_card_updates_status_and_records_history(): void
+    public function test_board_can_be_filtered_by_project(): void
     {
-        $project = Project::factory()->create(['status' => Project::STATUS_BACKLOG]);
+        $projectA = Project::factory()->create();
+        $projectB = Project::factory()->create();
+
+        $this->history($projectA, ProjectHistory::STATUS_TODO, 'Riwayat Alfa');
+        $this->history($projectB, ProjectHistory::STATUS_TODO, 'Riwayat Beta');
 
         Livewire::actingAs(User::factory()->create())
             ->test(ProjectBoard::class)
-            ->call('moveProjectTo', $project->getKey(), Project::STATUS_TODO)
+            ->set('projectFilter', (string) $projectA->getKey())
+            ->assertSee('Riwayat Alfa')
+            ->assertDontSee('Riwayat Beta');
+    }
+
+    public function test_moving_a_card_updates_the_history_status(): void
+    {
+        $project = Project::factory()->create();
+        $history = $this->history($project, ProjectHistory::STATUS_TODO, 'Pindah kartu');
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ProjectBoard::class)
+            ->call('moveHistoryTo', $history->getKey(), ProjectHistory::STATUS_CLOSE)
             ->assertOk();
 
-        $project->refresh();
-
-        $this->assertSame(Project::STATUS_TODO, $project->status);
-        $this->assertSame(1, $project->statusUpdates()->count());
+        $this->assertSame(ProjectHistory::STATUS_CLOSE, $history->refresh()->status);
     }
 
-    public function test_saving_an_update_from_the_modal_records_history(): void
+    public function test_creating_a_history_from_the_modal(): void
     {
-        $project = Project::factory()->create(['status' => Project::STATUS_BACKLOG]);
+        $project = Project::factory()->create();
 
         Livewire::actingAs(User::factory()->create())
             ->test(ProjectBoard::class)
-            ->call('openProject', $project->getKey())
-            ->set('updateStatus', Project::STATUS_IN_PROGRESS)
-            ->set('updateNote', 'Sudah mulai dikerjakan')
-            ->set('updateProgress', 30)
-            ->call('saveUpdate')
+            ->call('openCreate')
+            ->set('formProjectId', (string) $project->getKey())
+            ->set('formTitle', 'Follow up vendor')
+            ->set('formStatus', ProjectHistory::STATUS_PROGRESS)
+            ->set('formUpdateDate', now()->toDateString())
+            ->call('saveHistory')
+            ->assertHasNoErrors()
+            ->assertSet('modalMode', null);
+
+        $this->assertDatabaseHas('project_histories', [
+            'project_id' => $project->getKey(),
+            'title' => 'Follow up vendor',
+            'status' => ProjectHistory::STATUS_PROGRESS,
+        ]);
+    }
+
+    public function test_creating_a_history_requires_a_project_and_title(): void
+    {
+        Livewire::actingAs(User::factory()->create())
+            ->test(ProjectBoard::class)
+            ->call('openCreate')
+            ->set('formTitle', '')
+            ->call('saveHistory')
+            ->assertHasErrors(['formProjectId', 'formTitle']);
+    }
+
+    public function test_editing_a_history_from_the_modal(): void
+    {
+        $project = Project::factory()->create();
+        $history = $this->history($project, ProjectHistory::STATUS_TODO, 'Judul lama');
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ProjectBoard::class)
+            ->call('openEdit', $history->getKey())
+            ->set('formStatus', ProjectHistory::STATUS_CLOSE)
+            ->set('formTitle', 'Judul baru')
+            ->call('saveHistory')
             ->assertHasNoErrors();
 
-        $project->refresh();
+        $history->refresh();
 
-        $this->assertSame(Project::STATUS_IN_PROGRESS, $project->status);
-        $this->assertSame(30, $project->progress_percent);
-        $this->assertSame('Sudah mulai dikerjakan', $project->statusUpdates()->first()->note);
+        $this->assertSame('Judul baru', $history->title);
+        $this->assertSame(ProjectHistory::STATUS_CLOSE, $history->status);
     }
 
-    public function test_saving_an_update_requires_a_valid_status(): void
+    public function test_search_filter_matches_history_title(): void
     {
-        $project = Project::factory()->create(['status' => Project::STATUS_BACKLOG]);
+        $project = Project::factory()->create();
+        $this->history($project, ProjectHistory::STATUS_TODO, 'Follow up vendor');
+        $this->history($project, ProjectHistory::STATUS_TODO, 'Rapat internal');
 
         Livewire::actingAs(User::factory()->create())
             ->test(ProjectBoard::class)
-            ->call('openProject', $project->getKey())
-            ->set('updateStatus', 'bukan-status')
-            ->call('saveUpdate')
-            ->assertHasErrors('updateStatus');
-    }
-
-    public function test_only_stale_filter_hides_projects_updated_today(): void
-    {
-        $fresh = Project::factory()->create(['name' => 'Fresh Project']);
-        Project::factory()->create(['name' => 'Stale Project']);
-
-        app(ProjectService::class)->recordUpdate($fresh, Project::STATUS_IN_PROGRESS, 'Update hari ini');
-
-        Livewire::actingAs(User::factory()->create())
-            ->test(ProjectBoard::class)
-            ->set('onlyStale', true)
-            ->assertSee('Stale Project')
-            ->assertDontSee('Fresh Project');
-    }
-
-    public function test_search_filter_matches_project_name(): void
-    {
-        Project::factory()->create(['name' => 'Ekspedisi Mesin Pabrik']);
-        Project::factory()->create(['name' => 'Renovasi Gudang']);
-
-        Livewire::actingAs(User::factory()->create())
-            ->test(ProjectBoard::class)
-            ->set('search', 'Mesin')
-            ->assertSee('Ekspedisi Mesin Pabrik')
-            ->assertDontSee('Renovasi Gudang');
+            ->set('search', 'vendor')
+            ->assertSee('Follow up vendor')
+            ->assertDontSee('Rapat internal');
     }
 }

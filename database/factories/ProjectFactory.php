@@ -22,19 +22,11 @@ class ProjectFactory extends Factory
             'name' => fake()->sentence(3),
             'description' => fake()->optional()->sentence(),
             'pic_id' => User::factory(),
-            'status' => Project::STATUS_BACKLOG,
             'priority' => Project::PRIORITY_NORMAL,
             'start_date' => now()->toDateString(),
             'due_date' => now()->addWeeks(2)->toDateString(),
-            'progress_percent' => null,
-            'sort_order' => 0,
             'created_by' => User::factory(),
         ];
-    }
-
-    public function status(string $status): static
-    {
-        return $this->state(fn (): array => ['status' => $status]);
     }
 
     public function priority(string $priority): static

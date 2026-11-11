@@ -3,90 +3,125 @@
 namespace App\Services;
 
 use App\Models\Project;
-use App\Models\ProjectStatusUpdate;
+use App\Models\ProjectHistory;
 
 class ProjectService
 {
     /**
-     * Mencatat update status project. Riwayat boleh ditambah berkali-kali,
-     * tidak dibatasi satu per hari.
-     *
-     * Status project tidak diset di sini: hook di ProjectStatusUpdate yang
-     * menyelaraskannya, supaya jalur lain (mis. relation manager) ikut
-     * konsisten.
+     * Menambah satu baris riwayat pada sebuah project, diletakkan di paling
+     * akhir kolom sesuai statusnya.
      */
-    public function recordUpdate(
+    public function recordHistory(
         Project $project,
+        string $title,
         string $status,
         ?string $note = null,
         ?int $progressPercent = null,
         ?\DateTimeInterface $date = null,
         ?int $userId = null,
-    ): ProjectStatusUpdate {
-        return $project->statusUpdates()->create([
+    ): ProjectHistory {
+        return $project->histories()->create([
+            'title' => trim($title),
             'status' => $status,
             'note' => $this->normaliseNote($note),
             'progress_percent' => $this->normaliseProgress($progressPercent),
             'update_date' => ($date ?? now())->format('Y-m-d'),
+            'sort_order' => $this->nextSortOrder($status),
             'created_by' => $userId,
         ]);
     }
 
     /**
-     * Memindahkan project ke kolom lain (drag & drop board) dan mengurutkannya
-     * di dalam kolom tujuan.
+     * Memperbarui isi riwayat. Kalau statusnya berubah, kartunya dipindah ke
+     * paling akhir kolom yang baru.
      *
-     * Kalau kolomnya berubah, perubahan itu ikut dicatat ke riwayat supaya
-     * timeline tetap lengkap. Menukar urutan di kolom yang sama tidak dicatat.
+     * @param  array<string, mixed>  $attributes
      */
-    public function move(
-        Project $project,
-        string $status,
-        ?int $beforeProjectId = null,
-        ?int $userId = null,
-    ): Project {
-        if ($project->status !== $status) {
-            $this->recordUpdate(
-                project: $project,
-                status: $status,
-                note: 'Dipindah ke '.Project::statusLabel($status).'.',
-                userId: $userId,
+    public function updateHistory(ProjectHistory $history, array $attributes): ProjectHistory
+    {
+        $statusChanged = array_key_exists('status', $attributes)
+            && $attributes['status'] !== $history->status;
+
+        if (array_key_exists('title', $attributes)) {
+            $attributes['title'] = trim((string) $attributes['title']);
+        }
+
+        if (array_key_exists('note', $attributes)) {
+            $attributes['note'] = $this->normaliseNote(
+                $attributes['note'] !== null ? (string) $attributes['note'] : null,
             );
         }
 
-        $this->reorderColumn($status, $project, $beforeProjectId);
+        if (array_key_exists('progress_percent', $attributes)) {
+            $attributes['progress_percent'] = $this->normaliseProgress(
+                $attributes['progress_percent'] !== null ? (int) $attributes['progress_percent'] : null,
+            );
+        }
 
-        return $project->refresh();
+        if (($attributes['update_date'] ?? null) instanceof \DateTimeInterface) {
+            $attributes['update_date'] = $attributes['update_date']->format('Y-m-d');
+        }
+
+        $history->fill($attributes)->save();
+
+        if ($statusChanged) {
+            $this->reorderColumn($history->status, $history->refresh(), null);
+        }
+
+        return $history->refresh();
     }
 
     /**
-     * Menyusun ulang `sort_order` kartu pada sebuah kolom, dengan project yang
-     * baru dipindah diletakkan sebelum kartu penanda (atau di paling akhir).
+     * Memindahkan kartu riwayat antar kolom board (drag & drop) dan
+     * mengurutkannya di dalam kolom tujuan.
      */
-    protected function reorderColumn(string $status, Project $project, ?int $beforeProjectId): void
+    public function moveHistory(ProjectHistory $history, string $status, ?int $beforeHistoryId = null): ProjectHistory
     {
-        $ids = Project::query()
+        $history->forceFill(['status' => $status])->save();
+
+        $this->reorderColumn($status, $history, $beforeHistoryId);
+
+        return $history->refresh();
+    }
+
+    public function deleteHistory(ProjectHistory $history): void
+    {
+        $history->delete();
+    }
+
+    protected function nextSortOrder(string $status): int
+    {
+        return ((int) ProjectHistory::query()->where('status', $status)->max('sort_order')) + 1;
+    }
+
+    /**
+     * Menyusun ulang `sort_order` kartu pada sebuah kolom, dengan kartu yang
+     * dipindah diletakkan sebelum kartu penanda (atau di paling akhir).
+     */
+    protected function reorderColumn(string $status, ProjectHistory $history, ?int $beforeHistoryId): void
+    {
+        $ids = ProjectHistory::query()
             ->where('status', $status)
-            ->whereKeyNot($project->getKey())
+            ->whereKeyNot($history->getKey())
             ->orderBy('sort_order')
             ->orderBy('id')
             ->pluck('id')
             ->all();
 
-        if ($beforeProjectId !== null) {
-            $index = array_search($beforeProjectId, $ids, true);
+        if ($beforeHistoryId !== null) {
+            $index = array_search($beforeHistoryId, $ids, true);
 
             if ($index === false) {
-                $ids[] = $project->getKey();
+                $ids[] = $history->getKey();
             } else {
-                array_splice($ids, $index, 0, [$project->getKey()]);
+                array_splice($ids, $index, 0, [$history->getKey()]);
             }
         } else {
-            $ids[] = $project->getKey();
+            $ids[] = $history->getKey();
         }
 
         foreach ($ids as $position => $id) {
-            Project::query()->whereKey($id)->update(['sort_order' => $position]);
+            ProjectHistory::query()->whereKey($id)->update(['sort_order' => $position]);
         }
     }
 
