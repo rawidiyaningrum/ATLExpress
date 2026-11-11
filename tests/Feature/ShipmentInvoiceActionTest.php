@@ -35,6 +35,30 @@ class ShipmentInvoiceActionTest extends TestCase
         ], $attributes));
     }
 
+    public function test_belum_buat_invoice_filter_shows_shipments_without_invoice(): void
+    {
+        $withoutInvoice = $this->shipment(['awb_number' => 'AWB-NO-INV']);
+        $withInvoice = $this->shipment(['awb_number' => 'AWB-HAS-INV']);
+
+        Invoice::create([
+            'invoice_number' => 'INV-FILTER-1',
+            'shipment_id' => $withInvoice->id,
+            'shipping_cost' => 150000,
+            'subtotal' => 150000,
+            'discount' => 0,
+            'tax' => 0,
+            'total' => 150000,
+            'status' => Invoice::STATUS_DRAFT,
+        ]);
+
+        Livewire::actingAs(User::factory()->create())
+            ->test(ListShipments::class)
+            ->assertTableFilterExists('belum_buat_invoice')
+            ->filterTable('belum_buat_invoice')
+            ->assertCanSeeTableRecords([$withoutInvoice])
+            ->assertCanNotSeeTableRecords([$withInvoice]);
+    }
+
     public function test_shipment_without_invoice_shows_buat_invoice_and_saves_a_draft(): void
     {
         $shipment = $this->shipment();
@@ -163,7 +187,8 @@ class ShipmentInvoiceActionTest extends TestCase
         Livewire::actingAs(User::factory()->create())
             ->test(ListShipments::class)
             ->assertTableActionVisible('invoice', $shipment)
-            ->assertDontSee('Buat Invoice');
+            ->assertTableActionHasLabel('invoice', 'Invoice', $shipment)
+            ->assertTableActionDoesNotHaveLabel('invoice', 'Buat Invoice', $shipment);
 
         $this->assertSame(
             InvoiceResource::getUrl('view', ['record' => $invoice]),

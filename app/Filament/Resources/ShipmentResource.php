@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class ShipmentResource extends Resource
@@ -248,6 +249,21 @@ class ShipmentResource extends Resource
             // Daftar terbaru di atas supaya shipment yang baru dibuat langsung
             // terlihat tanpa perlu mengurutkan manual.
             ->defaultSort('created_at', 'desc')
+            ->filters([
+                // Menandai pengiriman yang belum punya invoice sama sekali,
+                // supaya admin cepat menemukan yang perlu ditagihkan.
+                Tables\Filters\Filter::make('belum_buat_invoice')
+                    ->label('Belum Buat Invoice')
+                    ->toggle()
+                    ->query(fn (Builder $query): Builder => $query->doesntHave('invoices')),
+            ])
+            // Filter jarang terlihat kalau hanya berupa ikon corong, jadi
+            // tombolnya diberi label seperti di menu jurnal keuangan.
+            ->filtersTriggerAction(fn (Tables\Actions\Action $action): Tables\Actions\Action => $action
+                ->button()
+                ->label('Filter')
+                ->icon('heroicon-m-funnel'),
+            )
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\Action::make('invoice')
