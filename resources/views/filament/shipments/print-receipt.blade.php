@@ -1,26 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        @media print {
-            .fi-sidebar,
-            .fi-topbar,
-            .fi-header,
-            .no-print {
-                display: none !important;
-            }
-
-            .fi-main {
-                padding: 0 !important;
-            }
-
-            html {
-                color-scheme: light !important;
-            }
-
-            body {
-                background: #fff !important;
-            }
-        }
-    </style>
+    @include('filament.partials.print-document-styles')
 
     <div class="space-y-6">
         <div class="no-print flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -52,7 +31,7 @@
             </x-filament::button>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-8 text-gray-900 shadow-sm print:border-0 print:p-0 print:shadow-none">
+        <div class="print-sheet rounded-xl border border-gray-200 bg-white p-8 text-gray-900 shadow-sm print:border-0 print:p-0 print:shadow-none">
             <div class="border-b-2 border-gray-900 pb-4">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex items-start gap-3 text-left">
@@ -110,7 +89,7 @@
                 </tbody>
             </table>
 
-            <div class="mt-10 flex items-end justify-between">
+            <div class="avoid-break mt-10 flex items-end justify-between">
                 <div class="inline-flex items-center gap-2 border border-gray-900 px-4 py-2">
                     <span class="text-sm">Rp</span>
                     <span class="text-lg font-bold">{{ $amount_formatted }}</span>
