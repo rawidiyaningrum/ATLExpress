@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             ShipmentSeeder::class,
             PricelistSeeder::class,
             InquirySeeder::class,
+            ThreadsKeywordSeeder::class,
         ]);
     }
 }
