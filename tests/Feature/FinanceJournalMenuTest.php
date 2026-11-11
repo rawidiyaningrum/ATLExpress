@@ -75,6 +75,77 @@ class FinanceJournalMenuTest extends TestCase
             ->assertCanSeeTableRecords([$revenue, $receipt]);
     }
 
+    /**
+     * Sepasang jurnal dari satu invoice: jurnal pendapatan, dan jurnal kas
+     * masuk kalau invoice sudah lunas.
+     *
+     * @return array<int, FinanceJournal>
+     */
+    private function journalPair(string $suffix, bool $withReceipt): array
+    {
+        $shipment = Shipment::create([
+            'awb_number' => 'AWB-PEL-'.$suffix,
+            'sender_name' => 'PT Kirim Sejahtera',
+            'origin' => 'Jakarta',
+            'destination' => 'Surabaya',
+            'final_tariff' => 150000,
+            'status' => Shipment::STATUS_IN_TRANSIT,
+        ]);
+
+        $reference = 'REF-PEL-'.$suffix;
+
+        $revenue = FinanceJournal::create([
+            'shipment_id' => $shipment->id,
+            'reference_label' => $reference,
+            'journal_type' => FinanceJournal::TYPE_REVENUE,
+            'entry_date' => now()->toDateString(),
+            'income' => 150000,
+        ]);
+
+        if (! $withReceipt) {
+            return [$revenue];
+        }
+
+        $receipt = FinanceJournal::create([
+            'shipment_id' => $shipment->id,
+            'reference_label' => $reference,
+            'journal_type' => FinanceJournal::TYPE_RECEIPT,
+            'entry_date' => now()->toDateString(),
+            'income' => 150000,
+        ]);
+
+        return [$revenue, $receipt];
+    }
+
+    public function test_journal_menu_exposes_a_pelunasan_filter(): void
+    {
+        Livewire::actingAs(User::factory()->create())
+            ->test(ListFinanceJournals::class)
+            ->assertTableFilterExists('status_pelunasan')
+            ->assertTableFilterVisible('status_pelunasan');
+    }
+
+    public function test_journal_menu_filters_by_pelunasan_status(): void
+    {
+        [$unpaidRevenue] = $this->journalPair('A', withReceipt: false);
+        [$paidRevenue, $paidReceipt] = $this->journalPair('B', withReceipt: true);
+
+        // Belum lunas: baru ada jurnal pendapatan, jurnal kas masuk belum dibuat.
+        Livewire::actingAs(User::factory()->create())
+            ->test(ListFinanceJournals::class)
+            ->filterTable('status_pelunasan', 'belum')
+            ->assertCanSeeTableRecords([$unpaidRevenue])
+            ->assertCanNotSeeTableRecords([$paidRevenue, $paidReceipt]);
+
+        // Sudah lunas: jurnal kas masuk ada, jadi pendapatan dan kasnya sama-sama
+        // muncul.
+        Livewire::actingAs(User::factory()->create())
+            ->test(ListFinanceJournals::class)
+            ->filterTable('status_pelunasan', 'lunas')
+            ->assertCanSeeTableRecords([$paidRevenue, $paidReceipt])
+            ->assertCanNotSeeTableRecords([$unpaidRevenue]);
+    }
+
     public function test_journal_filter_trigger_is_a_labelled_button(): void
     {
         $component = Livewire::actingAs(User::factory()->create())

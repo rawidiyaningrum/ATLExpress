@@ -216,8 +216,37 @@ class FinanceJournalResource extends Resource
             ->defaultSort('entry_date', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('journal_type')
-                    ->label('Tipe')
+                    ->label('Tipe Jurnal')
                     ->options(FinanceJournal::TYPE_LABELS),
+                Tables\Filters\SelectFilter::make('status_pelunasan')
+                    ->label('Status Pelunasan')
+                    ->options([
+                        'lunas' => 'Sudah Lunas',
+                        'belum' => 'Belum Lunas',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+
+                        if (! in_array($value, ['lunas', 'belum'], true)) {
+                            return $query;
+                        }
+
+                        // Pelunasan ditandai jurnal kas masuk: satu invoice punya
+                        // jurnal pendapatan dan, saat lunas, jurnal kas dengan
+                        // shipment dan referensi yang sama.
+                        $receiptExists = fn ($sub) => $sub->selectRaw('1')
+                            ->from('finance_journals as kas')
+                            ->whereColumn('kas.shipment_id', 'finance_journals.shipment_id')
+                            ->whereColumn('kas.reference_label', 'finance_journals.reference_label')
+                            ->where('kas.journal_type', FinanceJournal::TYPE_RECEIPT);
+
+                        return $value === 'lunas'
+                            ? $query->where(fn ($group) => $group
+                                ->where('journal_type', FinanceJournal::TYPE_RECEIPT)
+                                ->orWhereExists($receiptExists))
+                            : $query->where('journal_type', FinanceJournal::TYPE_REVENUE)
+                                ->whereNotExists($receiptExists);
+                    }),
                 Tables\Filters\Filter::make('entry_date')
                     ->label('Tanggal')
                     ->form([

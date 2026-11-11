@@ -202,6 +202,13 @@ class ShipmentResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('status')
+                        ->label('Status Terakhir')
+                        ->badge()
+                        ->formatStateUsing(fn (?string $state): string => Shipment::statusLabel($state))
+                        ->color(fn (?string $state): string => Shipment::STATUS_COLORS[$state] ?? 'gray')
+                        ->sortable(),
+
                     Tables\Columns\TextColumn::make('compact_line1')
                         ->state(function (Shipment $record): string {
                             $awb = $record->awb_number ?: '-';
@@ -238,6 +245,9 @@ class ShipmentResource extends Resource
                 ])
                     ->space(1),
             ])
+            // Daftar terbaru di atas supaya shipment yang baru dibuat langsung
+            // terlihat tanpa perlu mengurutkan manual.
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\Action::make('invoice')
