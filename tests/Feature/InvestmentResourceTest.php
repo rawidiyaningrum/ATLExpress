@@ -149,6 +149,7 @@ class InvestmentResourceTest extends TestCase
     {
         $investor = Investor::create([
             'name' => 'Investor Andalan',
+            'ktp_number' => '3174012345670002',
             'address' => 'Jl. Merdeka No. 1, Jakarta',
             'phone' => '081200001111',
         ]);
@@ -177,6 +178,8 @@ class InvestmentResourceTest extends TestCase
             ->assertSee('PERJANJIAN INVESTASI')
             ->assertSee('IVT/atl/10/11/2026/001')
             ->assertSee('Investor Andalan')
+            ->assertSee('No. KTP')
+            ->assertSee('3174012345670002')
             ->assertSee('Ekspedisi Mesin Pabrik')
             ->assertSee('10.000.000')
             ->assertSee('Pasal 1')

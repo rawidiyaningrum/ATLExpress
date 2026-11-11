@@ -89,6 +89,7 @@ class PrintAgreement extends Page
             'agreement_date' => $agreementDate,
             'agreement_date_long' => $agreementDate->translatedFormat('d F Y'),
             'investor_name' => $investor?->name ?? '-',
+            'investor_ktp' => $investor?->ktp_number ?: '-',
             'investor_address' => $investor?->address ?: '-',
             'investor_phone' => $investor?->phone ?: '-',
             'investor_relation' => $investor?->relation ?: null,

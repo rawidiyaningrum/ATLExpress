@@ -12,6 +12,7 @@ class Investor extends Model
 
     protected $fillable = [
         'name',
+        'ktp_number',
         'relation',
         'phone',
         'email',

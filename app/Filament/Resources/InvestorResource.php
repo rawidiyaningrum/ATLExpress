@@ -51,6 +51,13 @@ class InvestorResource extends Resource
                         ->required()
                         ->maxLength(255),
 
+                    Forms\Components\TextInput::make('ktp_number')
+                        ->label('No. KTP')
+                        ->placeholder('Contoh: 3174012345670001')
+                        ->maxLength(50)
+                        ->unique(ignoreRecord: true)
+                        ->helperText('Nomor KTP / identitas investor (16 digit, tanpa spasi).'),
+
                     Forms\Components\TextInput::make('relation')
                         ->label('Relasi')
                         ->placeholder('Contoh: Rekan Bisnis / Keluarga / Sahabat / Mitra Kerja')
@@ -127,6 +134,14 @@ class InvestorResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->description(fn (Investor $record): ?string => $record->relation ? 'Relasi: '.$record->relation : null),
+
+                Tables\Columns\TextColumn::make('ktp_number')
+                    ->label('No. KTP')
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('-')
+                    ->icon('heroicon-m-identification')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('phone')
                     ->label('Kontak')

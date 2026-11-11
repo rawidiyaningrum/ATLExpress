@@ -50,6 +50,7 @@ class InvestorResourceTest extends TestCase
             ->test(InvestorResource\Pages\CreateInvestor::class)
             ->fillForm([
                 'name' => 'Hendra Wijaya',
+                'ktp_number' => '3174012345670001',
                 'relation' => 'Keluarga',
                 'phone' => '08198765432',
                 'email' => 'hendra@example.com',
@@ -64,6 +65,7 @@ class InvestorResourceTest extends TestCase
 
         $this->assertDatabaseHas('investors', [
             'name' => 'Hendra Wijaya',
+            'ktp_number' => '3174012345670001',
             'relation' => 'Keluarga',
             'bank_name' => 'Mandiri',
         ]);
