@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\ThreadsMonitor;
 use App\Filament\Resources\ThreadsKeywordResource;
 use App\Filament\Resources\ThreadsPostResource;
+use App\Filament\Resources\ThreadsPostResource\Pages\ListThreadsPosts;
 use App\Jobs\FetchThreadsCargoRequestsJob;
 use App\Models\ThreadsKeyword;
 use App\Models\ThreadsPost;
@@ -13,6 +14,7 @@ use App\Services\Threads\ThreadsQueryQuota;
 use Database\Seeders\ThreadsKeywordSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ThreadsCargoMonitorTest extends TestCase
@@ -175,6 +177,44 @@ class ThreadsCargoMonitorTest extends TestCase
         $this->assertSame(1, $summary['keywords']);
         $this->assertSame(1, $summary['created']);
         $this->assertSame('scrape', ThreadsPost::first()->source);
+    }
+
+    public function test_admin_can_clear_threads_search_results_from_monitor(): void
+    {
+        $admin = User::factory()->create();
+
+        ThreadsPost::create(['threads_id' => '1', 'text' => 'post satu']);
+        ThreadsPost::create(['threads_id' => '2', 'text' => 'post dua']);
+
+        Livewire::actingAs($admin)
+            ->test(ThreadsMonitor::class)
+            ->assertActionVisible('clearSearchResults')
+            ->callAction('clearSearchResults');
+
+        $this->assertSame(0, ThreadsPost::count());
+    }
+
+    public function test_admin_can_clear_threads_search_results_from_list_page(): void
+    {
+        $admin = User::factory()->create();
+
+        ThreadsPost::create(['threads_id' => '1', 'text' => 'post satu']);
+
+        Livewire::actingAs($admin)
+            ->test(ListThreadsPosts::class)
+            ->assertActionVisible('clearSearchResults')
+            ->callAction('clearSearchResults');
+
+        $this->assertSame(0, ThreadsPost::count());
+    }
+
+    public function test_clear_search_action_is_visible_for_admin_atl(): void
+    {
+        $adminAtl = User::factory()->adminAtl()->create();
+
+        Livewire::actingAs($adminAtl)
+            ->test(ThreadsMonitor::class)
+            ->assertActionVisible('clearSearchResults');
     }
 
     public function test_keyword_seeder_populates_curated_keywords(): void

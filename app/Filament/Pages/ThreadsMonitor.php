@@ -63,7 +63,36 @@ class ThreadsMonitor extends Page
                 ->requiresConfirmation()
                 ->modalDescription('Job pengambilan data akan dikirim ke queue. Pastikan queue worker aktif.')
                 ->action('runFetch'),
+
+            Action::make('clearSearchResults')
+                ->label('Kosongkan Pencarian')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Kosongkan hasil pencarian Threads?')
+                ->modalDescription('Semua postingan hasil pencarian akan dihapus permanen. Keyword dan pengaturan tetap tersimpan.')
+                ->visible(fn (): bool => auth()->user()?->isAdminRole() ?? false)
+                ->action(fn () => $this->clearSearchResults()),
         ];
+    }
+
+    /**
+     * Hapus seluruh postingan hasil pencarian Threads. Hanya admin yang
+     * boleh menjalankan aksi ini.
+     */
+    public function clearSearchResults(): void
+    {
+        if (! (auth()->user()?->isAdminRole() ?? false)) {
+            abort(403);
+        }
+
+        $deleted = ThreadsPost::query()->delete();
+
+        Notification::make()
+            ->title('Hasil pencarian dikosongkan')
+            ->body($deleted.' postingan dihapus. Keyword dan pengaturan tetap tersimpan.')
+            ->success()
+            ->send();
     }
 
     public function runFetch(): void
