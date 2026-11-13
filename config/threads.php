@@ -52,27 +52,20 @@ return [
      * Fallback scraping. Rapuh dan berisiko melanggar ToS: pakai hanya
      * sebagai jalur sementara sebelum API resmi disetujui Meta.
      *
-     * - endpoint : opsional. Bila diisi, scraper akan POST {query, mode,
-     *              search_type, limit} ke endpoint ini dan mengharapkan
-     *              balasan {"data": [ ... ]}. Cocok untuk scraper sendiri
-     *              atau layanan pihak ketiga.
-     * - doc_id   : opsional. doc_id GraphQL Threads untuk pencarian. Bila
-     *              diisi, scraper memakai endpoint GraphQL internal.
+     * Scraper membuka halaman pencarian publik
+     * `{base_url}/search?exact_match=false&q={query}&filter=recent` lalu
+     * mengekstrak hasil yang dirender server. User-Agent crawler dipakai
+     * agar Threads mengirim HTML berisi data pencarian, bukan halaman SPA
+     * kosong.
      */
     'scrape' => [
         'base_url' => env('THREADS_SCRAPE_BASE_URL', 'https://www.threads.com'),
-        'endpoint' => env('THREADS_SCRAPE_ENDPOINT'),
-        'doc_id' => env('THREADS_SCRAPE_DOC_ID'),
-        'app_id' => env('THREADS_SCRAPE_APP_ID', '238260118697367'),
         'timeout' => (int) env('THREADS_SCRAPE_TIMEOUT', 30),
         'retries' => (int) env('THREADS_SCRAPE_RETRIES', 1),
-
-        /*
-         * Mengambil HTML halaman pencarian publik secara langsung. Sengaja
-         * default nonaktif: jalur ini paling rapuh dan bisa membebani Threads
-         * bila dijalankan otomatis tanpa kendali.
-         */
-        'allow_page' => env('THREADS_SCRAPE_ALLOW_PAGE', false),
+        'user_agent' => env(
+            'THREADS_SCRAPE_USER_AGENT',
+            'Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)'
+        ),
     ],
 
     /*

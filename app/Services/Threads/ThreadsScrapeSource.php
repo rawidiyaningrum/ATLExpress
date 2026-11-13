@@ -8,17 +8,19 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
- * Fallback pengambilan data dengan cara scraping.
+ * Fallback pengambilan data dengan cara membuka halaman pencarian publik
+ * Threads lalu mengekstrak hasil yang sudah dirender server.
+ *
+ * Alur:
+ * 1. Buka https://www.threads.com/search?exact_match=false&q={query}&filter=recent.
+ * 2. Ambil HTML halaman dengan User-Agent crawler agar Threads merender
+ *    hasil pencarian di sisi server (bukan SPA kosong).
+ * 3. Ekstrak JSON yang tertanam di dalam <script type="application/json">.
+ * 4. Kumpulkan node postingan dan normalisasi lewat ThreadsSearchResult.
  *
  * PENTING: jalur ini rapuh (struktur internal Threads sering berubah) dan
  * berisiko melanggar Terms of Service. Gunakan hanya sebagai sementara
  * sebelum API resmi `threads_keyword_search` disetujui Meta.
- *
- * Tiga mode, dipilih otomatis sesuai konfigurasi:
- * 1. `endpoint` — POST ke scraper sendiri / layanan pihak ketiga.
- * 2. `doc_id`   — memakai endpoint GraphQL internal Threads.
- * 3. halaman    — mengambil HTML halaman pencarian publik lalu mengekstrak
- *                 JSON yang tertanam (best-effort).
  */
 class ThreadsScrapeSource implements ThreadsSource
 {
@@ -29,103 +31,39 @@ class ThreadsScrapeSource implements ThreadsSource
 
     public function isAvailable(): bool
     {
-        return (bool) config('threads.enabled') && (
-            trim((string) config('threads.scrape.endpoint')) !== ''
-            || trim((string) config('threads.scrape.doc_id')) !== ''
-            || (bool) config('threads.scrape.allow_page')
-        );
+        return (bool) config('threads.enabled');
     }
 
     public function search(string $query, string $mode = 'keyword', string $searchType = 'RECENT', int $limit = 25): array
     {
-        $endpoint = trim((string) config('threads.scrape.endpoint'));
-        $docId = trim((string) config('threads.scrape.doc_id'));
-
         try {
-            $items = match (true) {
-                $endpoint !== '' => $this->searchViaEndpoint($endpoint, $query, $mode, $searchType, $limit),
-                $docId !== '' => $this->searchViaGraphql($docId, $query, $mode, $searchType, $limit),
-                (bool) config('threads.scrape.allow_page') => $this->searchViaPage($query, $limit),
-                default => throw new ThreadsException('Fallback scraping belum dikonfigurasi. Isi THREADS_SCRAPE_ENDPOINT atau THREADS_SCRAPE_DOC_ID, atau set THREADS_SCRAPE_ALLOW_PAGE=true untuk scraping halaman publik.'),
-            };
+            $items = $this->searchViaPage($query, $limit);
         } catch (ConnectionException $e) {
-            throw new ThreadsException('Scraper Threads tidak dapat dihubungi: '.Str::limit($e->getMessage(), 200));
+            throw new ThreadsException('Halaman pencarian Threads tidak dapat dihubungi: '.Str::limit($e->getMessage(), 200));
         }
 
         return $this->mapResults($items);
     }
 
     /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function searchViaEndpoint(string $endpoint, string $query, string $mode, string $searchType, int $limit): array
-    {
-        $response = Http::timeout((int) config('threads.scrape.timeout'))
-            ->acceptJson()
-            ->retry(max(1, (int) config('threads.scrape.retries')), 500, throw: false)
-            ->post($endpoint, [
-                'query' => $query,
-                'mode' => $mode,
-                'search_type' => strtoupper($searchType),
-                'limit' => $limit,
-            ]);
-
-        if ($response->failed()) {
-            throw new ThreadsException('Endpoint scraper menolak permintaan (HTTP '.$response->status().').');
-        }
-
-        return (array) $response->json('data', []);
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function searchViaGraphql(string $docId, string $query, string $mode, string $searchType, int $limit): array
-    {
-        $base = rtrim((string) config('threads.scrape.base_url'), '/');
-
-        $variables = [
-            'query' => $query,
-            'first' => $limit,
-            'search_type' => $mode === 'tag' ? 'TAG' : 'KEYWORD',
-        ];
-
-        $response = Http::timeout((int) config('threads.scrape.timeout'))
-            ->acceptJson()
-            ->withHeaders($this->browserHeaders())
-            ->retry(max(1, (int) config('threads.scrape.retries')), 500, throw: false)
-            ->asForm()
-            ->post($base.'/api/graphql', [
-                'doc_id' => $docId,
-                'variables' => json_encode($variables),
-            ]);
-
-        if ($response->failed()) {
-            throw new ThreadsException('GraphQL Threads menolak permintaan (HTTP '.$response->status().').');
-        }
-
-        $decoded = (array) $response->json();
-        $items = [];
-
-        $this->collectPosts($decoded, $items);
-
-        return $items;
-    }
-
-    /**
+     * Buka halaman pencarian publik lalu ambil postingan dari JSON yang
+     * tertanam di HTML.
+     *
      * @return array<int, array<string, mixed>>
      */
     private function searchViaPage(string $query, int $limit): array
     {
-        $base = rtrim((string) config('threads.scrape.base_url'), '/');
+        $base = rtrim((string) config('threads.scrape.base_url', 'https://www.threads.com'), '/');
+        $url = $base.'/search?'.http_build_query([
+            'exact_match' => 'false',
+            'q' => $query,
+            'filter' => 'recent',
+        ]);
 
         $response = Http::timeout((int) config('threads.scrape.timeout'))
             ->withHeaders($this->browserHeaders())
             ->retry(max(1, (int) config('threads.scrape.retries')), 500, throw: false)
-            ->get($base.'/search', [
-                'q' => $query,
-                'serp_type' => 'default',
-            ]);
+            ->get($url);
 
         if ($response->failed()) {
             throw new ThreadsException('Halaman pencarian Threads menolak permintaan (HTTP '.$response->status().').');
@@ -144,7 +82,7 @@ class ThreadsScrapeSource implements ThreadsSource
         }
 
         if ($items === []) {
-            throw new ThreadsException('Scraping halaman tidak menemukan data. Isi THREADS_SCRAPE_ENDPOINT atau THREADS_SCRAPE_DOC_ID, atau gunakan API resmi.');
+            throw new ThreadsException('Scraping halaman pencarian tidak menemukan data. Struktur halaman Threads mungkin berubah.');
         }
 
         return array_slice($items, 0, $limit);
@@ -205,10 +143,12 @@ class ThreadsScrapeSource implements ThreadsSource
     private function browserHeaders(): array
     {
         return [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-            'Accept' => 'text/html,application/json,application/xhtml+xml',
+            'User-Agent' => (string) config(
+                'threads.scrape.user_agent',
+                'Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)'
+            ),
+            'Accept' => 'text/html,application/xhtml+xml',
             'Accept-Language' => 'id-ID,id;q=0.9,en;q=0.8',
-            'X-IG-App-ID' => (string) config('threads.scrape.app_id'),
         ];
     }
 }

@@ -40,7 +40,7 @@ class ThreadsSourceManager
     {
         return match (strtolower((string) config('threads.source', 'auto'))) {
             'api' => 'API resmi Meta',
-            'scrape' => 'Fallback scraping',
+            'scrape' => 'Scraping halaman pencarian',
             default => 'Auto (API lalu scraping)',
         };
     }

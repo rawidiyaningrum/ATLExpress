@@ -84,21 +84,11 @@ class ThreadsCargoMonitorTest extends TestCase
 
     public function test_auto_source_falls_back_to_scrape_when_api_fails(): void
     {
-        config([
-            'threads.source' => 'auto',
-            'threads.scrape.endpoint' => 'https://scraper.test/search',
-        ]);
+        config(['threads.source' => 'auto']);
 
         Http::fake([
             '*graph.threads.com/*' => Http::response(['error' => ['message' => 'invalid token']], 401),
-            'https://scraper.test/search' => Http::response([
-                'data' => [[
-                    'code' => 'abc123',
-                    'caption' => ['text' => 'cari ekspedisi murah ke makassar'],
-                    'user' => ['username' => 'sinta'],
-                    'taken_at' => 1731000000,
-                ]],
-            ]),
+            'https://www.threads.com/search*' => Http::response($this->scrapePageHtml()),
         ]);
 
         ThreadsKeyword::create([
@@ -119,6 +109,11 @@ class ThreadsCargoMonitorTest extends TestCase
         $this->assertSame('scrape', $post->source);
         $this->assertStringContainsString('cari ekspedisi', (string) $post->text);
         $this->assertSame('https://www.threads.com/@sinta/post/abc123', $post->permalink);
+
+        Http::assertSent(fn ($request): bool => str_starts_with(
+            $request->url(),
+            'https://www.threads.com/search?exact_match=false&q=cari+ekspedisi&filter=recent'
+        ));
     }
 
     public function test_daily_quota_cap_blocks_further_queries(): void
@@ -158,14 +153,15 @@ class ThreadsCargoMonitorTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_no_source_ready_by_default_without_credentials(): void
+    public function test_scrape_source_works_without_api_credentials(): void
     {
         config([
             'threads.source' => 'auto',
             'threads.api.access_token' => '',
-            'threads.scrape.endpoint' => null,
-            'threads.scrape.doc_id' => null,
-            'threads.scrape.allow_page' => false,
+        ]);
+
+        Http::fake([
+            'https://www.threads.com/search*' => Http::response($this->scrapePageHtml()),
         ]);
 
         ThreadsKeyword::create([
@@ -176,10 +172,9 @@ class ThreadsCargoMonitorTest extends TestCase
 
         $summary = (new FetchThreadsCargoRequestsJob)->execute();
 
-        $this->assertSame(0, $summary['keywords']);
-        $this->assertSame(0, $summary['errors']);
-        $this->assertSame(0, ThreadsPost::count());
-        Http::assertNothingSent();
+        $this->assertSame(1, $summary['keywords']);
+        $this->assertSame(1, $summary['created']);
+        $this->assertSame('scrape', ThreadsPost::first()->source);
     }
 
     public function test_keyword_seeder_populates_curated_keywords(): void
@@ -225,6 +220,31 @@ class ThreadsCargoMonitorTest extends TestCase
         $this->actingAs($tracker)
             ->get(ThreadsMonitor::getUrl())
             ->assertForbidden();
+    }
+
+    /**
+     * HTML tiruan halaman pencarian Threads: JSON pencarian tertanam di
+     * dalam <script type="application/json"> seperti respons asli.
+     */
+    private function scrapePageHtml(): string
+    {
+        $payload = [
+            'data' => [
+                'search_results' => [
+                    ['node' => ['thread' => ['thread_items' => [[
+                        'post' => [
+                            'code' => 'abc123',
+                            'caption' => ['text' => 'cari ekspedisi murah ke makassar'],
+                            'user' => ['username' => 'sinta'],
+                            'taken_at' => 1731000000,
+                            'media_type' => 19,
+                        ],
+                    ]]]]],
+                ],
+            ],
+        ];
+
+        return '<html><body><script type="application/json">'.json_encode($payload).'</script></body></html>';
     }
 
     private function fakeApi(): void

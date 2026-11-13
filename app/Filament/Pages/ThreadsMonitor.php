@@ -198,9 +198,7 @@ class ThreadsMonitor extends Page
             'enabled' => (bool) config('threads.enabled'),
             'sourceLabel' => $manager->label(),
             'apiConfigured' => trim((string) config('threads.api.access_token')) !== '',
-            'scrapeConfigured' => trim((string) config('threads.scrape.endpoint')) !== ''
-                || trim((string) config('threads.scrape.doc_id')) !== ''
-                || (bool) config('threads.scrape.allow_page'),
+            'scrapeConfigured' => (bool) config('threads.enabled'),
             'aiConfigured' => app(ThreadsKeywordResearcher::class)->isConfigured(),
             'quotaUsed' => $quota->used(),
             'quotaRemaining' => $quota->remaining(),
